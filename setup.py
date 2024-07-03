@@ -7,7 +7,7 @@ config = {
      'description': 'Utilities to track and visualize satellites in real time',
      'author': 'Oliver Jelko',
      'author_email': 'ojelko@proton.me',
-     'install_requires': ['pytest'],
+     'install_requires': ['pytest', 'numpy', 'matplotlib', 'basemap', 'basemap-data-hires'],
      'packages': ['satutils'],
      'scripts': [],
      'name': 'satutils'

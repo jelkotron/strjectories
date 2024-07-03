@@ -1,7 +1,9 @@
-import satutils
+import pytest
+from satutils.map import Canvas
 
-def func(x):
-    return x+1
-
-def test_basic():
-    assert func(3) == 4
+def test_canvas():
+    canvas = Canvas(49, 8, 123)
+    assert canvas.lat == 49
+    assert canvas.lon == 8
+    assert canvas.center == [49,8]
+    assert canvas.radius == 123
