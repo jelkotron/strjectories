@@ -20,6 +20,7 @@ lat = "0"
 lon = "0"
 gn = geocoders.Nominatim(user_agent="my_App")
 
+config_val = None
 tle_val = None
 trajectories_val = None
 loc_list = []
@@ -103,6 +104,14 @@ def open_trajectories_clicked():
     else:
         open_tle_button.configure(text="Open")
 
+def open_config_clicked():
+    global config_val
+    config_val = askopenfilename()
+    if config_val:
+        open_trajectories_button.configure(text=config_val)
+    else:
+        open_tle_button.configure(text="Open")
+
 
 
 ############################################ Location Box ############################################
@@ -178,14 +187,15 @@ lon_val.grid(row=7, column=1, sticky="W")
 selection_box.columnconfigure((0,1,2,3,4,5,6,7,8,9,10),minsize=100, weight=0)
 
 # options frame
-tle_row = 0
-trajectory_row = 1
-radius_step_row = 2
-info_row_0 = 3
-info_row_1 = 4
-info_row_2 = 5
-info_row_3 = 6
-info_row_4 = 7
+config_row = 0
+tle_row = 1
+trajectory_row = 2
+radius_step_row = 3
+info_row_0 = 4
+info_row_1 = 5
+info_row_2 = 6
+info_row_3 = 7
+info_row_4 = 8
 
 
 ############################################ File Box ############################################
@@ -195,6 +205,17 @@ file_box.pack(padx=0, pady=2, fill='both', expand=True)
 
 def update_radius():
     print("radius updated!")
+
+################################ CONFIG ################################
+config_label = ttk.Label(file_box, text="Config:").grid(row=config_row, column=0, columnspan=1, sticky="E")
+open_config_button = ttk.Button(file_box, text="Open", command=open_config_clicked)
+open_config_button.grid(row=config_row, column=1, sticky='EW', padx=0)
+
+get_config_button = ttk.Button(file_box, text="New")
+get_config_button.grid(row=config_row, column=2, sticky='WE', padx=0)
+
+save_config_button = ttk.Button(file_box, text="Save")
+save_config_button.grid(row=config_row, column=3, sticky='W', padx=0)
 
 ################################ TLE ################################
 tle_label = ttk.Label(file_box, text="TLEs:").grid(row=tle_row, column=0, columnspan=1, sticky="E")
@@ -286,7 +307,7 @@ playback_label.grid(row=0, column=0, columnspan=1, sticky="E")
 play_button = ttk.Button(playback_box, text="Run")
 play_button.grid(row=0, columnspan=1, column=1, sticky='W', padx=0)
 
-clock_label = ttk.Label(playback_box, text="Hier tickt die Uhr der Zeitzone des ausgewählten Ortes.")
+clock_label = ttk.Label(playback_box, text="Monday, 01.01.2000, 00:00:00 <time.now>")
 clock_label.grid(row=0, column=2)
 
 
