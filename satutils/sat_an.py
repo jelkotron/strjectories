@@ -302,7 +302,7 @@ option_box.rowconfigure(1, pad=10)
 ######################################################################################################
 playback_box = ttk.Frame(root)
 playback_box.pack(padx=0, pady=2, fill='both', expand=True)
-playback_label = ttk.Label(playback_box, text="Deamon:")
+playback_label = ttk.Label(playback_box, text="Simulation:")
 playback_label.grid(row=0, column=0, columnspan=1, sticky="E")
 play_button = ttk.Button(playback_box, text="Run")
 play_button.grid(row=0, columnspan=1, column=1, sticky='W', padx=0)
@@ -320,7 +320,7 @@ satellite_box.pack(padx=0, pady=2, fill='both', expand=True)
 inrange_label = ttk.Label(satellite_box, text="In Range:")
 inrange_label.grid(row=0, column=0, columnspan=1, sticky="NE")
 
-dummies = ("Pipi", "Kaka", "Popo")
+dummies = ("Sputnik 2", "ISS")
 var = tk.Variable(value=dummies)
 
 inrange_list = tk.Listbox(satellite_box, listvariable=var, selectmode = tk.SINGLE, width=66)
