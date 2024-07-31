@@ -42,9 +42,6 @@ def login_clicked():
         list.itemconfig(i, 
                 bg = "#3498db" if i % 2 == 0 else "#e6b0aa") 
       
-
-
-
 def city_selected(event):
     global loc_list
     selection = event.widget.curselection()
@@ -108,9 +105,9 @@ def open_config_clicked():
     global config_val
     config_val = askopenfilename()
     if config_val:
-        open_trajectories_button.configure(text=config_val)
+        open_config_button.configure(text=config_val)
     else:
-        open_tle_button.configure(text="Open")
+        open_config_button.configure(text="Open")
 
 
 
@@ -186,7 +183,13 @@ lon_val.grid(row=7, column=1, sticky="W")
 
 selection_box.columnconfigure((0,1,2,3,4,5,6,7,8,9,10),minsize=100, weight=0)
 
-# options frame
+
+
+
+############################################ File Box ############################################
+##################################################################################################
+file_box = ttk.Frame(root)
+file_box.pack(padx=0, pady=2, fill='both', expand=True)
 config_row = 0
 tle_row = 1
 trajectory_row = 2
@@ -197,14 +200,6 @@ info_row_2 = 6
 info_row_3 = 7
 info_row_4 = 8
 
-
-############################################ File Box ############################################
-##################################################################################################
-file_box = ttk.Frame(root)
-file_box.pack(padx=0, pady=2, fill='both', expand=True)
-
-def update_radius():
-    print("radius updated!")
 
 ################################ CONFIG ################################
 config_label = ttk.Label(file_box, text="Config:").grid(row=config_row, column=0, columnspan=1, sticky="E")
@@ -228,7 +223,7 @@ get_tle_button.grid(row=tle_row, column=2, sticky='WE', padx=0)
 save_tle_button = ttk.Button(file_box, text="Save")
 save_tle_button.grid(row=tle_row, column=3, sticky='W', padx=0)
 
-################################ KEYFRAMES ################################
+################################ TRAJECTORIES ################################
 trajectories_label = ttk.Label(file_box, text="Trajectories:")
 trajectories_label.grid(row=trajectory_row, column=0, columnspan=1, sticky="E")
 
@@ -289,11 +284,13 @@ choice = tk.StringVar()
 time_box = ttk.OptionMenu(option_box, choice, *steps)
 time_box.grid(row=0, column=5, columnspan=1, sticky='W')
 choice.set(steps[1])
+################################ APPEND FLAG ################################
+append_trajectories = 1
+append_val = ttk.Checkbutton(option_box, text='Append',variable=append_trajectories, onvalue=1, offvalue=0, command=None)
+append_val.grid(row=0, column=6, sticky='W')
 ################################ RENDERBUTTON ################################
 calculate_button = ttk.Button(option_box, text="Calculate Trajectories")
 calculate_button.grid(row=1, columnspan=5, column=1, sticky='W', padx=0)
-
-
 
 option_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
 option_box.rowconfigure(1, pad=10)
@@ -312,7 +309,6 @@ clock_label.grid(row=0, column=2)
 
 
 playback_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
-
 ############################################ Satellite Box ############################################
 ######################################################################################################
 satellite_box = ttk.Frame(root)
