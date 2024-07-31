@@ -1,16 +1,25 @@
 #!/home/schnollie/.venvs/strwueue/bin/python
+import time
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from tkinter import ttk
 from geopy import geocoders
 
-
+class StrwueueUi():
+    def __init__(self):
+        pass
 
 # root window
 root = tk.Tk()
 root.geometry("800x900")
 root.resizable(True, True)
 root.title('STRWÜÜ')
+
+style = ttk.Style()
+style.configure("Black.TButton", foreground="black")
+style.configure("Black.TLabel", foreground="black")
+style.configure("Red.TButton", foreground="red")
+style.configure("Red.TLabel", foreground="red")
 
 # store email address and password
 location = tk.StringVar()
@@ -23,7 +32,10 @@ config_val = None
 tle_val = None
 trajectories_val = None
 loc_list = []
+sim_running = False
 
+############################################ Callbacks ############################################
+###################################################################################################
 def location_submit(event=None):
     global loc_list
     loc_list = []
@@ -41,7 +53,7 @@ def location_submit(event=None):
         loc_list_ui.itemconfig(i, 
                 bg = "#3498db" if i % 2 == 0 else "#e6b0aa") 
       
-def city_selected(event):
+def location_select(event):
     global loc_list
     selection = event.widget.curselection()
     if selection:
@@ -108,7 +120,24 @@ def open_config_clicked():
     else:
         open_config_button.configure(text="Open")
 
+def toggle_sim_running():
+    global sim_running
+    sim_running = (sim_running != True)
+    if sim_running:
+        play_button.configure(text='Stop')
+        play_button.configure(style="Red.TButton")
+        clock_label.configure(style="Red.TLabel")
+    else:
+        play_button.configure(text='Run')
+        play_button.configure(style="Black.TButton")
+        clock_label.configure(style="Black.TLabel")
 
+def clock(clock_label):
+    t = time
+    current_day = t.strftime("%d.%m.%Y")
+    current_time = t.strftime("%H : %M : %S")
+    clock_label.configure(text=current_day + ' - ' + current_time)
+    clock_label.after(200, clock, clock_label)
 
 ############################################ Location Box ############################################
 ######################################################################################################
@@ -120,8 +149,9 @@ location_entry = ttk.Entry(locations_box, textvariable=location)
 location_entry.bind('<Return>', location_submit)
 
 location_button = ttk.Button(locations_box, text="OK", command=location_submit)
-loc_list_ui = tk.Listbox(locations_box, selectmode = tk.SINGLE, width=66)
-loc_list_ui.bind('<<ListboxSelect>>', city_selected)
+loc_list_ui = tk.Listbox(locations_box, selectmode = tk.BROWSE, width=66)
+loc_list_ui.bind('<<ListboxSelect>>', location_select)
+loc_list_ui.bind('<Return>', location_select)
 
 location_label.grid(row=0, column=0, columnspan=1)
 location_entry.grid(row=0, column=1, columnspan=5, padx=2, pady=2, sticky="EW")
@@ -291,10 +321,12 @@ append_val = ttk.Checkbutton(option_box, text='Append',variable=append_trajector
 append_val.grid(row=0, column=6, sticky='W')
 ################################ RENDERBUTTON ################################
 calculate_button = ttk.Button(option_box, text="Calculate Trajectories")
-calculate_button.grid(row=1, columnspan=5, column=1, sticky='W', padx=0)
+calculate_button.grid(row=1, column=1, columnspan=2, sticky='W', padx=0)
+calc_start_label = ttk.Label(option_box, text="From: DD.MM.YYYY - hh:mm\tTo:DD.MM.YYYY - hh:mm")
+calc_start_label.grid(row=1, column=3, columnspan=5, sticky='W', padx=0)
+
 
 option_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
-option_box.rowconfigure(1, pad=10)
 
 
 ############################################ Playback Box ############################################
@@ -303,11 +335,12 @@ playback_box = ttk.Frame(root)
 playback_box.pack(padx=0, pady=2, fill='both', expand=True)
 playback_label = ttk.Label(playback_box, text="Simulation:")
 playback_label.grid(row=0, column=0, columnspan=1, sticky="E")
-play_button = ttk.Button(playback_box, text="Run")
+play_button = ttk.Button(playback_box, text="Run", command=toggle_sim_running)
 play_button.grid(row=0, columnspan=1, column=1, sticky='W', padx=0)
 
 clock_label = ttk.Label(playback_box, text="Monday, 01.01.2000, 00:00:00 <time.now>")
 clock_label.grid(row=0, column=2)
+clock_label.configure()
 
 
 playback_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
@@ -329,4 +362,5 @@ inrange_list.grid(row=0, column=1)
 satellite_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
 
 
+clock(clock_label)
 root.mainloop()
