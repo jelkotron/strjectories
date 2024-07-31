@@ -2,7 +2,6 @@
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from tkinter import ttk
-from tkinter.messagebox import showinfo
 from geopy import geocoders
 
 
@@ -25,10 +24,10 @@ tle_val = None
 trajectories_val = None
 loc_list = []
 
-def login_clicked():
+def location_submit(event=None):
     global loc_list
     loc_list = []
-    list.delete(0, tk.END)
+    loc_list_ui.delete(0, tk.END)
     input = gn.geocode(location.get(), exactly_one=False)
     if input:
         for i in range(len(input)):
@@ -37,9 +36,9 @@ def login_clicked():
             
     for i in range(len(loc_list)):
         s =  loc_list[i][0] + str(loc_list[i][1])
-        list.insert(tk.END, s) 
+        loc_list_ui.insert(tk.END, s) 
         
-        list.itemconfig(i, 
+        loc_list_ui.itemconfig(i, 
                 bg = "#3498db" if i % 2 == 0 else "#e6b0aa") 
       
 def city_selected(event):
@@ -116,15 +115,18 @@ def open_config_clicked():
 locations_box = ttk.Frame(root)
 locations_box.pack(padx=0, pady=2, fill='both', expand=True)
 
-email_label = ttk.Label(locations_box, text="Location:")
-email_entry = ttk.Entry(locations_box, textvariable=location)
-login_button = ttk.Button(locations_box, text="OK", command=login_clicked)
-list = tk.Listbox(locations_box, selectmode = tk.SINGLE, width=66)
+location_label = ttk.Label(locations_box, text="Location:")
+location_entry = ttk.Entry(locations_box, textvariable=location)
+location_entry.bind('<Return>', location_submit)
 
-email_label.grid(row=0, column=0, columnspan=1)
-email_entry.grid(row=0, column=1, columnspan=5, padx=2, pady=2, sticky="EW")
-login_button.grid(row=0, column=6, padx=2, pady=2)
-list.grid(row=1, column=1, columnspan=6, rowspan=8, padx=2, pady=2, sticky='EW')
+location_button = ttk.Button(locations_box, text="OK", command=location_submit)
+loc_list_ui = tk.Listbox(locations_box, selectmode = tk.SINGLE, width=66)
+loc_list_ui.bind('<<ListboxSelect>>', city_selected)
+
+location_label.grid(row=0, column=0, columnspan=1)
+location_entry.grid(row=0, column=1, columnspan=5, padx=2, pady=2, sticky="EW")
+location_button.grid(row=0, column=6, padx=2, pady=2)
+loc_list_ui.grid(row=1, column=1, columnspan=6, rowspan=8, padx=2, pady=2, sticky='EW')
 locations_box.columnconfigure((0,1,2,3,4,5,6,7,8,9,10),minsize=100, weight=0)
 
 ############################################ Selection Box ############################################
@@ -182,8 +184,6 @@ lon_label.grid(row=7, column=0, columnspan=1, sticky="E")
 lon_val.grid(row=7, column=1, sticky="W")
 
 selection_box.columnconfigure((0,1,2,3,4,5,6,7,8,9,10),minsize=100, weight=0)
-
-
 
 
 ############################################ File Box ############################################
@@ -257,6 +257,7 @@ info_3_val.grid(row=info_row_3, column=1, columnspan=1, sticky="W")
 info_4_val = ttk.Label(file_box, text="Calculations for <trajectory_end - now>")
 info_4_val.grid(row=info_row_4, column=1, columnspan=1, sticky="W")
 
+
 ############################################ Options Box ############################################
 #####################################################################################################
 option_box = ttk.Frame(root)
@@ -295,6 +296,7 @@ calculate_button.grid(row=1, columnspan=5, column=1, sticky='W', padx=0)
 option_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
 option_box.rowconfigure(1, pad=10)
 
+
 ############################################ Playback Box ############################################
 ######################################################################################################
 playback_box = ttk.Frame(root)
@@ -309,6 +311,8 @@ clock_label.grid(row=0, column=2)
 
 
 playback_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
+
+
 ############################################ Satellite Box ############################################
 ######################################################################################################
 satellite_box = ttk.Frame(root)
@@ -323,48 +327,6 @@ inrange_list = tk.Listbox(satellite_box, listvariable=var, selectmode = tk.SINGL
 inrange_list.grid(row=0, column=1)
 
 satellite_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
-
-
-
-
-
-list.bind('<<ListboxSelect>>', city_selected)
-
-
-"""
-
-login_button.grid(row=0, column=5, columnspan=1)
-email_entry.pack(fill='x', expand=True)
-
-# login button
-login_button.pack(fill='x', expand=True, pady=10)
-
-
-email_entry.focus()
-
-list.pack(expand=False, fill=tk.BOTH) 
-  
-  
-loc_label = tk.Label(locations_box, text="Please enter a location.")
-loc_label.pack()
-
-"""
-
-
-# var1 = False
-# var2 = False
-# var3 = False
-
-# c00 = tk.Label(root, bg='white', width=20, text='empty')
-# c01 = tk.Checkbutton(locations_box, text='10m',variable=var1, onvalue=1, offvalue=0, command=None)
-# c02 = tk.Checkbutton(locations_box, text='100m',variable=var2, onvalue=1, offvalue=0, command=None)
-# c03 = tk.Checkbutton(locations_box, text='1000m',variable=var3, onvalue=1, offvalue=0, command=None)
-# c04 = tk.Checkbutton(locations_box, text='10000m',variable=var3, onvalue=1, offvalue=0, command=None)
-
-# c01.pack()
-# c02.pack()
-# c03.pack()
-# c04.pack()
 
 
 root.mainloop()
