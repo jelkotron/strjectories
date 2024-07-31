@@ -3,16 +3,19 @@ import time
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from tkinter import ttk
-from geopy import geocoders
 from strwueue_style import style as strwueuestyle
+from strwueue_utils import location_query
+from strwueue_engine import Engine
 
 class Ui(ttk.Frame):
-    def __init__(self, parent, *args, **kwargs):
+    def __init__(self, parent, engine, trajectories = None, *args, **kwargs):
         ttk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
     
         self.style = strwueuestyle()
 
+        self.engine = engine
+        self.trajectories = trajectories
         self.location = tk.StringVar()
         self.config_val = None
         self.tle_val = None
@@ -114,37 +117,37 @@ class Ui(ttk.Frame):
 
         ################################ CONFIG ################################
         config_label = ttk.Label(file_box, text="Config:").grid(row=config_row, column=0, columnspan=1, sticky="E")
-        self.open_config_button = ttk.Button(file_box, text="Open", command=self.open_config_clicked)
-        self.open_config_button.grid(row=config_row, column=1, sticky='EW', padx=0)
+        self.config_open_button = ttk.Button(file_box, text="Open", command=self.config_open)
+        self.config_open_button.grid(row=config_row, column=1, sticky='EW', padx=0)
 
-        get_config_button = ttk.Button(file_box, text="New")
+        get_config_button = ttk.Button(file_box, text="New", command=self.config_new)
         get_config_button.grid(row=config_row, column=2, sticky='WE', padx=0)
 
-        save_config_button = ttk.Button(file_box, text="Save")
+        save_config_button = ttk.Button(file_box, text="Save", command=self.config_save)
         save_config_button.grid(row=config_row, column=3, sticky='W', padx=0)
 
         ################################ TLE ################################
         tle_label = ttk.Label(file_box, text="TLEs:").grid(row=tle_row, column=0, columnspan=1, sticky="E")
-        self.open_tle_button = ttk.Button(file_box, text="Open", command=self.open_tle_clicked)
-        self.open_tle_button.grid(row=tle_row, column=1, sticky='EW', padx=0)
+        self.tle_open_button = ttk.Button(file_box, text="Open", command=self.tle_open)
+        self.tle_open_button.grid(row=tle_row, column=1, sticky='EW', padx=0)
 
-        get_tle_button = ttk.Button(file_box, text="New")
+        get_tle_button = ttk.Button(file_box, text="New", command=self.tle_new)
         get_tle_button.grid(row=tle_row, column=2, sticky='WE', padx=0)
 
-        save_tle_button = ttk.Button(file_box, text="Save")
+        save_tle_button = ttk.Button(file_box, text="Save", command=self.tle_save)
         save_tle_button.grid(row=tle_row, column=3, sticky='W', padx=0)
 
         ################################ TRAJECTORIES ################################
         trajectories_label = ttk.Label(file_box, text="Trajectories:")
         trajectories_label.grid(row=trajectory_row, column=0, columnspan=1, sticky="E")
 
-        self.open_trajectories_button = ttk.Button(file_box, text="Open", command=self.open_trajectories_clicked)
-        self.open_trajectories_button.grid(row=trajectory_row, column=1, sticky='EW', padx=0)
+        self.trajectories_open_button = ttk.Button(file_box, text="Open", command=self.trajectories_open)
+        self.trajectories_open_button.grid(row=trajectory_row, column=1, sticky='EW', padx=0)
 
-        get_trajectories_button = ttk.Button(file_box, text="New")
+        get_trajectories_button = ttk.Button(file_box, text="New", command=self.trajectories_new)
         get_trajectories_button.grid(row=trajectory_row, column=2, sticky='WE', padx=0)
 
-        save_trajectories_button = ttk.Button(file_box, text="Save")
+        save_trajectories_button = ttk.Button(file_box, text="Save", command=self.trajectories_save)
         save_trajectories_button.grid(row=trajectory_row, column=3, sticky='W', padx=0)
 
         file_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
@@ -201,7 +204,7 @@ class Ui(ttk.Frame):
         append_val = ttk.Checkbutton(option_box, text='Append',variable=append_trajectories, onvalue=1, offvalue=0, command=None)
         append_val.grid(row=0, column=6, sticky='W')
         ################################ RENDERBUTTON ################################
-        calculate_button = ttk.Button(option_box, text="Calculate Trajectories")
+        calculate_button = ttk.Button(option_box, text="Calculate Trajectories", command=self.trajectories.calculate)
         calculate_button.grid(row=1, column=1, columnspan=2, sticky='W', padx=0)
         calc_start_label = ttk.Label(option_box, text="From: DD.MM.YYYY - hh:mm\tTo:DD.MM.YYYY - hh:mm")
         calc_start_label.grid(row=1, column=3, columnspan=5, sticky='W', padx=0)
@@ -242,13 +245,12 @@ class Ui(ttk.Frame):
 
         satellite_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
 
-    ############################################ Callbacks ############################################
-    ###################################################################################################
+        print("Info: UI intialized")
+
     def location_submit(self, event=None):
         self.loc_list = []
         self.loc_list_ui.delete(0, tk.END)
-        gn = geocoders.Nominatim(user_agent="my_App")
-        input = gn.geocode(self.location.get(), exactly_one=False)
+        input = location_query(self.location.get())
         if input:
             for i in range(len(input)):
                 
@@ -299,26 +301,45 @@ class Ui(ttk.Frame):
 
         self.locations_box.columnconfigure((0,1,2,3,4,5,6,7,8,9,10),minsize=100, weight=1)
         
-    def open_tle_clicked(self):
+    def tle_open(self):
         self.tle_val = askopenfilename()
         if self.tle_val:
-            self.open_tle_button.configure(text=self.tle_val)
+            self.tle_open_button.configure(text=self.tle_val)
         else:
-            self.open_tle_button.configure(text="Open")
+            self.tle_open_button.configure(text="Open")
 
-    def open_trajectories_clicked(self):
+    def tle_new(self):
+        print("Info: Querying new TLE data")
+        print("Info: TLE data aquired")
+
+    def tle_save(self):
+        print("Info: TLEs saved to <file>")
+
+    def trajectories_open(self):
         self.trajectories_val = askopenfilename()
         if self.trajectories_val:
-            self.open_trajectories_button.configure(text=self.trajectories_val)
+            self.trajectories_open_button.configure(text=self.trajectories_val)
         else:
-            self.open_trajectories_button.configure(text="Open")
+            self.trajectories_open_button.configure(text="Open")
 
-    def open_config_clicked(self):
+    def trajectories_new(self):
+        print("Info: Trajectories reset")
+
+    def trajectories_save(self):
+        print("Info: Trajectories saved to <file>")
+
+    def config_open(self):
         self.config_val = askopenfilename()
         if self.config_val:
-            self.open_config_button.configure(text=self.config_val)
+            self.config_open_button.configure(text=self.config_val)
         else:
-            self.open_config_button.configure(text="Open")
+            self.config_open_button.configure(text="Open")
+
+    def config_new(self):
+        print("Info: Config reset")
+
+    def config_save(self):
+        print("Info: Config save to <file>")
 
     def toggle_sim_running(self):
         self.sim_running = (self.sim_running != True)
@@ -326,10 +347,13 @@ class Ui(ttk.Frame):
             self.play_button.configure(text='Stop')
             self.play_button.configure(style="Highlight.TButton")
             self.clock_label.configure(style="Highlight.TLabel")
+            self.engine.start()
+            
         else:
             self.play_button.configure(text='Run')
             self.play_button.configure(style="Regular.TButton")
             self.clock_label.configure(style="Regular.TLabel")
+            self.engine.stop()
 
     def clock(self, clock_label):
         t = time
@@ -338,9 +362,3 @@ class Ui(ttk.Frame):
         clock_label.configure(text=current_day + ' - ' + current_time)
         clock_label.after(200, self.clock, clock_label)
         return time
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    Ui(root).pack(side="top", fill="both", expand=True)
-    root.mainloop()
