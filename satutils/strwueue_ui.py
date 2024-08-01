@@ -120,22 +120,22 @@ class Ui(ttk.Frame):
         self.config_open_button = ttk.Button(file_box, text="Open", command=self.config_open)
         self.config_open_button.grid(row=config_row, column=1, sticky='EW', padx=0)
 
-        get_config_button = ttk.Button(file_box, text="New", command=self.config_new)
-        get_config_button.grid(row=config_row, column=2, sticky='WE', padx=0)
+        config_get_button = ttk.Button(file_box, text="New", command=self.config_new)
+        config_get_button.grid(row=config_row, column=2, sticky='WE', padx=0)
 
-        save_config_button = ttk.Button(file_box, text="Save", command=self.config_save)
-        save_config_button.grid(row=config_row, column=3, sticky='W', padx=0)
+        config_save_button = ttk.Button(file_box, text="Save", command=self.config_save)
+        config_save_button.grid(row=config_row, column=3, sticky='W', padx=0)
 
         ################################ TLE ################################
         tle_label = ttk.Label(file_box, text="TLEs:").grid(row=tle_row, column=0, columnspan=1, sticky="E")
         self.tle_open_button = ttk.Button(file_box, text="Open", command=self.tle_open)
         self.tle_open_button.grid(row=tle_row, column=1, sticky='EW', padx=0)
 
-        get_tle_button = ttk.Button(file_box, text="New", command=self.tle_new)
-        get_tle_button.grid(row=tle_row, column=2, sticky='WE', padx=0)
+        tle_get_button = ttk.Button(file_box, text="New", command=self.tle_new)
+        tle_get_button.grid(row=tle_row, column=2, sticky='WE', padx=0)
 
-        save_tle_button = ttk.Button(file_box, text="Save", command=self.tle_save)
-        save_tle_button.grid(row=tle_row, column=3, sticky='W', padx=0)
+        tle_save_button = ttk.Button(file_box, text="Save", command=self.tle_save)
+        tle_save_button.grid(row=tle_row, column=3, sticky='W', padx=0)
 
         ################################ TRAJECTORIES ################################
         trajectories_label = ttk.Label(file_box, text="Trajectories:")
@@ -144,11 +144,11 @@ class Ui(ttk.Frame):
         self.trajectories_open_button = ttk.Button(file_box, text="Open", command=self.trajectories_open)
         self.trajectories_open_button.grid(row=trajectory_row, column=1, sticky='EW', padx=0)
 
-        get_trajectories_button = ttk.Button(file_box, text="New", command=self.trajectories_new)
-        get_trajectories_button.grid(row=trajectory_row, column=2, sticky='WE', padx=0)
+        trajectories_get_button = ttk.Button(file_box, text="New", command=self.trajectories_new)
+        trajectories_get_button.grid(row=trajectory_row, column=2, sticky='WE', padx=0)
 
-        save_trajectories_button = ttk.Button(file_box, text="Save", command=self.trajectories_save)
-        save_trajectories_button.grid(row=trajectory_row, column=3, sticky='W', padx=0)
+        trajectories_save_button = ttk.Button(file_box, text="Save", command=self.trajectories_save)
+        trajectories_save_button.grid(row=trajectory_row, column=3, sticky='W', padx=0)
 
         file_box.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
 
