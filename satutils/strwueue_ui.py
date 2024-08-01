@@ -2,10 +2,12 @@
 import time
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import asksaveasfile
 from tkinter import ttk
 from strwueue_style import style as strwueuestyle
 from strwueue_utils import location_query
 from strwueue_engine import Engine
+from strwueue_trajectories import Trajectories
 
 class Ui(ttk.Frame):
     def __init__(self, parent, engine, trajectories = None, *args, **kwargs):
@@ -309,11 +311,15 @@ class Ui(ttk.Frame):
             self.tle_open_button.configure(text="Open")
 
     def tle_new(self):
-        print("Info: Querying new TLE data")
-        print("Info: TLE data aquired")
+        if self.trajectories:
+            self.trajectories.tle_download()
+        
 
     def tle_save(self):
-        print("Info: TLEs saved to <file>")
+        filename = "/tmp/satlist.json"
+        if self.trajectories and self.trajectories.tles:
+            self.trajectories.tle_write(self.trajectories.tles, filename)
+            print("Info: TLEs saved to %s"%filename)
 
     def trajectories_open(self):
         self.trajectories_val = askopenfilename()

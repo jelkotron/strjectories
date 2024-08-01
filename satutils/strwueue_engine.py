@@ -20,8 +20,10 @@ class Engine():
         print("Info: Engine stopped")
 
     def run(self):
+        t = 0
         while True:
-            print("thread running")
+            t += 1
+            print("Info: Engine running %i"%t)
             time.sleep(1)
             if not self.running:
                 break

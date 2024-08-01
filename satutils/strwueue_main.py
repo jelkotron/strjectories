@@ -1,5 +1,4 @@
 #!/home/schnollie/.venvs/strwueue/bin/python
-import threading
 import tkinter as tk
 from strwueue_ui import Ui
 from strwueue_engine import Engine
