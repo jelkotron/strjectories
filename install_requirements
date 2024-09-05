@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+dir=$(dirname $(realpath $0))
+req=requirements.txt
+
+mate-terminal -x sh -c "pip install -r $dir/$req; bash"
