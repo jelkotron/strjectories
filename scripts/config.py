@@ -240,15 +240,25 @@ class ConfigIo():
         data = kwargs.get('data')
         subtype = kwargs.get('subtype')
 
+
         if not path:
             if subtype == 'CONFIG':
                 path = self.properties.config_file
-                data = data if data else self.properties.properties_get()
-            elif subtype == 'DATA':
+            
+            if subtype == 'DATA':
                 path = self.properties.tle_file
-                data = data if data else self.trajectories.to_json()
-            elif subtype == 'SESSION':
+            
+            if subtype == 'SESSION':
                 path = self.properties.sessiondata_file
+
+        if not data:
+            if subtype == 'CONFIG':
+                data = data if data else self.properties.properties_get()
+            
+            if subtype == 'DATA':
+                data = data if data else self.trajectories.to_json()
+            
+            if subtype == 'SESSION':
                 data = self.session_data()
 
         if path and data:
@@ -456,8 +466,8 @@ class ConfigIo():
     def save(self, path=None):
         if path == None:
             path = self.properties.config_file
-        data = self.properties.properties_get()
-        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=None, path=path, data=self.properties.properties_get()))
+        self.properties.config_file_set(path, single = False) 
+        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=None, path=path))
 
 
     ######## Data ########
@@ -482,13 +492,13 @@ class ConfigIo():
             self.simulation_start()
 
     def data_save(self, path=None):
-        data = self.trajectories.to_json()
-        if path == None:
-            path = self.properties.tle_file 
-        if self.properties.tle_file:
-            self.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=None, path=path, data=data))
+        self.properties.tle_file_set(path, single = False) 
+        self.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=None, path=path))
+        
 
     def data_new(self):
+        self.properties.tle_file_set(None, single=False)
+        self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file', data=None))
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
 
 
