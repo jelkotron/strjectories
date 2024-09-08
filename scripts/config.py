@@ -130,8 +130,7 @@ class ConfigIo():
         if self.trajectories:
             self.trajectories.simulation_stop()
             self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=0))
-            if self.properties.auto_render == False:
-                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
+            
 
     ######## File ########
     def file_read(self, callback=None, **kwargs):
@@ -925,7 +924,8 @@ class ConfigData():
         self.ui_q.put(Task(type='LOCATION_UPDATE', subtype='all'))
         
         if single:
-            self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
+            if self.auto_render:
+                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
 
 
 
@@ -937,7 +937,8 @@ class ConfigData():
 
             if single == True:
                 self.input_q.put(Task(type='SIMULATION', subtype='radius'))
-                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                if self.auto_render:
+                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                 else:
@@ -951,7 +952,8 @@ class ConfigData():
             
             if single == True:
                 self.input_q.put(Task(type='SIMULATION', subtype='classification'))
-                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                if self.auto_render:
+                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                 else:
@@ -969,7 +971,8 @@ class ConfigData():
 
                 if single == True:
                     self.input_q.put(Task(type='SIMULATION', subtype='filter'))
-                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                    if self.auto_render:
+                        self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                     if self.auto_save:
                         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                     else:
@@ -982,7 +985,8 @@ class ConfigData():
             self.sort_by = value
             self.input_q.put(Task(type='SIMULATION', subtype='sort_by'))
             if single == True:
-                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                if self.auto_render:
+                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                 else:
@@ -993,7 +997,8 @@ class ConfigData():
         if self.t0_max != value and value != None:
             self.t0_max = value
             if single == True:
-                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                if self.auto_render:
+                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                 else:
@@ -1004,7 +1009,8 @@ class ConfigData():
             self.t1_max = value
             self.input_q.put(Task(type='SIMULATION', subtype='threads'))
             if single == True:
-                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                if self.auto_render:
+                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                 else:
@@ -1080,6 +1086,8 @@ class ConfigData():
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
                 self.saved_set(False)
+            if value == True:
+                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
             
 
 
