@@ -130,6 +130,8 @@ class ConfigIo():
         if self.trajectories:
             self.trajectories.simulation_stop()
             self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=0))
+            if self.properties.auto_render == False:
+                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
 
     ######## File ########
     def file_read(self, callback=None, **kwargs):
