@@ -84,7 +84,7 @@ class ConfigIo():
             self.file_read(task.callback, **task.kwargs)
 
         if task.type == 'FILE_WRITE':
-            self.file_write(task.callback, **task.kwargs)
+            self.file_write(task.subtype, task.callback, **task.kwargs)
         
         #### Serial ####
         if task.type == 'SERIAL_OPEN':
@@ -235,20 +235,26 @@ class ConfigIo():
                 if callback:
                     callback(data=result)
                 
-    def file_write(self, callback=None, **kwargs):
+    def file_write(self, subtype=None, callback=None, **kwargs):
         path = kwargs.get('path')
         data = kwargs.get('data')
-        subtype = kwargs.get('subtype')
+        
+        print("file write %s %s %s"%(path, data, subtype))
 
         if not path:
             if subtype == 'CONFIG':
                 path = self.properties.config_file
-                data = data if data else self.properties.properties_get()
-            elif subtype == 'DATA':
+            if subtype == 'DATA':
                 path = self.properties.tle_file
-                data = data if data else self.trajectories.to_json()
-            elif subtype == 'SESSION':
+            if subtype == 'SESSION':
                 path = self.properties.sessiondata_file
+                
+        if not data:
+            if subtype == 'CONFIG':
+                data = data if data else self.properties.properties_get()
+            if subtype == 'DATA':
+                data = data if data else self.trajectories.to_json()
+            if subtype == 'SESSION':
                 data = self.session_data()
 
         if path and data:
@@ -408,15 +414,7 @@ class ConfigIo():
             self.data_load(tles, init=True)
 
     def session_save(self):
-        if self.properties.sessiondata_file:
-            s = self.session_data()
-            if s != '':
-                self.input_q.put(Task(type='FILE_WRITE', 
-                                      subtype='SESSION', 
-                                      callback=None, 
-                                      path=self.properties.sessiondata_file, 
-                                      data=s)
-                                      )
+        self.input_q.put(Task(type='FILE_WRITE', subtype='SESSION', callback=None))
 
             
     def session_data(self):
@@ -454,10 +452,7 @@ class ConfigIo():
 
 
     def save(self, path=None):
-        if path == None:
-            path = self.properties.config_file
-        data = self.properties.properties_get()
-        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=None, path=path, data=self.properties.properties_get()))
+        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=None, path=path))
 
 
     ######## Data ########
@@ -482,11 +477,8 @@ class ConfigIo():
             self.simulation_start()
 
     def data_save(self, path=None):
-        data = self.trajectories.to_json()
-        if path == None:
-            path = self.properties.tle_file 
-        if self.properties.tle_file:
-            self.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=None, path=path, data=data))
+        self.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=None, path=None))
+        
 
     def data_new(self):
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))

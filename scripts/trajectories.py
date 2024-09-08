@@ -389,9 +389,9 @@ class Trajectories():
             
             self.config.input_q.put(Task(type='INFO_UPDATE', callback=None, subtype='tle_age'))
 
-            if self.config.properties.auto_download:
-                if delta.astype(int) >= self.config.properties.auto_download_interval:    
-                    self.tle_request()        
+            # if self.config.properties.auto_download:
+            #     if delta.astype(int) >= self.config.properties.auto_download_interval:    
+            #         self.tle_request()        
                     
             return delta
 
@@ -411,9 +411,9 @@ class Trajectories():
 
             self.config.input_q.put(Task(type='INFO_UPDATE', callback=None, subtype='sim_age'))
 
-            if self.config.properties.auto_save:
-                if delta.astype(int) >= self.config.properties.auto_save_interval:            
-                    self.config.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='DATA', path=self.config.properties.tle_file, data=self.to_json()))
+            # if self.config.properties.auto_save:
+            #     if delta.astype(int) >= self.config.properties.auto_save_interval:            
+            #         self.config.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=None))
 
 
             return delta
@@ -512,7 +512,7 @@ class Trajectories():
                     self.sat_dict[id].tle_2 = tle[1]
         
             if self.config.properties.auto_save == True:
-                self.config.input_q.put(Task(type='FILE_WRITE', callback=None, subttype='DATA', path=self.config.properties.tle_file, data=self.to_json()))
+                self.config.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=None))
 
             self.simulating = was_running
             msg = "%s TLE Data updated"%self.config.time.strftime("%H:%M:%S")
