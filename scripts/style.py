@@ -96,7 +96,8 @@ def style(variant=None):
                         lightcolor=bg,
                         padding=(0,2),
                         darkcolor='grey10',
-                        disabledbackground="red"
+                        disabledbackground="red",
+                        anchor="center",
                         )
         
         style.map("Dark.TMenubutton", 
@@ -115,6 +116,7 @@ def style(variant=None):
                     padding=(0,3),
                     darkcolor='grey10'   
                         )
+        
         
         style.configure('Dark.TCheckbutton', 
                 bordercolor = 'black',#)#[('active', 'disabled', 'black'), ('!active', 'black')])

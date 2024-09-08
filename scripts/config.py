@@ -206,7 +206,7 @@ class ConfigIo():
                                 "auto_download" : data.get("auto_download"),
                                 "auto_download_interval" : data.get("auto_download_interval"),
                                 "auto_simulate" : data.get("auto_simulate"),
-                                "auto_output" : data.get("auto_output"),
+                                "auto_sleep" : data.get("auto_sleep"),
                                 "auto_render" : data.get("auto_render"),
                                 
                                 "sort_by": data.get("sort_by"),
@@ -568,7 +568,7 @@ class ConfigData():
         
         self.auto_simulate = None
         self.auto_render = None
-        self.auto_output = None
+        self.auto_sleep = None
         self.auto_serial = None
         self.auto_pin = None
 
@@ -603,7 +603,7 @@ class ConfigData():
             "auto_download" : False,
             "auto_download_interval" : 4,
             "auto_simulate" : False,
-            "auto_output" : False,
+            "auto_sleep" : False,
             "auto_serial" : False,
             "auto_pin" : False,
             "auto_render" : False,
@@ -636,7 +636,7 @@ class ConfigData():
                 "auto_download" : self.auto_download,
                 "auto_download_interval" : self.auto_download_interval,
                 "auto_simulate" : self.auto_simulate,
-                "auto_output" : self.auto_output,
+                "auto_sleep" : self.auto_sleep,
                 "auto_serial" : self.auto_serial,
                 "auto_pin" : self.auto_pin,
                 "auto_render" : self.auto_render,
@@ -678,7 +678,7 @@ class ConfigData():
         self.auto_download_set(self.default_values["auto_download"], single=False)
         self.auto_download_interval_set(self.default_values["auto_download_interval"], single=False)
         self.auto_simulate_set(self.default_values["auto_simulate"], single=False)
-        self.auto_output_set(self.default_values["auto_output"], single=False)
+        self.auto_sleep_set(self.default_values["auto_sleep"], single=False)
         self.auto_serial_set(self.default_values["auto_serial"], single=False)
         self.auto_pin_set(self.default_values["auto_pin"], single=False)
         self.auto_render_set(self.default_values["auto_render"], single=False)
@@ -761,8 +761,8 @@ class ConfigData():
         auto_simulate = data.get("auto_simulate")
         self.auto_simulate_set(auto_simulate if auto_simulate else self.default_values["auto_simulate"], single=False)
         
-        auto_output = data.get("auto_output")
-        self.auto_output_set(auto_output if auto_output else self.default_values["auto_output"], single=False)
+        auto_sleep = data.get("auto_sleep")
+        self.auto_sleep_set(auto_sleep if auto_sleep else self.default_values["auto_sleep"], single=False)
 
         auto_serial = data.get("auto_serial")
         self.auto_serial_set(auto_serial if auto_serial else self.default_values["auto_serial"], single=False)
@@ -1069,9 +1069,9 @@ class ConfigData():
                     self.saved_set(False)
             
 
-    def auto_output_set(self, value, single=True):
-        if self.auto_output != value and value != None:
-            self.auto_output = value
+    def auto_sleep_set(self, value, single=True):
+        if self.auto_sleep != value and value != None:
+            self.auto_sleep = value
             if single == True:
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
@@ -1104,7 +1104,7 @@ class ConfigData():
     def auto_serial_set(self, value, single=True):
         self.auto_serial = value
 
-        if value == True and self.auto_output == True:
+        if value == True:
             self.input_q.put(Task(type='SERIAL_OPEN'))
         else:
             self.input_q.put(Task(type='SERIAL_CLOSE'))

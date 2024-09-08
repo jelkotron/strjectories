@@ -407,7 +407,7 @@ class SimulationBox(ttk.Frame):
         t0_max_label = ttk.Label(self.frame, text="Primary:", style="BoldDark.TLabel")
         t0_max_label.grid(row=0, column=4, sticky="E")
         self.t0_max = tk.IntVar()
-        t0_max_box = ttk.Entry(self.frame, textvariable=self.t0_max, validate="focusout", validatecommand=self.t0_max_set, style="Dark.TEntry")
+        t0_max_box = ttk.Entry(self.frame, textvariable=self.t0_max, justify='center', validate="focusout", validatecommand=self.t0_max_set, style="Dark.TEntry")
         t0_max_box.bind('<Return>', self.t0_max_set)
         t0_max_box.bind('<FocusIn>', self.highlight_t0)
         t0_max_box.bind('<Enter>', self.highlight_t0)
@@ -418,7 +418,7 @@ class SimulationBox(ttk.Frame):
         t1_max_label = ttk.Label(self.frame, text="Secondary:", style="BoldDark.TLabel")
         t1_max_label.grid(row=1, column=4, sticky="E")
         self.t1_max = tk.IntVar()
-        t1_max_box = ttk.Entry(self.frame, textvariable=self.t1_max, validate="focusout", validatecommand=self.t1_max_set, style="Dark.TEntry")
+        t1_max_box = ttk.Entry(self.frame, textvariable=self.t1_max, justify='center', validate="focusout", validatecommand=self.t1_max_set, style="Dark.TEntry")
         t1_max_box.bind('<Return>', self.t1_max_set)
         t1_max_box.bind('<FocusIn>', self.highlight_t1)
         t1_max_box.bind('<Enter>', self.highlight_t1)
@@ -573,7 +573,7 @@ class AutomationBox(ttk.Frame):
         self.auto_save = tk.BooleanVar()
         self.auto_download = tk.BooleanVar()
         self.auto_simulate = tk.BooleanVar()
-        self.auto_output = tk.BooleanVar()
+        self.auto_sleep = tk.BooleanVar()
         self.auto_render = tk.BooleanVar()
         self.frame = ttk.Frame(self.root, style="Dark.TFrame")
         self.frame.pack(padx=0, pady=2, fill='both', expand=True)
@@ -592,11 +592,11 @@ class AutomationBox(ttk.Frame):
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
 
-        auto_output_w = ttk.Checkbutton(self.frame, var=self.auto_output, command=self.auto_output_set, text="Output",style="Dark.TCheckbutton")
-        self.auto_output.set(False)
+        auto_sleep_w = ttk.Checkbutton(self.frame, var=self.auto_sleep, command=self.auto_sleep_set, text="Sleep",style="Dark.TCheckbutton")
+        self.auto_sleep.set(False)
 
-        interval_label = ttk.Label(self.frame, text="Interval:", style="Dark.TLabel")
-
+        interval_label = ttk.Label(self.frame, text="Interval:", style="BoldDark.TLabel")
+        
         self.choices_auto_save_interval = ['1 minute', '10 minutes', '30 minutes', '60 minutes', '90 minutes', '120 minutes']
         self.auto_save_interval = tk.StringVar(self.root)
         self.auto_save_interval.set(self.choices_auto_save_interval[1])
@@ -607,15 +607,30 @@ class AutomationBox(ttk.Frame):
         self.auto_download_interval.set(self.choices_auto_download_interval[0])
         self.auto_download_interval_box = ttk.OptionMenu(self.frame, self.auto_download_interval, self.choices_auto_download_interval[0], *self.choices_auto_download_interval, command=self.auto_download_interval_set, style="Dark.TMenubutton")
 
-        auto_save_w.grid(row=0, column=1, sticky="E", padx=(1,5))
-        auto_download_w.grid(row=0, column=2, sticky="E", padx=(1,5))
-        automsim_w.grid(row=0, column=3, sticky="E",padx=(1,5))
-        auto_render_w.grid(row=0, column=4, sticky="E",padx=(1,5))
-        auto_output_w.grid(row=0, column=5, sticky="E",padx=(1,5))
+        auto_save_w.grid(row=0, column=2, sticky="E", padx=(1,5))
+        auto_download_w.grid(row=0, column=3, sticky="E", padx=(1,5))
+        self.auto_save_interval_box.grid(row=1, column=2, sticky='W', padx=(1,5))
+        self.auto_download_interval_box.grid(row=1, column=3, sticky='W', padx=(1,5))
+
+        automsim_w.grid(row=0, column=4, sticky="E",padx=(1,5))
+        auto_render_w.grid(row=0, column=5, sticky="E",padx=(1,5))
+        auto_sleep_w.grid(row=0, column=1, sticky="E",padx=(1,5))
         
         interval_label.grid(row=1, column=0, sticky='E', padx=(0,1))
-        self.auto_save_interval_box.grid(row=1, column=1, sticky='W', padx=(1,5))
-        self.auto_download_interval_box.grid(row=1, column=2, sticky='W', padx=(1,5))
+        
+
+        self.sleep_t0 = tk.StringVar()
+        sleep_t0_entry = ttk.Entry(self.frame, textvariable=self.sleep_t0, justify='center', validate="focusout", validatecommand=None, style="Dark.TEntry")
+        sleep_t0_entry.grid(row=1, column=1, sticky='W', padx=(1,5))
+        self.sleep_t0.set("23:33")
+
+        self.sleep_t1 = tk.StringVar()
+        sleep_t1_entry = ttk.Entry(self.frame, textvariable=self.sleep_t1, justify='center', validate="focusout", validatecommand=None, style="Dark.TEntry")
+        sleep_t1_entry.grid(row=2, column=1, sticky='W', padx=(1,5))
+        self.sleep_t1.set("08:15")
+
+
+
 
         self.frame.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=107, weight=1)
 
@@ -658,10 +673,10 @@ class AutomationBox(ttk.Frame):
             if type(val) == bool:
                 self.auto_render.set(val)
 
-        if task.subtype == 'auto_output':
-            val = self.config.properties.auto_output
+        if task.subtype == 'auto_sleep':
+            val = self.config.properties.auto_sleep
             if type(val) == bool:
-                self.auto_output.set(val)
+                self.auto_sleep.set(val)
 
         if task.subtype == 'auto_pin':
             val = self.config.properties.auto_pin
@@ -694,8 +709,8 @@ class AutomationBox(ttk.Frame):
         if self.viewer:
             self.viewer.rendering = val
         
-    def auto_output_set(self):
-        self.config.properties.auto_output_set(self.auto_output.get())
+    def auto_sleep_set(self):
+        self.config.properties.auto_sleep_set(self.auto_sleep.get())
         
 
 class SatelliteBox(ttk.Frame):
@@ -784,41 +799,42 @@ class OutputBox(ttk.Frame):
         pin_tab = ttk.Frame(tabsystem, style="Dark.TNotebook.Tab")
         pin_frame = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
         
-        pin_port_use_label = ttk.Label(pin_frame, text="Use:", style="Dark.TLabel")  
-        pin_port_use_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
-        pin_port_use = ttk.Checkbutton(pin_frame, var=self.auto_pin, command=self.auto_pin_set, text="", style="Dark.TCheckbutton")
-        pin_port_use.grid(row=0, column=1, columnspan=2, sticky="E", padx=0, pady=0)
+        # pin_port_use_label = ttk.Label(pin_frame, text="Use:", style="Dark.TLabel")  
+        # pin_port_use_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
+        # pin_port_use = ttk.Checkbutton(pin_frame, var=self.auto_pin, command=self.auto_pin_set, text="", style="Dark.TCheckbutton")
+        # pin_port_use.grid(row=0, column=1, columnspan=2, sticky="E", padx=0, pady=0)
 
         pin_port_label = ttk.Label(pin_frame, text="Pin:", style="Dark.TLabel")
-        pin_port_label.grid(row=1, column=0, sticky="E", padx=0, pady=0)
+        pin_port_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
 
         self.choices_pin = [i for i in range(26)]
         pin_box = ttk.OptionMenu(pin_frame, self.pin, self.choices_pin[0], *self.choices_pin, command=self.pin_value_set, style="Dark.TMenubutton")
-        pin_box.grid(row=1, column=1, columnspan=2, sticky='EW')
+        pin_box.grid(row=0, column=1, columnspan=1, sticky='W')
         self.pin_value.set(self.choices_pin[0])
 
-        pin_state_label = ttk.Label(pin_frame, text="State:", style="Dark.TLabel")
-        pin_state_label.grid(row=3, column=0, sticky="E")
+        # pin_state_label = ttk.Label(pin_frame, text="State:", style="Dark.TLabel")
+        # pin_state_label.grid(row=3, column=0, sticky="E")
 
         self.choices_pin_state = ['High', 'Low']
         pin_state_box = ttk.OptionMenu(pin_frame, self.pin_state, self.choices_pin_state[0], *self.choices_pin_state, command=self.pin_value_set, style="Dark.TMenubutton")
-        pin_state_box.grid(row=3, column=1, columnspan=2, sticky='EW')
+        pin_state_box.grid(row=0, column=2, columnspan=1, sticky='W')
 
         pin_value_label = ttk.Label(pin_frame, text="Value:", style="Dark.TLabel")
-        pin_value_label.grid(row=4, column=0, sticky="E")
+        pin_value_label.grid(row=4, column=0, sticky="W")
 
         self.choices_pin_value = ['Satellites in Range', 'No Satellites in Range']
         pin_value_box = ttk.OptionMenu(pin_frame, self.pin_value, self.choices_pin_value[0], *self.choices_pin_value, command=self.pin_value_set, style="Dark.TMenubutton")
-        pin_value_box.grid(row=4, column=1, columnspan=2, sticky='EW')
+        pin_value_box.grid(row=4, column=1, columnspan=2, sticky='W')
 
-        pin_ingore_label = ttk.Label(pin_frame, text="Ignore:", style="Dark.TLabel")
-        pin_ingore_label.grid(row=5, column=0, sticky="E")
+        # pin_ingore_label = ttk.Label(pin_frame, text="Ignore:", style="Dark.TLabel")
+        # pin_ingore_label.grid(row=5, column=0, sticky="E")
+        # self.pin_ignore_input = ttk.Entry(pin_frame, textvariable=self.pin_ignore, validate='focusout', validatecommand=self.pin_set, style="Dark.TEntry")
         
-        self.pin_ignore_input = ttk.Entry(pin_frame, textvariable=self.pin_ignore, validate='focusout', validatecommand=self.pin_set, style="Dark.TEntry")
-        self.pin_ignore_input.bind('<Return>', self.pin_ignore_set)
-        self.pin_ignore_input.grid(row=5, column=1, columnspan=2, padx=0, sticky='EW')
+        # self.pin_ignore_input.bind('<Return>', self.pin_ignore_set)
+        # self.pin_ignore_input.grid(row=5, column=1, columnspan=2, padx=0, sticky='EW')
         
-        pin_frame.columnconfigure((0,1), minsize=20, weight=1)
+        pin_frame.columnconfigure((0,1,2), minsize=20, weight=1, pad=0)
+
         pin_frame.pack(padx=20, pady=20, anchor='nw')
         tabsystem.add(pin_tab, text="Pin")
 
@@ -1239,7 +1255,7 @@ class Gui(ttk.Frame):
             "auto_download": "AUTOMATION_UPDATE",
             "auto_download_interval": "AUTOMATION_UPDATE",
             "auto_simulate": "AUTOMATION_UPDATE",
-            "auto_output": "AUTOMATION_UPDATE",
+            "auto_sleep": "AUTOMATION_UPDATE",
             "auto_pin": "AUTOMATION_UPDATE",
             "auto_render": "AUTOMATION_UPDATE",
 
