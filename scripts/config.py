@@ -240,7 +240,6 @@ class ConfigIo():
         data = kwargs.get('data')
         subtype = kwargs.get('subtype')
 
-
         if not path:
             if subtype == 'CONFIG':
                 path = self.properties.config_file
@@ -253,10 +252,10 @@ class ConfigIo():
 
         if not data:
             if subtype == 'CONFIG':
-                data = data if data else self.properties.properties_get()
+                data = self.properties.properties_get()
             
             if subtype == 'DATA':
-                data = data if data else self.trajectories.to_json()
+                data = self.trajectories.to_json()
             
             if subtype == 'SESSION':
                 data = self.session_data()
@@ -446,7 +445,10 @@ class ConfigIo():
     def set(self, data=None, default=False, **kwargs):
         if data or default == True:
             # init prevents saving due to value changes on load
-            init = data.get("init") if data.get("init") else False
+            
+            init = False
+            if data:
+                init = data.get("init") if data.get("init") else False
 
             if default == False:
                 self.properties.set_all(data)
@@ -466,7 +468,9 @@ class ConfigIo():
     def save(self, path=None):
         if path == None:
             path = self.properties.config_file
-        self.properties.config_file_set(path, single = False) 
+        else:
+            self.properties.config_file_set(path, single = False) 
+
         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=None, path=path))
 
 
@@ -479,7 +483,10 @@ class ConfigIo():
             self.trajectories.tle_update(data, mode=mode)
 
         # init prevents saving due to value changes on load
-        init = data.get("init") if data.get("init") else False
+        init = False
+        if data:
+            init = data.get("init") if data.get("init") else False
+             
         self.properties.tle_file_set(data.get("tle_file"), single = not init)
 
         self.trajectories.update_once(update_coords=False, update_dist=True)
@@ -492,7 +499,6 @@ class ConfigIo():
             self.simulation_start()
 
     def data_save(self, path=None):
-        self.properties.tle_file_set(path, single = False) 
         self.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=None, path=path))
         
 
