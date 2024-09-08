@@ -518,9 +518,11 @@ class Trajectories():
             msg = "%s TLE Data updated"%self.config.time.strftime("%H:%M:%S")
             print(msg)
             self.config.log(msg)
+            self.saved_set(False)
         
         elif mode == 'DATA':
             self.set(data)
+            self.saved_set(True)
 
       
     def tle_parse(self, text):
@@ -561,11 +563,26 @@ class Trajectories():
 
         return data
 
+    def get(self, value):
+        data = {
+            "timestamp": self.timestamp,
+            "last_saved": self.last_saved,
+            "num_tles": self.num_tles,
+            "satellites": [i.to_json() for i in self.satellites],
+            "sort_by": self.config.properties.sort_by,
+            "tle_age": str(self.tle_age),
+            "sim_age": str(self.sim_age),
+            "saved": self.saved,
+        }
+        return(data[value])
+
 
     def saved_set(self, value=True):
         self.saved = value
         if value == True:
             self.last_saved = time.gmtime()
+        self.config.input_q.put(Task(type='INFO_UPDATE', subtype='tle_file'))
+        self.config.input_q.put(Task(type='INFO_UPDATE', subtype='sim_age'))
         
 
     def read(self, file, set_values=True):

@@ -449,20 +449,23 @@ class ConfigIo():
             init = False
             if data:
                 init = data.get("init") if data.get("init") else False
-
-            if default == False:
+                self.properties.config_file_set(data.get("config_file"), single = not init) 
                 self.properties.set_all(data)
                 for key, value in self.properties.properties_get().items():
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
-            else:
+            else: # default == True
                 self.properties.set_default()
-
-            self.properties.config_file_set(data.get("config_file"), single = not init) 
+                self.properties.config_file_set(None, single = not init) 
+                for key, value in self.properties.properties_get().items():
+                    self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
                
             self.input_q.put(Task(type='SIMULATION', subtype='selection'))
             
             if not init:
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
+        
+        self.input_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
+
 
 
     def save(self, path=None):
@@ -471,8 +474,17 @@ class ConfigIo():
         else:
             self.properties.config_file_set(path, single = False) 
 
-        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=None, path=path))
+        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.properties.saved_set, path=path))
+        self.ui_q.put(Task(type='UI_UPDATE', subtype='config_file'))
+        self.ui_q.put(Task(type='UI_UPDATE', subtype='saved'))
 
+        
+
+    def new(self):
+        self.set(data=None, default=True)
+        self.properties.saved_set(False)
+        self.ui_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
+        
 
     ######## Data ########
     def data_load(self, path, init=False):
@@ -499,7 +511,13 @@ class ConfigIo():
             self.simulation_start()
 
     def data_save(self, path=None):
-        self.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=None, path=path))
+        if path == None:
+            path = self.properties.tle_file
+        else:
+            self.properties.tle_file_set(path)
+
+        self.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=self.trajectories.saved_set, path=path))
+        
         
 
     def data_new(self):
@@ -622,6 +640,7 @@ class ConfigData():
                 "auto_pin" : self.auto_pin,
                 "auto_render" : self.auto_render,
                 "sort_by" : self.sort_by, 
+                "saved": self.saved,
         }
         return data
     
@@ -784,6 +803,8 @@ class ConfigData():
                 self.input_q.put(Task(type='FILE_WRITE', subtype='SESSION'))
             
             self.ui_q.put(Task(type='FILE_UPDATE', subtype='config_file'))
+        if value == None:
+            self.saved_set(False)
         
 
     #### Location ####
@@ -791,8 +812,12 @@ class ConfigData():
         if self.lat != value:
             if type(value == float):
                 self.lat = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                if single == True:
+                    if self.auto_save:
+                        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                    else:
+                        self.saved_set(False)
+
             
                
             
@@ -800,15 +825,22 @@ class ConfigData():
         if self.lon != value:
             if type(value == float):
                 self.lon = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                if single == True:
+                    if self.auto_save:
+                        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                    else:
+                        self.saved_set(False)
+
             
             
 
     def timezone_set(self, value, single=True):
         self.timezone = value
-        if single == True and self.auto_save:
-            self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            else:
+                self.saved_set(False)
 
         self.ui_q.put(Task(type='SELECTION_UPDATE', subtype='timezone', data=None))
             
@@ -817,21 +849,31 @@ class ConfigData():
     def loc_query_set(self, value, single=True):
         if self.loc_query != value and value != None:
             self.loc_query = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                else:
+                    self.saved_set(False)
             
 
     def loc_list_set(self, value, single=True):
         self.loc_list = value
-        if single == True and self.auto_save:
-            self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            else:
+                self.saved_set(False)
             
 
     def loc_index_set(self, value, single=True):
         if self.loc_index != value and value != None: 
             self.loc_index = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                else:
+                    self.saved_set(False)
+
             
 
     def selection_set(self, selection_index, single=True):
@@ -864,8 +906,13 @@ class ConfigData():
                 "selected" : selected,
             }
 
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                else:
+                    self.saved_set(False)
+
+
 
             self.ui_q.put(Task(type='SELECTION_UPDATE', subtype='MISC', data=additional_data))
         
@@ -880,6 +927,7 @@ class ConfigData():
 
 
 
+
     #### Filter ####
     def radius_set(self, value, single=True):
         if self.radius != value and value != None:
@@ -890,6 +938,8 @@ class ConfigData():
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                else:
+                    self.saved_set(False)
             
     
     def classification_set(self, value, single=True):
@@ -902,6 +952,8 @@ class ConfigData():
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                else:
+                    self.saved_set(False)
             
     
     def filter_set(self, value, single=True):
@@ -918,7 +970,8 @@ class ConfigData():
                     self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                     if self.auto_save:
                         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
-            
+                    else:
+                        self.saved_set(False)
     
 
     #### Simulation ####
@@ -930,6 +983,8 @@ class ConfigData():
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                else:
+                    self.saved_set(False)
             
    
     def t0_max_set(self, value, single=True):
@@ -939,7 +994,8 @@ class ConfigData():
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
-            
+                else:
+                    self.saved_set(False)
 
     def t1_max_set(self, value, single=True):
         if self.t1_max != value and value != None:
@@ -949,6 +1005,8 @@ class ConfigData():
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                else:
+                    self.saved_set(False)
                 
 
 
@@ -956,56 +1014,81 @@ class ConfigData():
     def auto_save_set(self, value, single=True):
         self.auto_save = value
         if single == True:
-            self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
             
 
     def auto_save_interval_set(self, value, single=True):
         if value != self.auto_save_interval: 
             self.auto_save_interval = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
+                    
             
 
     def auto_download_set(self, value, single=True):
         if self.auto_download != value and value != None:
             self.auto_download = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
             
 
     def auto_download_interval_set(self, value, single=True):
         if self.auto_download_interval != value and value != None:
             self.auto_download_interval = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
             
 
     def auto_simulate_set(self, value, single=True):
         if self.auto_simulate != value and value != None:
             self.auto_simulate = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
             
 
     def auto_output_set(self, value, single=True):
         if self.auto_output != value and value != None:
             self.auto_output = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
             
 
     def auto_render_set(self, value, single=True):
         self.auto_render = value
-        if single == True and self.auto_save:
-            self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
             
 
 
     #### Pins ####
     def auto_pin_set(self, value, single=True):
         self.auto_pin = value
-        if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
             
     #### Serial ####
     def auto_serial_set(self, value, single=True):
@@ -1016,23 +1099,32 @@ class ConfigData():
         else:
             self.input_q.put(Task(type='SERIAL_CLOSE'))
 
-        if single == True and self.auto_save:
-            self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
             
 
     
     def serial_value_set(self, value, single=True):
         if self.serial_value != value and value != None:
             self.serial_value = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
             
 
     def serial_port_set(self, value, single=True):
         if self.serial_port != value and value != None:
             self.serial_port = value
-            if single == True and self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
             
     
     def serial_baud_set(self, value, single=True):
@@ -1040,8 +1132,12 @@ class ConfigData():
             try:
                 value = int(value)
                 self.serial_baud = value
-                if single == True and self.auto_save:
-                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                if single == True:
+                    if self.auto_save:
+                        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                    else:
+                        self.saved_set(False)
+
             except ValueError:
                 msg = "%s Invalid Baud Rate: %s"%(time.strftime("%H:%M:%S"), value)
                 print(msg)
@@ -1049,6 +1145,11 @@ class ConfigData():
                 self.ui_q.put(Task(type='OUTPUT_UPDATE', subtype='serial_baud'))
 
 
+    def saved_set(self, value):
+        if value == None:
+            value = True
+        self.saved = value
+        self.input_q.put(Task(type='INFO_UPDATE', subtype='saved'))
 
 
    

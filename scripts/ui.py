@@ -228,7 +228,7 @@ class FileBox(ttk.Frame):
 
     def update(self, task):
         self.root.configure(cursor="watch")
-
+ 
         if task.subtype == 'config_file':
             if self.config.properties.config_file:
                 self.config_open_button.configure(text=self.config.properties.config_file)
@@ -242,31 +242,37 @@ class FileBox(ttk.Frame):
             else:
                 self.tle_open_button.configure(text="Open")
 
-        if task.subtype == 'sim_age' or task.subtype == 'tle_age':
-            if task.subtype == 'sim_age':
-                self.sim_age = str(self.config.trajectories.sim_age).strip("'(),")
-                if self.sim_age[0] == '1':
-                    self.sim_age = self.sim_age.replace("minutes", "minute")
+        # if task.subtype == 'sim_age' or task.subtype == 'tle_age':
+        if task.subtype == 'sim_age':
+            self.sim_age = str(self.config.trajectories.sim_age).strip("'(),")
+            if self.sim_age[0] == '1':
+                self.sim_age = self.sim_age.replace("minutes", "minute")
 
-            if task.subtype == 'tle_age':
-                self.tle_age = str(self.config.trajectories.tle_age).strip("'(),")
-                if self.tle_age[0] == '1':
-                    self.tle_age = self.tle_age.replace("hours", "hour")
+        if task.subtype == 'tle_age':
+            self.tle_age = str(self.config.trajectories.tle_age).strip("'(),")
+            if self.tle_age[0] == '1':
+                self.tle_age = self.tle_age.replace("hours", "hour")
 
-            num_tles = 0 if type(self.config.trajectories.num_tles) != int else self.config.trajectories.num_tles
-            saved = self.config.properties.get("saved")
+        num_tles = 0 if type(self.config.trajectories.num_tles) != int else self.config.trajectories.num_tles
+        config_saved = self.config.properties.get("saved")
+        tle_file = self.config.properties.get("tle_file")
+        tle_saved = self.config.properties.get("saved")
 
-            info  = "%i satellites in cache, saved %s ago "%(num_tles, self.sim_age) 
-            info += "| Config %s "%("saved" if saved == True else "unsaved")
-            info += "| Data decay: %s"%str(self.tle_age)
+        if tle_file:
+            info  = "%i satellites in cache, saved %s ago "%(num_tles, self.sim_age)
+        else:
+            info  = "%i satellites in cache, unsaved "%num_tles
 
-            self.info_0_val.configure(text=info)
+        info += "| Config %s "%("saved" if config_saved == True else "unsaved")
+        info += "| Data decay: %s"%str(self.tle_age)
+
+        self.info_0_val.configure(text=info)
  
         self.root.configure(cursor="")
 
 
     def config_new(self):
-        self.config.set(default=True)
+        self.config.new()
 
 
     def config_open(self):
@@ -1212,6 +1218,8 @@ class Gui(ttk.Frame):
             "config_file": "FILE_UPDATE",
             "tle_file": "FILE_UPDATE",
             "saved": "FILE_UPDATE",
+
+            "sim_age": "FILE_UPDATE",
             
             "radius": "OPTION_UPDATE",
             "classification": "OPTION_UPDATE",
