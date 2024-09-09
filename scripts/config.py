@@ -215,8 +215,18 @@ class ConfigIo():
                                 "serial_port" : data.get("serial_port"),
                                 "serial_baud" : data.get("serial_baud"),
                                 "serial_value": data.get("serial_value"),
+
+                                "pin_0_use": data.get("pin_0_use"),
+                                "pin_0": data.get("pin_0"),
+                                "pin_0_state": data.get("pin_0_state"), 
+                                "pin_0_value": data.get("pin_0_value"),
                                 
-                                "auto_pin": data.get("auto_pin"),
+                                "pin_1_use": data.get("pin_1_use"),
+                                "pin_1": data.get("pin_1"),
+                                "pin_1_state": data.get("pin_1_state"),
+                                "pin_1_value": data.get("pin_1_value"),
+                                
+                            
                                 }   
 
                         f.close()
@@ -232,7 +242,7 @@ class ConfigIo():
 
                 print(msg)    
                 self.log(msg)
-
+                
                 if callback:
                     callback(data=result)
                 
@@ -333,15 +343,12 @@ class ConfigIo():
             # self.ui_q.put(Task(type='LOCATION_UPDATE', subtype='all', data=None))
             # self.ui_q.put(Task(type='SELECTION_UPDATE', subtype='MISC', data={}))
             
-           
-
     def location_submit(self, location=None):
         if not location:
             location = self.properties.loc_query
         if location and location != '':
             self.input_q.put(Task(type='LOCATION_QUERY', callback=self.properties.selection_set, data=location))
             
-
     def timezone_request(self, data, callback):
         lat = data.get("lat")
         lon = data.get("lon")
@@ -413,6 +420,8 @@ class ConfigIo():
 
         if config:
             self.load(config, init=True)
+        else:
+            self.properties.set_default()
          
         if tles:
             self.data_load(tles, init=True)
@@ -446,13 +455,13 @@ class ConfigIo():
     def set(self, data=None, default=False, **kwargs):
         if data or default == True:
             # init prevents saving due to value changes on load
-            
             init = False
             if data:
                 init = data.get("init") if data.get("init") else False
                 self.properties.config_file_set(data.get("config_file"), single = not init) 
                 self.properties.set_all(data)
                 for key, value in self.properties.properties_get().items():
+                    print(key, value)
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
             else: # default == True
                 self.properties.set_default()
@@ -570,13 +579,22 @@ class ConfigData():
         self.auto_render = None
         self.auto_sleep = None
         self.auto_serial = None
-        self.auto_pin = None
-
+        
         self.serial_port = None
         self.serial_baud = None
         self.serial_value = None
         
-        #### Save state ####
+        self.pin_0_use = False
+        self.pin_0 = 0
+        self.pin_0_state = 'High'
+        self.pin_0_value = False
+        
+        self.pin_1_use = False
+        self.pin_1 = 1
+        self.pin_1_state = 'High'
+        self.pin_1_value = False
+
+                #### Save state ####
         self.saved = True
         self.sort_by = None
 
@@ -605,8 +623,19 @@ class ConfigData():
             "auto_simulate" : False,
             "auto_sleep" : False,
             "auto_serial" : False,
-            "auto_pin" : False,
             "auto_render" : False,
+
+            "pin_0_use": False,
+            "pin_0": 0,
+            "pin_0_state": 'High',
+            "pin_0_value": False,
+
+            "pin_1_use": False,
+            "pin_1": 1,
+            "pin_1_state": 'High',
+            "pin_1_value": False,
+
+
             "saved" : True, 
             "sort_by": "Proximity"
         }
@@ -638,10 +667,18 @@ class ConfigData():
                 "auto_simulate" : self.auto_simulate,
                 "auto_sleep" : self.auto_sleep,
                 "auto_serial" : self.auto_serial,
-                "auto_pin" : self.auto_pin,
                 "auto_render" : self.auto_render,
                 "sort_by" : self.sort_by, 
-                "saved": self.saved,
+                
+                "pin_0_use": self.pin_0_use,
+                "pin_0": self.pin_0,
+                "pin_0_state": self.pin_0_state,
+                "pin_0_value": self.pin_0_value,
+
+                "pin_1_use": self.pin_1_use,
+                "pin_1": self.pin_1,
+                "pin_1_state": self.pin_1_state,
+                "pin_1_value": self.pin_1_value,
         }
         return data
     
@@ -680,10 +717,18 @@ class ConfigData():
         self.auto_simulate_set(self.default_values["auto_simulate"], single=False)
         self.auto_sleep_set(self.default_values["auto_sleep"], single=False)
         self.auto_serial_set(self.default_values["auto_serial"], single=False)
-        self.auto_pin_set(self.default_values["auto_pin"], single=False)
         self.auto_render_set(self.default_values["auto_render"], single=False)
         self.sort_by_set(self.default_values["sort_by"], single=False)
-
+        
+        self.pin_0_use_set(self.default_values["pin_0_use"], single=False)
+        self.pin_0_set(self.default_values["pin_0"], single=False)
+        self.pin_0_state_set(self.default_values["pin_0_state"], single=False)
+        self.pin_0_value_set(self.default_values["pin_0_value"], single=False)
+        
+        self.pin_1_use_set(self.default_values["pin_1_use"], single=False)
+        self.pin_1_set(self.default_values["pin_1"], single=False)
+        self.pin_1_state_set(self.default_values["pin_1_state"], single=False)
+        self.pin_1_value_set(self.default_values["pin_1_value"], single=False)
         
     def set_all(self, data):
 
@@ -767,8 +812,6 @@ class ConfigData():
         auto_serial = data.get("auto_serial")
         self.auto_serial_set(auto_serial if auto_serial else self.default_values["auto_serial"], single=False)
 
-        auto_pin = data.get("auto_pin")
-        self.auto_pin_set(auto_pin if auto_pin else self.default_values["auto_pin"], single=False)
         
         auto_render = data.get("auto_render")
         self.auto_render_set(auto_render if auto_render else self.default_values["auto_render"], single=False)
@@ -776,6 +819,24 @@ class ConfigData():
         sort_by = data.get("sort_by")
         self.sort_by_set(sort_by if sort_by else self.default_values["sort_by"], single=False)
 
+        
+        pin_0_use = data.get("pin_0_use")
+        self.pin_0_use_set(pin_0_use, single=False)
+        pin_0 = data.get("pin_0")
+        self.pin_0_set(pin_0, single=False)
+        pin_0_state = data.get("pin_0_state")
+        self.pin_0_state_set(pin_0_state, single=False)
+        pin_0_value = data.get("pin_0_value")
+        self.pin_0_value_set(pin_0_value, single=False)
+        
+        pin_1_use = data.get("pin_1_use")
+        self.pin_1_use_set(pin_1_use, single=False)
+        pin_1 = data.get("pin_1")
+        self.pin_1_set(pin_1, single=False)
+        pin_1_state = data.get("pin_1_state")
+        self.pin_1_state_set(pin_1_state, single=False)
+        pin_1_value = data.get("pin_1_value")
+        self.pin_1_value_set(pin_1_value, single=False)
         
 
     
@@ -1022,6 +1083,7 @@ class ConfigData():
     def auto_save_set(self, value, single=True):
         self.auto_save = value
         if single == True:
+            self.ui_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_save'))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
@@ -1043,6 +1105,7 @@ class ConfigData():
         if self.auto_download != value and value != None:
             self.auto_download = value
             if single == True:
+                self.ui_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_download'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
                 else:
@@ -1073,6 +1136,8 @@ class ConfigData():
         if self.auto_sleep != value and value != None:
             self.auto_sleep = value
             if single == True:
+                self.ui_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
+
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
                 else:
@@ -1092,14 +1157,77 @@ class ConfigData():
 
 
     #### Pins ####
-    def auto_pin_set(self, value, single=True):
-        self.auto_pin = value
+    def pin_0_use_set(self, value, single=True):
+        self.pin_0_use = value      
         if single == True:
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
                 self.saved_set(False)
+
             
+    def pin_0_set(self, value, single=True):
+        self.pin_0 = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+          
+    def pin_0_state_set(self, value, single=True):
+        self.pin_0_state = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+          
+    def pin_0_value_set(self, value, single=True):
+        self.pin_0_value = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+
+    def pin_1_use_set(self, value, single=True):
+        self.pin_1_use = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+
+    def pin_1_set(self, value, single=True):
+        self.pin_1 = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+    def pin_1_state_set(self, value, single=True):
+        self.pin_1_state = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+
+    def pin_1_value_set(self, value, single=True):
+        self.pin_1_value = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+
     #### Serial ####
     def auto_serial_set(self, value, single=True):
         self.auto_serial = value
@@ -1115,8 +1243,7 @@ class ConfigData():
             else:
                 self.saved_set(False)
             
-
-    
+   
     def serial_value_set(self, value, single=True):
         if self.serial_value != value and value != None:
             self.serial_value = value

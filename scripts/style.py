@@ -74,14 +74,22 @@ def style(variant=None):
 
 
         style.configure("Highlight.TLabel", background=bg, foreground=txt_0)
+        style.map("Highlight.TLabel",
+                    background=[("!disabled", bg), ("disabled", bg)],
+                    foreground=[("!disabled", txt_0), ("disabled", txt_5)],
+
+        )
         style.configure("Dark.TLabel", background=bg, foreground=txt_3)
         style.configure("BoldDark.TLabel", background=bg, foreground=txt_1)
+
 
         style.configure('Dark.TButton', 
                         bordercolor = 'black',#)#[('active', 'disabled', 'black'), ('!active', 'black')])
                         lightcolor=bg,
                         padding=(0,2),
                         darkcolor='grey10',
+                        anchor="center",
+                        width=12,
                         )
         
         style.map('Dark.TButton', 
@@ -98,6 +106,7 @@ def style(variant=None):
                         padding=(0,2),
                         darkcolor='grey10',
                         anchor="center",
+                        width=10,
                         )
         
         style.configure("DarkFixed.TMenubutton",
@@ -127,11 +136,11 @@ def style(variant=None):
                     fieldbackground="grey17",
                     background="grey17",
 
-                    foreground='white',
-                    bordercolor = 'grey19',#)#[('active', 'disabled', 'black'), ('!active', 'black')])
-                    lightcolor=bg,
+                    foreground=txt_0,
+                    bordercolor = bg,#)#[('active', 'disabled', 'black'), ('!active', 'black')])
+                    lightcolor='grey40',
                     padding=(0,3),
-                    darkcolor='grey10'   
+                    darkcolor='black'   
                         )
         
         

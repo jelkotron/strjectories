@@ -6,8 +6,8 @@ def main():
     config = ConfigIo()
     ui = Gui(config,
         title_main="STRJECTORIES",
-        resizable_main=(False, False),
-        geometry_main="800x800+800+0",
+        resizable_main=(False, True),
+        geometry_main="800x900+800+0",
        
         title_viewer="STRVIEW",
         resizable_viewer=(False, False),
