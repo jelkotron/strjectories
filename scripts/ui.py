@@ -595,7 +595,7 @@ class AutomationBox(ttk.Frame):
         auto_sleep_w = ttk.Checkbutton(self.frame, var=self.auto_sleep, command=self.auto_sleep_set, text="Sleep",style="Dark.TCheckbutton")
         self.auto_sleep.set(False)
 
-        interval_label = ttk.Label(self.frame, text="Interval:", style="BoldDark.TLabel")
+        interval_label = ttk.Label(self.frame, text="Interval:", style="Dark.TLabel")
         
         self.choices_auto_save_interval = ['1 minute', '10 minutes', '30 minutes', '60 minutes', '90 minutes', '120 minutes']
         self.auto_save_interval = tk.StringVar(self.root)
@@ -764,10 +764,13 @@ class OutputBox(ttk.Frame):
         self.config = config
 
         self.auto_pin = tk.BooleanVar()
-        self.pin = tk.IntVar()
-        self.pin_state = tk.StringVar()
-        self.pin_value = tk.StringVar()
-        self.pin_ignore = tk.StringVar()
+        
+        self.pin_0 = tk.IntVar()
+        self.pin_0_state = tk.StringVar()
+        self.pin_0_value = tk.StringVar()
+        self.pin_1 = tk.IntVar()
+        self.pin_1_state = tk.StringVar()
+        self.pin_1_value = tk.StringVar()
 
 
         self.pin_baud = tk.IntVar()
@@ -796,49 +799,75 @@ class OutputBox(ttk.Frame):
         tabsystem.add(label_tab, text="Output:", state="disabled")
 
         ################################ Pin Tab ################################
-        pin_tab = ttk.Frame(tabsystem, style="Dark.TNotebook.Tab")
-        pin_frame = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
-        
-        # pin_port_use_label = ttk.Label(pin_frame, text="Use:", style="Dark.TLabel")  
-        # pin_port_use_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
-        # pin_port_use = ttk.Checkbutton(pin_frame, var=self.auto_pin, command=self.auto_pin_set, text="", style="Dark.TCheckbutton")
-        # pin_port_use.grid(row=0, column=1, columnspan=2, sticky="E", padx=0, pady=0)
-
-        pin_port_label = ttk.Label(pin_frame, text="Pin:", style="Dark.TLabel")
-        pin_port_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
-
-        self.choices_pin = [i for i in range(26)]
-        pin_box = ttk.OptionMenu(pin_frame, self.pin, self.choices_pin[0], *self.choices_pin, command=self.pin_value_set, style="Dark.TMenubutton")
-        pin_box.grid(row=0, column=1,sticky='W', padx=0, ipadx=0)
-        self.pin_value.set(self.choices_pin[0])
-
-        # pin_state_label = ttk.Label(pin_frame, text="State:", style="Dark.TLabel")
-        # pin_state_label.grid(row=3, column=0, sticky="E")
-
+        self.choices_pin = [i for i in reversed(range(26))]
         self.choices_pin_state = ['High', 'Low']
-        pin_state_box = ttk.OptionMenu(pin_frame, self.pin_state, self.choices_pin_state[0], *self.choices_pin_state, command=self.pin_value_set, style="Dark.TMenubutton")
-        pin_state_box.grid(row=0, column=2, sticky='W', padx=0, ipadx=0)
-
-        pin_value_label = ttk.Label(pin_frame, text="Value:", style="Dark.TLabel")
-        pin_value_label.grid(row=4, column=0, sticky="W")
-
         self.choices_pin_value = ['Satellites in Range', 'No Satellites in Range', 'Sleeping', 'Not Sleeping']
-        pin_value_box = ttk.OptionMenu(pin_frame, self.pin_value, self.choices_pin_value[0], *self.choices_pin_value, command=self.pin_value_set, style="Dark.TMenubutton")
-        pin_value_box.grid(row=4, column=1, columnspan=2, sticky='W')
-
-        # pin_ingore_label = ttk.Label(pin_frame, text="Ignore:", style="Dark.TLabel")
-        # pin_ingore_label.grid(row=5, column=0, sticky="E")
-        # self.pin_ignore_input = ttk.Entry(pin_frame, textvariable=self.pin_ignore, validate='focusout', validatecommand=self.pin_set, style="Dark.TEntry")
+        pin_tab = ttk.Frame(tabsystem, style="Dark.TNotebook.Tab")
         
-        # self.pin_ignore_input.bind('<Return>', self.pin_ignore_set)
-        # self.pin_ignore_input.grid(row=5, column=1, columnspan=2, padx=0, sticky='EW')
+        #### Pin 0 Row 0 ####
+        pin_0_row_0 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
+        pin_0_label = ttk.Label(pin_0_row_0, text="Pin:", style="Dark.TLabel")
+        pin_0_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
+
+        pin_0_box = ttk.OptionMenu(pin_0_row_0, self.pin_0, self.choices_pin[-1], *self.choices_pin, command=self.pin_value_set, direction='above', style="Dark.TMenubutton")
+        pin_0_box.grid(row=0, column=1, padx=0, ipadx=0)
+    
+        pin_0_state_box = ttk.OptionMenu(pin_0_row_0, self.pin_0_state, self.choices_pin_state[0], *self.choices_pin_state, command=self.pin_value_set, style="Dark.TMenubutton")
+        pin_0_state_box.grid(row=0, column=2, padx=0, ipadx=0)
+
+        pin_0_row_0.columnconfigure((0,1,2), minsize=50, weight=0)
+        pin_0_row_0.pack(padx=20, pady=(20,0), anchor='nw')
+
+        #### Pin 0 Row 1 ####
+        pin_0_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
+        pin_0_value_label = ttk.Label(pin_0_row_1, text="Value:", style="Dark.TLabel")
+        pin_0_value_label.grid(row=1, column=0, sticky="E")
+
+        pin_0_value_box = ttk.OptionMenu(pin_0_row_1, self.pin_0_value, self.choices_pin_value[0], *self.choices_pin_value, command=self.pin_value_set, style="DarkFixed.TMenubutton")
+        pin_0_value_box.grid(row=1, column=1, sticky='W', padx=0, ipadx=0)
         
-        pin_frame.columnconfigure((0,1,2), minsize=50, weight=0)
-        # pin_frame.columnconfigure((1), minsize=50, weight=1)
-        # pin_frame.columnconfigure((2), minsize=50, weight=0)
+        pin_0_display = ttk.Label(pin_0_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
+        pin_0_display.grid(row=1, column=2, sticky='E')
+        pin_0_display.configure(text=" = HI")
+        
+        pin_0_row_1.columnconfigure((0), minsize=50, weight=0)
+        pin_0_row_1.pack(padx=20, pady=(0,20), anchor='nw')
 
 
-        pin_frame.pack(padx=20, pady=20, anchor='nw')
+        #### Pin 1 Row 0 ####
+        pin_1_row_0 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
+        pin_1_label = ttk.Label(pin_1_row_0, text="Pin:", style="Dark.TLabel")
+        pin_1_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
+
+        pin_1_box = ttk.OptionMenu(pin_1_row_0, self.pin_1, self.choices_pin[-2], *self.choices_pin, command=self.pin_value_set, direction='above', style="Dark.TMenubutton")
+        pin_1_box.grid(row=0, column=1, padx=0, ipadx=0)
+    
+        pin_1_state_box = ttk.OptionMenu(pin_1_row_0, self.pin_1_state, self.choices_pin_state[1], *self.choices_pin_state, command=self.pin_value_set, style="Dark.TMenubutton")
+        pin_1_state_box.grid(row=0, column=2, padx=0, ipadx=0)
+
+        pin_1_row_0.columnconfigure((0,1,2), minsize=50, weight=0)
+        pin_1_row_0.pack(padx=20, pady=(5,0), anchor='nw')
+
+        #### Pin 1 Row 1 ####
+        pin_1_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
+        pin_1_value_label = ttk.Label(pin_1_row_1, text="Value:", style="Dark.TLabel")
+        pin_1_value_label.grid(row=1, column=0, sticky="E")
+
+        pin_1_value_box = ttk.OptionMenu(pin_1_row_1, self.pin_1_value, self.choices_pin_value[2], *self.choices_pin_value, command=self.pin_value_set, style="DarkFixed.TMenubutton")
+        pin_1_value_box.grid(row=1, column=1, sticky='W', padx=0, ipadx=0)
+        
+        pin_1_display = ttk.Label(pin_1_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
+        pin_1_display.grid(row=1, column=2, sticky='E')
+        pin_1_display.configure(text=" = HI")
+        
+        pin_1_row_1.columnconfigure((0), minsize=50, weight=0)
+        pin_1_row_1.pack(padx=20, pady=(0,20), anchor='nw')
+
+
+
+
+
+
         tabsystem.add(pin_tab, text="Pin")
 
         ################################ Serial Tab ################################
@@ -870,15 +899,6 @@ class OutputBox(ttk.Frame):
         self.serial_value = tk.StringVar()
         serial_value_box = ttk.OptionMenu(serial_frame, self.serial_value, self.choices_serial_value[0], *self.choices_serial_value, command=self.serial_value_set, style="Dark.TMenubutton")
         serial_value_box.grid(row=3, column=1, columnspan=2, sticky='EW')
-        # self.serial_value.set(self.choices_serial_value[1])
-        
-        serial_ingore_label = ttk.Label(serial_frame, text="Ignore:", style="Dark.TLabel")
-        serial_ingore_label.grid(row=5, column=0, sticky="E")
-        
-        self.serial_ignore_input = ttk.Entry(serial_frame, textvariable=self.serial_ignore, validate='focusout', validatecommand=self.serial_ignore_set, style="Dark.TEntry")
-        self.serial_ignore_input.bind('<Return>', self.pin_ignore_set)
-        self.serial_ignore_input.grid(row=5, column=1, columnspan=2, padx=0, sticky='EW')
-
 
         serial_frame.columnconfigure((0,1), minsize=20, weight=1)
         serial_frame.pack(padx=20, pady=20, anchor='nw')
@@ -953,10 +973,6 @@ class OutputBox(ttk.Frame):
 
     def pin_value_set(self, event=None):
         pass
-
-    def pin_ignore_set(self, event=None):
-        pass
-
 
     def auto_serial_set(self, event=None):
         if self.config and self.config.properties:

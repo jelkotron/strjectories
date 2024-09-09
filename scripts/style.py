@@ -74,7 +74,7 @@ def style(variant=None):
 
 
         style.configure("Highlight.TLabel", background=bg, foreground=txt_0)
-        style.configure("Dark.TLabel", background=bg, foreground="grey60")
+        style.configure("Dark.TLabel", background=bg, foreground=txt_3)
         style.configure("BoldDark.TLabel", background=bg, foreground=txt_1)
 
         style.configure('Dark.TButton', 
@@ -91,20 +91,37 @@ def style(variant=None):
                     )
 
 
+
         style.configure("Dark.TMenubutton", 
-                        bordercolor = 'black',#)#[('active', 'disabled', 'black'), ('!active', 'black')])
+                        bordercolor = 'black',
                         lightcolor=bg,
                         padding=(0,2),
                         darkcolor='grey10',
-                        disabledbackground="red",
                         anchor="center",
                         )
+        
+        style.configure("DarkFixed.TMenubutton",
+                        bordercolor = 'black',
+                        lightcolor=bg,
+                        padding=(0,2),
+                        darkcolor='grey10',
+                        anchor="center",
+                        width=18,
+                        )
+        
+        style.map("DarkFixed.TMenubutton", 
+                    foreground = [('disabled', txt_5), ('active', '!disabled', txt_0), ('!active', txt_2)],
+                    background = [('disabled', buttoncolor_disabled), ('active', buttoncolor), ('!active', buttoncolor)],
+                    # disabledbackground = [(('active', 'red'), ('!active', 'blue')],
+                    )
         
         style.map("Dark.TMenubutton", 
                     foreground = [('disabled', txt_5), ('active', '!disabled', txt_0), ('!active', txt_2)],
                     background = [('disabled', buttoncolor_disabled), ('active', buttoncolor), ('!active', buttoncolor)],
                     # disabledbackground = [(('active', 'red'), ('!active', 'blue')],
                     )
+        
+        
 
         style.configure("Dark.TEntry",
                     fieldbackground="grey17",
