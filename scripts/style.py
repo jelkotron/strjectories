@@ -80,6 +80,13 @@ def style(variant=None):
 
         )
         style.configure("Dark.TLabel", background=bg, foreground=txt_3)
+        style.map("Dark.TLabel",
+                    background=[("!disabled", bg), ("disabled", bg)],
+                    foreground=[("!disabled", txt_3), ("disabled", txt_5)],
+
+        )
+
+
         style.configure("BoldDark.TLabel", background=bg, foreground=txt_1)
 
 
@@ -135,11 +142,11 @@ def style(variant=None):
         style.configure("Dark.TEntry",
                     fieldbackground="grey17",
                     background="grey17",
-
+                    height=50,
                     foreground=txt_0,
                     bordercolor = bg,#)#[('active', 'disabled', 'black'), ('!active', 'black')])
                     lightcolor='grey40',
-                    padding=(0,3),
+                    padding=(0,4),
                     darkcolor='black'   
                         )
         

@@ -613,9 +613,6 @@ class AutomationBox(ttk.Frame):
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
         auto_render_w.grid(row=0, column=6, sticky="W")
-
-        interval_label = ttk.Label(self.frame, text="Time:", style="Dark.TLabel")
-        interval_label.grid(row=1, column=0, sticky='E', padx=(0,4))
         
         self.choices_auto_save_interval = ['1 minute', '10 minutes', '30 minutes', '60 minutes', '90 minutes', '120 minutes']
         self.auto_save_interval = tk.StringVar(self.root)
@@ -634,6 +631,9 @@ class AutomationBox(ttk.Frame):
         auto_sleep_w = ttk.Checkbutton(self.frame, var=self.auto_sleep, command=self.auto_sleep_set, text="Sleep",style="Dark.TCheckbutton")
         auto_sleep_w.grid(row=0, column=3, sticky="W")
         self.auto_sleep.set(False)
+
+        self.until_label = ttk.Label(self.frame, text="Until", style="Dark.TLabel")
+        self.until_label.grid(row=0, column=4, sticky='W')
 
         self.sleep_t0 = tk.StringVar()
         self.sleep_t0_entry = ttk.Entry(self.frame, textvariable=self.sleep_t0, justify='center', validate="focusout", validatecommand=None, width=10, style="Dark.TEntry")
@@ -764,9 +764,12 @@ class AutomationBox(ttk.Frame):
         if autosleep == False:
             self.sleep_t0_entry.configure(state='disabled')
             self.sleep_t1_entry.configure(state='disabled')
+            self.until_label.configure(state='disabled')
         else:
             self.sleep_t0_entry.configure(state='normal')
             self.sleep_t1_entry.configure(state='normal')
+            self.until_label.configure(state='normal')
+
 
 
 class SatelliteBox(ttk.Frame):
@@ -890,7 +893,7 @@ class OutputBox(ttk.Frame):
         
         self.pin_0_display = ttk.Label(pin_0_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_0_display.grid(row=1, column=2, sticky='E')
-        self.pin_0_display.configure(text=" = HI")
+        self.pin_0_display.configure(text=" | HI")
         
         pin_0_row_1.columnconfigure((0), minsize=50, weight=0)
         pin_0_row_1.pack(padx=20, pady=(0,20), anchor='nw')
@@ -921,7 +924,7 @@ class OutputBox(ttk.Frame):
         
         self.pin_1_display = ttk.Label(pin_1_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_1_display.grid(row=1, column=2, sticky='E')
-        self.pin_1_display.configure(text=" = HI")
+        self.pin_1_display.configure(text=" | HI")
         
         pin_1_row_1.columnconfigure((0), minsize=50, weight=0)
         pin_1_row_1.pack(padx=20, pady=(0,20), anchor='nw')
@@ -1307,7 +1310,6 @@ class Viewer(ttk.Frame):
             render_step = 100
             if self.config and self.config.trajectories and self.config.trajectories.render_queue:
                 for i in range(render_step):
-                
                     if self.rendering == False:
                         break
                     if not self.config.trajectories.render_queue.empty():
@@ -1356,6 +1358,7 @@ class Gui(ttk.Frame):
         root.title(title_main)
         root.resizable(resizable_main[0], resizable_main[1])
         self.root = root
+        # root.configure(background='#2C2C2C')
         self.style = strwueuestyle()
 
         self.viewer = Viewer(self.root, config, title_viewer, resizable_viewer, geometry_viewer, background_viewer, *args, **kwargs)
