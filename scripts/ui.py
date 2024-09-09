@@ -727,7 +727,7 @@ class SatelliteBox(ttk.Frame):
         self.inrange_list_ui.grid(row=0, column=1, rowspan=8, columnspan=2, sticky='W')
         self.num_in_range = tk.Variable(value = 0)
         self.numinrange_label = ttk.Label(frame, text="0", style="BoldDark.TLabel")
-        self.numinrange_label.grid(row=7, rowspan=1, column=3, columnspan=1, sticky="SW")
+        self.numinrange_label.grid(row=7, rowspan=1, column=3, columnspan=1, sticky="SW", padx=(0,20))
 
         frame.columnconfigure((0),minsize=107, weight=1)
         frame.columnconfigure((1,2),minsize=100, weight=1)
@@ -809,7 +809,7 @@ class OutputBox(ttk.Frame):
 
         self.choices_pin = [i for i in range(26)]
         pin_box = ttk.OptionMenu(pin_frame, self.pin, self.choices_pin[0], *self.choices_pin, command=self.pin_value_set, style="Dark.TMenubutton")
-        pin_box.grid(row=0, column=1, columnspan=1, sticky='W')
+        pin_box.grid(row=0, column=1,sticky='W', padx=0, ipadx=0)
         self.pin_value.set(self.choices_pin[0])
 
         # pin_state_label = ttk.Label(pin_frame, text="State:", style="Dark.TLabel")
@@ -817,12 +817,12 @@ class OutputBox(ttk.Frame):
 
         self.choices_pin_state = ['High', 'Low']
         pin_state_box = ttk.OptionMenu(pin_frame, self.pin_state, self.choices_pin_state[0], *self.choices_pin_state, command=self.pin_value_set, style="Dark.TMenubutton")
-        pin_state_box.grid(row=0, column=2, columnspan=1, sticky='W')
+        pin_state_box.grid(row=0, column=2, sticky='W', padx=0, ipadx=0)
 
         pin_value_label = ttk.Label(pin_frame, text="Value:", style="Dark.TLabel")
         pin_value_label.grid(row=4, column=0, sticky="W")
 
-        self.choices_pin_value = ['Satellites in Range', 'No Satellites in Range']
+        self.choices_pin_value = ['Satellites in Range', 'No Satellites in Range', 'Sleeping', 'Not Sleeping']
         pin_value_box = ttk.OptionMenu(pin_frame, self.pin_value, self.choices_pin_value[0], *self.choices_pin_value, command=self.pin_value_set, style="Dark.TMenubutton")
         pin_value_box.grid(row=4, column=1, columnspan=2, sticky='W')
 
@@ -833,7 +833,10 @@ class OutputBox(ttk.Frame):
         # self.pin_ignore_input.bind('<Return>', self.pin_ignore_set)
         # self.pin_ignore_input.grid(row=5, column=1, columnspan=2, padx=0, sticky='EW')
         
-        pin_frame.columnconfigure((0,1,2), minsize=20, weight=1, pad=0)
+        pin_frame.columnconfigure((0,1,2), minsize=50, weight=0)
+        # pin_frame.columnconfigure((1), minsize=50, weight=1)
+        # pin_frame.columnconfigure((2), minsize=50, weight=0)
+
 
         pin_frame.pack(padx=20, pady=20, anchor='nw')
         tabsystem.add(pin_tab, text="Pin")
