@@ -600,19 +600,19 @@ class AutomationBox(ttk.Frame):
 
         auto_save_w = ttk.Checkbutton(self.frame,var=self.auto_save, command=self.auto_save_set, text="Save",style="Dark.TCheckbutton")
         self.auto_save.set(False)
-        auto_save_w.grid(row=0, column=2, sticky="W")
+        auto_save_w.grid(row=0, column=1, sticky="W")
 
         auto_download_w = ttk.Checkbutton(self.frame,var=self.auto_download, command=self.auto_download_set, text="Download", style="Dark.TCheckbutton")
         self.auto_download.set(False)
-        auto_download_w.grid(row=0, column=3, sticky="W")
+        auto_download_w.grid(row=0, column=2, sticky="W")
 
         automsim_w = ttk.Checkbutton(self.frame,var=self.auto_simulate, command=self.auto_simulate_set, text="Simulate",style="Dark.TCheckbutton")
         self.auto_simulate.set(False)
-        automsim_w.grid(row=0, column=4, sticky="W")
+        automsim_w.grid(row=0, column=5, sticky="W")
 
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
-        auto_render_w.grid(row=0, column=5, sticky="W")
+        auto_render_w.grid(row=0, column=6, sticky="W")
 
         interval_label = ttk.Label(self.frame, text="Time:", style="Dark.TLabel")
         interval_label.grid(row=1, column=0, sticky='E', padx=(0,4))
@@ -621,29 +621,29 @@ class AutomationBox(ttk.Frame):
         self.auto_save_interval = tk.StringVar(self.root)
         self.auto_save_interval.set(self.choices_auto_save_interval[1])
         self.auto_save_interval_box = ttk.OptionMenu(self.frame, self.auto_save_interval, self.choices_auto_save_interval[1], *self.choices_auto_save_interval, command=self.auto_save_interval_set, style="Dark.TMenubutton")
-        self.auto_save_interval_box.grid(row=1, column=2, sticky='W')
+        self.auto_save_interval_box.grid(row=1, column=1, sticky='W')
         self.auto_save_interval_box.configure(state='disabled')
 
         self.choices_auto_download_interval = ['1 hour', '2 hours', '4 hours', '8 hours', '12 hours', '24 hours', '48 hours']
         self.auto_download_interval = tk.StringVar(self.root)
         self.auto_download_interval.set(self.choices_auto_download_interval[0])
         self.auto_download_interval_box = ttk.OptionMenu(self.frame, self.auto_download_interval, self.choices_auto_download_interval[0], *self.choices_auto_download_interval, command=self.auto_download_interval_set, style="Dark.TMenubutton")
-        self.auto_download_interval_box.grid(row=1, column=3, sticky='W')
+        self.auto_download_interval_box.grid(row=1, column=2, sticky='W')
         self.auto_download_interval_box.configure(state='disabled')
         
         auto_sleep_w = ttk.Checkbutton(self.frame, var=self.auto_sleep, command=self.auto_sleep_set, text="Sleep",style="Dark.TCheckbutton")
-        auto_sleep_w.grid(row=0, column=1, sticky="W")
+        auto_sleep_w.grid(row=0, column=3, sticky="W")
         self.auto_sleep.set(False)
 
         self.sleep_t0 = tk.StringVar()
         self.sleep_t0_entry = ttk.Entry(self.frame, textvariable=self.sleep_t0, justify='center', validate="focusout", validatecommand=None, width=10, style="Dark.TEntry")
-        self.sleep_t0_entry.grid(row=1, column=1, sticky='EW')
+        self.sleep_t0_entry.grid(row=1, column=3, sticky='EW')
         self.sleep_t0.set("23:33")
         self.sleep_t0_entry.configure(state='disabled')
 
         self.sleep_t1 = tk.StringVar()
         self.sleep_t1_entry = ttk.Entry(self.frame, textvariable=self.sleep_t1, justify='center', validate="focusout", validatecommand=None, width=10, style="Dark.TEntry")
-        self.sleep_t1_entry.grid(row=2, column=1, sticky='EW')
+        self.sleep_t1_entry.grid(row=1, column=4, sticky='EW')
         self.sleep_t1.set("08:15")
         self.sleep_t1_entry.configure(state='disabled')
 
@@ -1022,8 +1022,6 @@ class OutputBox(ttk.Frame):
         if task.subtype == 'pin_0_use':
             pin_use = self.config.properties.pin_0_use
             self.pin_0_use.set(pin_use)
-            print("--->",pin_use)
-            
 
         if task.subtype == 'pin_0':
             self.pin_0.set(self.config.properties.pin_0)

@@ -461,7 +461,6 @@ class ConfigIo():
                 self.properties.config_file_set(data.get("config_file"), single = not init) 
                 self.properties.set_all(data)
                 for key, value in self.properties.properties_get().items():
-                    print(key, value)
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
             else: # default == True
                 self.properties.set_default()
