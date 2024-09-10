@@ -397,8 +397,8 @@ class SimulationBox(ttk.Frame):
         self.config = config
 
         self.sort_by = tk.StringVar()
-        self.t0_max = tk.IntVar()
-        self.t1_max = tk.IntVar()
+        self.t0_max = tk.StringVar()
+        self.t1_max = tk.StringVar()
 
         self.frame = ttk.Frame(self.root, style="Dark.TFrame")
         
@@ -422,7 +422,7 @@ class SimulationBox(ttk.Frame):
 
         t0_max_label = ttk.Label(self.frame, text="Primary", anchor='center', justify='center', style="Dark.TLabel")
         t0_max_label.grid(row=1, column=5, sticky="EW", ipadx=0, padx=0)
-        self.t0_max = tk.IntVar()
+
         t0_max_box = ttk.Entry(self.frame, textvariable=self.t0_max, justify='center', validate="focusout", validatecommand=self.t0_max_set, style="Dark.TEntry")
         t0_max_box.bind('<Return>', self.t0_max_set)
         t0_max_box.bind('<FocusIn>', self.highlight_t0)
@@ -433,7 +433,7 @@ class SimulationBox(ttk.Frame):
 
         t1_max_label = ttk.Label(self.frame, text="Secondary", style="Dark.TLabel", anchor='center', justify='center')
         t1_max_label.grid(row=1, column=6, sticky="EW", ipadx=0, padx=(0,100))
-        self.t1_max = tk.IntVar()
+
         t1_max_box = ttk.Entry(self.frame, textvariable=self.t1_max, justify='center', validate="focusout", validatecommand=self.t1_max_set, style="Dark.TEntry")
         t1_max_box.bind('<Return>', self.t1_max_set)
         t1_max_box.bind('<FocusIn>', self.highlight_t1)
@@ -531,15 +531,18 @@ class SimulationBox(ttk.Frame):
         
 
     def t0_max_set(self, event=None):
-        self.config.properties.t0_max_set(self.t0_max.get())
+        update = self.config.properties.t0_max_set(self.t0_max.get())
+        if update == False:
+            self.t0_max.set(self.config.properties.t0_max)
         self.highlight_t0(event)
 
         
     def t1_max_set(self, event=None):
-        self.root.configure(cursor="watch")
-        self.config.properties.t1_max_set(self.t1_max.get())
+        update = self.config.properties.t1_max_set(self.t1_max.get())
+        if update == False:
+            self.t1_max.set(self.config.properties.t1_max)
         self.highlight_t1(event)
-        self.root.configure(cursor="")
+        
 
         
 
@@ -599,6 +602,8 @@ class AutomationBox(ttk.Frame):
         self.auto_download = tk.BooleanVar()
         self.auto_simulate = tk.BooleanVar()
         self.auto_sleep = tk.BooleanVar()
+        self.sleep_time = tk.StringVar()
+        self.wake_time = tk.StringVar()
         self.auto_render = tk.BooleanVar()
         self.frame = ttk.Frame(self.root, style="Dark.TFrame")
         self.frame.pack(padx=0, pady=(4,0), ipady=2, fill=tk.BOTH, expand=True)
@@ -642,19 +647,19 @@ class AutomationBox(ttk.Frame):
         self.until_label = ttk.Label(self.frame, text="Until", style="Dark.TLabel")
         self.until_label.grid(row=0, column=4, sticky='W')
 
-        self.sleep_t0 = tk.StringVar()
-        self.sleep_t0_entry = ttk.Entry(self.frame, textvariable=self.sleep_t0, justify='center', validate="focusout", validatecommand=None, width=10, style="Dark.TEntry")
-        self.sleep_t0_entry.grid(row=1, column=3, sticky='EW')
-        self.sleep_t0.set("23:33")
-        self.sleep_t0_entry.configure(state='disabled')
+        self.sleep_time_entry = ttk.Entry(self.frame, textvariable=self.sleep_time, justify='center', validate="focusout", validatecommand=self.sleep_time_set, width=10, style="Dark.TEntry")
+        self.sleep_time_entry.grid(row=1, column=3, sticky='EW')
+        self.sleep_time.set("23:33")
+        self.sleep_time_entry.configure(state='disabled')
 
-        self.sleep_t1 = tk.StringVar()
-        self.sleep_t1_entry = ttk.Entry(self.frame, textvariable=self.sleep_t1, justify='center', validate="focusout", validatecommand=None, width=10, style="Dark.TEntry")
-        self.sleep_t1_entry.grid(row=1, column=4, sticky='EW')
-        self.sleep_t1.set("08:15")
-        self.sleep_t1_entry.configure(state='disabled')
+        self.wake_time_entry = ttk.Entry(self.frame, textvariable=self.wake_time, justify='center', validate="focusout", validatecommand=self.wake_time_set, width=10, style="Dark.TEntry")
+        self.wake_time_entry.grid(row=1, column=4, sticky='EW')
+        self.wake_time.set("08:15")
+        self.wake_time_entry.configure(state='disabled')
 
 
+        self.sleep_time_entry.bind('<Return>', self.sleep_time_set)
+        self.wake_time_entry.bind('<Return>', self.wake_time_set)
 
 
         self.frame.columnconfigure((0),minsize=100, weight=0)
@@ -715,17 +720,23 @@ class AutomationBox(ttk.Frame):
             if type(val) == bool:
                 self.auto_sleep.set(val)
                 if val == True:
-                    self.sleep_t0_entry.configure(state='normal')
-                    self.sleep_t1_entry.configure(state='normal')
+                    self.sleep_time_entry.configure(state='normal')
+                    self.wake_time_entry.configure(state='normal')
                 else:
-                    self.sleep_t0_entry.configure(state='disabled')
-                    self.sleep_t1_entry.configure(state='disabled')
+                    self.sleep_time_entry.configure(state='disabled')
+                    self.wake_time_entry.configure(state='disabled')
 
         if task.subtype == 'auto_pin':
             val = self.config.properties.auto_pin
             if type(val) == bool:
                 pass
 
+        if task.subtype == 'sleep_time':         
+            self.sleep_time.set(self.config.properties.sleep_time)
+
+        if task.subtype == 'wake_time':
+            self.wake_time.set(self.config.properties.wake_time)
+            
         self.root.configure(cursor="")
 
     def auto_save_set(self):
@@ -769,14 +780,33 @@ class AutomationBox(ttk.Frame):
         autosleep = self.auto_sleep.get()
         self.config.properties.auto_sleep_set(autosleep)
         if autosleep == False:
-            self.sleep_t0_entry.configure(state='disabled')
-            self.sleep_t1_entry.configure(state='disabled')
+            self.sleep_time_entry.configure(state='disabled')
+            self.wake_time_entry.configure(state='disabled')
             self.until_label.configure(state='disabled')
         else:
-            self.sleep_t0_entry.configure(state='normal')
-            self.sleep_t1_entry.configure(state='normal')
+            self.sleep_time_entry.configure(state='normal')
+            self.wake_time_entry.configure(state='normal')
             self.until_label.configure(state='normal')
 
+    def wake_time_set(self, event=None):
+        wake_time = self.wake_time.get()
+        update = False
+        if wake_time != None:
+            update = self.config.properties.wake_time_set(wake_time)
+        if update == False:
+            self.wake_time.set(self.config.properties.wake_time)
+        else:
+            self.wake_time.set(update) # correcting user input
+
+    def sleep_time_set(self, event=None):
+        sleep_time = self.sleep_time.get()
+        update = False
+        if sleep_time != None:
+            update = self.config.properties.sleep_time_set(sleep_time)
+        if update == False:
+            self.sleep_time.set(self.config.properties.sleep_time)
+        else:
+            self.sleep_time.set(update) # correcting user input
 
 
 class SatelliteBox(ttk.Frame):
@@ -1417,6 +1447,9 @@ class Gui(ttk.Frame):
             "auto_sleep": "AUTOMATION_UPDATE",
             "auto_pin": "AUTOMATION_UPDATE",
             "auto_render": "AUTOMATION_UPDATE",
+            "wake_time": "AUTOMATION_UPDATE",
+            "sleep_time": "AUTOMATION_UPDATE",
+
 
             "viewer": "VIEWER_UPDATE",
 

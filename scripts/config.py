@@ -9,6 +9,7 @@ import requests
 import serial
 import timezonefinder
 from geopy import geocoders
+import schedule
 
 DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
 
@@ -27,6 +28,7 @@ class ConfigIo():
 
         self.properties = ConfigData(self.input_q, self.ui_q)
         self.trajectories = Trajectories(self)
+        self.schedule = schedule
 
         self.session_load()
 
@@ -47,12 +49,33 @@ class ConfigIo():
     def run(self):
         while self.running:
             if self.input_q.empty():
+                self.schedule.run_pending()
                 time.sleep(0.1)
             else:
                 task = self.input_q.get()
                 self.process(task)
                 self.input_q.task_done()
           
+
+    def sleep_schedule(self, sleep_time, wake_time, clear=False,):
+        self.schedule.clear()
+        if clear == False:
+            if sleep_time == None:
+                sleep_time = self.properties.sleep_time
+            if wake_time == None:
+                wake_time = self.properties.wake_time
+            self.schedule.every().day.at(sleep_time).do(self.sleep)
+            self.schedule.every().day.at(wake_time).do(self.wake)
+
+
+    def sleep(self):
+        print("Going to sleep")
+        self.input_q.put(Task(type='SIMULATION', subtype='sleep'))
+
+    def wake(self):
+        print("Waking up")
+        self.input_q.put(Task(type='SIMULATION', subtype='wake'))
+
 
     def process(self, task):
         #### Simulation / Rendering ####
@@ -71,7 +94,14 @@ class ConfigIo():
                 os.environ['TZ'] = self.properties.timezone
                 self.time.tzset()
             
+
             self.ui_q.put(task)
+
+        #### Automation ####
+        if task.type == 'AUTOMATION_UPDATE':
+            if task.subtype == 'auto_sleep':
+                self.sleep_schedule(None, None, clear = not self.properties.auto_sleep)
+
 
         #### Query ####
         if task.type == 'DATA_QUERY':
@@ -214,6 +244,8 @@ class ConfigIo():
                                 "auto_render" : data.get("auto_render"),
                                 
                                 "sort_by": data.get("sort_by"),
+                                "sleep_time": data.get("sleep_time"),
+                                "wake_time": data.get("wake_time"),
                                 
                                 "auto_serial": data.get("auto_serial"),
                                 "serial_port" : data.get("serial_port"),
@@ -467,10 +499,10 @@ class ConfigIo():
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
             else: # default == True
                 self.properties.set_default()
-                self.properties.config_file_set(None, single = not init) 
+                self.properties.config_file_set(None, single = False) 
                 for key, value in self.properties.properties_get().items():
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
-               
+
             self.input_q.put(Task(type='SIMULATION', subtype='selection'))
             
             if not init:
@@ -591,6 +623,9 @@ class ConfigData():
         self.auto_render = None
         self.auto_sleep = None
         self.auto_serial = None
+
+        self.sleep_time = None
+        self.wake_time = None
         
         self.serial_port = None
         self.serial_baud = None
@@ -647,6 +682,9 @@ class ConfigData():
             "pin_1_state": 'High',
             "pin_1_value": False,
 
+            "wake_time": "00:00",
+            "sleep_time": "00:00",
+
 
             "saved" : True, 
             "sort_by": "Proximity"
@@ -682,6 +720,9 @@ class ConfigData():
                 "auto_render" : self.auto_render,
                 "sort_by" : self.sort_by, 
                 
+                "sleep_time": self.sleep_time,
+                "wake_time": self.wake_time,
+
                 "pin_0_use": self.pin_0_use,
                 "pin_0": self.pin_0,
                 "pin_0_state": self.pin_0_state,
@@ -741,6 +782,9 @@ class ConfigData():
         self.pin_1_set(self.default_values["pin_1"], single=False)
         self.pin_1_state_set(self.default_values["pin_1_state"], single=False)
         self.pin_1_value_set(self.default_values["pin_1_value"], single=False)
+
+        self.sleep_time_set(self.default_values["sleep_time"], single=False)
+        self.wake_time_set(self.default_values["wake_time"], single=False)
         
     def set_all(self, data):
 
@@ -754,16 +798,6 @@ class ConfigData():
         # tle_file = data.get("tle_file")
         # self.tle_file_set(tle_file if tle_file else self.default_values["tle_file"], single=False)
         
-        loc_query = data.get("loc_query")
-        self.loc_query_set(loc_query if loc_query else self.default_values["loc_query"], single=False)
-        
-        loc_list = data.get("loc_list")
-        self.loc_list_set(loc_list if loc_list else self.default_values["loc_list"], single=False)
-
-        
-        loc_index = data.get("loc_index")
-        self.selection_set(loc_index, single=False)
-        
         # self.loc_index_set(loc_index if loc_index else self.default_values["loc_index"], single=False)
         
         # lat = data.get("lat")
@@ -774,6 +808,16 @@ class ConfigData():
         
         # timezone = data.get("timezone")
         # self.timezone_set(timezone if timezone else self.default_values["timezone"], single=False)
+        loc_query = data.get("loc_query")
+        self.loc_query_set(loc_query if loc_query else self.default_values["loc_query"], single=False)
+        
+        loc_list = data.get("loc_list")
+        self.loc_list_set(loc_list if loc_list else self.default_values["loc_list"], single=False)
+
+        
+        loc_index = data.get("loc_index")
+        self.selection_set(loc_index, single=False)
+        
         
         radius = data.get("radius")
         self.radius_set(radius if radius else self.default_values["radius"], single=False)
@@ -831,7 +875,12 @@ class ConfigData():
         sort_by = data.get("sort_by")
         self.sort_by_set(sort_by if sort_by else self.default_values["sort_by"], single=False)
 
-        
+        sleep_time = data.get("sleep_time")
+        self.sleep_time_set(sleep_time, single=False)
+
+        wake_time = data.get("wake_time")
+        self.wake_time_set(wake_time, single=False)
+
         pin_0_use = data.get("pin_0_use")
         self.pin_0_use_set(pin_0_use, single=False)
         pin_0 = data.get("pin_0")
@@ -1068,28 +1117,44 @@ class ConfigData():
             
    
     def t0_max_set(self, value, single=True):
-        if self.t0_max != value and value != None:
-            self.t0_max = value
-            if single == True:
-                if self.auto_render:
-                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
-                if self.auto_save:
-                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
-                else:
-                    self.saved_set(False)
+        if self.t0_max != value:
+            try:
+                value = int(value)
+                self.t0_max = value
+                if single == True:
+                    if self.auto_render:
+                        self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                    if self.auto_save:
+                        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                    else:
+                        self.saved_set(False)
+
+                return value
+                
+            except ValueError:
+                return False
+
+        return False
 
     def t1_max_set(self, value, single=True):
-        if self.t1_max != value and value != None:
-            self.t1_max = value
-            self.input_q.put(Task(type='SIMULATION', subtype='threads'))
-            if single == True:
-                if self.auto_render:
-                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
-                if self.auto_save:
-                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
-                else:
-                    self.saved_set(False)
-                
+        if self.t1_max != value:
+            try:
+                value = int(value)
+                self.t1_max = value
+                self.input_q.put(Task(type='SIMULATION', subtype='threads'))
+                if single == True:
+                    if self.auto_render:
+                        self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                    if self.auto_save:
+                        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                    else:
+                        self.saved_set(False)
+
+                return value
+
+            except ValueError:
+                return False
+        return False
 
 
     #### Automation ####
@@ -1148,6 +1213,7 @@ class ConfigData():
     def auto_sleep_set(self, value, single=True):
         if self.auto_sleep != value and value != None:
             self.auto_sleep = value
+            self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
             if single == True:
                 self.ui_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
 
@@ -1167,6 +1233,93 @@ class ConfigData():
             if value == True:
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
             
+
+    def wake_time_set(self, value, single=True):
+        try:
+            divisor = None
+            hours = None
+            minutes = None
+
+            for item in [':', '.', '-']:
+                if item in value:
+                    divisor = item
+            if divisor:
+                strtime = value.split(divisor)
+                hours = int(strtime[0].strip())
+                minutes = int(strtime[1].strip())
+            else:
+                minutes = int(value[-2:])
+                hours = int(value[:1] if len(value)==3 else value[:2])
+
+            if hours !=None and hours < 24:
+                if minutes != None and minutes < 60:
+                    strtime = str(hours).zfill(2) + ':' + str(minutes).zfill(2)
+                    if self.wake_time != strtime:
+                        self.wake_time = strtime
+                        if single == True:
+                            if self.auto_save:
+                                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                            else:
+                                self.saved_set(False)
+                        
+                        self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
+                        return strtime
+
+            return False
+
+        except ValueError:
+            return False
+        
+        except IndexError:
+            return False
+
+        except TypeError:
+            return False
+
+
+    def sleep_time_set(self, value, single=True):
+        try:
+            divisor = None
+            hours = None
+            minutes = None
+
+            for item in [':', '.', '-']:
+                if item in value:
+                    divisor = item
+            if divisor:
+                strtime = value.split(divisor)
+                hours = int(strtime[0].strip())
+                minutes = int(strtime[1].strip())
+            else:
+                minutes = int(value[-2:])
+                hours = int(value[:1] if len(value)==3 else value[:2])
+
+            if hours !=None and hours < 24:
+                if minutes !=None and minutes < 60:
+                    strtime = str(hours).zfill(2) + ':' + str(minutes).zfill(2)
+                    if self.sleep_time != strtime:
+                        self.sleep_time = strtime
+                        if single == True:
+                            if self.auto_save:
+                                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                            else:
+                                self.saved_set(False)
+                        
+                        self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
+                        return strtime
+                    
+            return False
+
+        except ValueError:
+            return False
+        
+        except IndexError:
+            return False
+
+        except TypeError:
+            return False
+            
+
 
 
     #### Pins ####
