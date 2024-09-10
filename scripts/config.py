@@ -66,6 +66,10 @@ class ConfigIo():
 
             if task.subtype in ['filter','threads', 'classification']:
                 self.trajectories.update_filter()
+
+            if task.subtype == 'timezone':
+                os.environ['TZ'] = self.properties.timezone
+                self.time.tzset()
             
             self.ui_q.put(task)
 
@@ -437,7 +441,6 @@ class ConfigIo():
                                       data=s)
                                       )
 
-            
     def session_data(self):
         s = ''
         if self.properties.config_file:
@@ -475,8 +478,6 @@ class ConfigIo():
         
         self.input_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
 
-
-
     def save(self, path=None):
         if path == None:
             path = self.properties.config_file
@@ -486,8 +487,6 @@ class ConfigIo():
         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.properties.saved_set, path=path))
         self.ui_q.put(Task(type='UI_UPDATE', subtype='config_file'))
         self.ui_q.put(Task(type='UI_UPDATE', subtype='saved'))
-
-        
 
     def new(self):
         self.set(data=None, default=True)
@@ -526,14 +525,28 @@ class ConfigIo():
             self.properties.tle_file_set(path)
 
         self.input_q.put(Task(type='FILE_WRITE', subtype='DATA', callback=self.trajectories.saved_set, path=path))
-        
-        
-
+         
     def data_new(self):
         self.properties.tle_file_set(None, single=False)
         self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file', data=None))
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
 
+
+    ######## Time ########
+    def time_get(self, tz=False, mode='STR'):
+        t = None
+        if tz == False:
+            t = self.time.gmtime()
+        else:
+            if self.properties.timezone:
+                os.environ['TZ'] = self.properties.timezone
+                self.time.tzset()
+            t = self.time.localtime()
+
+        if mode == 'STR':
+            return  self.time.strftime("%H:%M:%S",t)
+        else:
+            return t
 
 
 class ConfigData():
@@ -897,12 +910,13 @@ class ConfigData():
 
     def timezone_set(self, value, single=True):
         self.timezone = value
+        
         if single == True:
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
             else:
                 self.saved_set(False)
-
+        self.input_q.put(Task(type='SIMULATION_UPDATE', subtype='timezone'))
         self.ui_q.put(Task(type='SELECTION_UPDATE', subtype='timezone', data=None))
             
 

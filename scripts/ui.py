@@ -140,9 +140,16 @@ class SelectionBox(ttk.Frame):
         clock_label.grid(row=4, column=0, sticky="E", padx=(0,4))
         self.clock = ttk.Label(frame, text="00:00", style="Dark.TLabel")
         self.clock.grid(row=4, column=1, sticky="WE", ipadx=50)
-
-
         frame.columnconfigure((0,1,2,3,4,5,6,7,8,9,10),minsize=100, weight=0)
+
+        self.clock_tick()
+
+
+    def clock_tick(self):
+        t = self.config.time_get(tz=True, mode='STR')
+        self.clock.configure(text = t)
+        self.root.after(1000, self.clock_tick)
+
 
     def update(self, task):
         self.root.configure(cursor="watch")
@@ -885,7 +892,7 @@ class OutputBox(ttk.Frame):
 
         #### Pin 0 Row 1 ####
         pin_0_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
-        pin_0_value_label = ttk.Label(pin_0_row_1, text="Value:", style="Dark.TLabel")
+        pin_0_value_label = ttk.Label(pin_0_row_1, text="if", style="Dark.TLabel")
         pin_0_value_label.grid(row=1, column=0, sticky="E")
 
         self.pin_0_value_box = ttk.OptionMenu(pin_0_row_1, self.pin_0_value, self.choices_pin_value[0], *self.choices_pin_value, command=self.pin_0_value_set, style="DarkFixed.TMenubutton")
@@ -893,7 +900,7 @@ class OutputBox(ttk.Frame):
         
         self.pin_0_display = ttk.Label(pin_0_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_0_display.grid(row=1, column=2, sticky='E')
-        self.pin_0_display.configure(text=" | HI")
+        # self.pin_0_display.configure(text=" True")
         
         pin_0_row_1.columnconfigure((0), minsize=50, weight=0)
         pin_0_row_1.pack(padx=20, pady=(0,20), anchor='nw')
@@ -916,7 +923,7 @@ class OutputBox(ttk.Frame):
 
         #### Pin 1 Row 1 ####
         pin_1_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
-        pin_1_value_label = ttk.Label(pin_1_row_1, text="Value:", style="Dark.TLabel")
+        pin_1_value_label = ttk.Label(pin_1_row_1, text="if", style="Dark.TLabel")
         pin_1_value_label.grid(row=1, column=0, sticky="E")
 
         self.pin_1_value_box = ttk.OptionMenu(pin_1_row_1, self.pin_1_value, self.choices_pin_value[2], *self.choices_pin_value, command=self.pin_1_value_set, style="DarkFixed.TMenubutton")
@@ -924,7 +931,7 @@ class OutputBox(ttk.Frame):
         
         self.pin_1_display = ttk.Label(pin_1_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_1_display.grid(row=1, column=2, sticky='E')
-        self.pin_1_display.configure(text=" | HI")
+        # self.pin_1_display.configure(text=" False")
         
         pin_1_row_1.columnconfigure((0), minsize=50, weight=0)
         pin_1_row_1.pack(padx=20, pady=(0,20), anchor='nw')
