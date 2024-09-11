@@ -455,76 +455,38 @@ class ConfigIo():
         satellites_in_range = (len(self.trajectories.in_range) > 0)
         sleeping = self.sleeping
 
-        if task.subtype == 'in_range_list' or task.subtype == None:
-            # Pin 0 #
-            if self.properties.pin_0_condition == "Satellites in Range":
-                self.properties.pin_0_state_set(satellites_in_range * (self.properties.pin_0_value == 'High'))
-            if self.properties.pin_0_condition == "No Satellites in Range":
-                self.properties.pin_0_state_set(not satellites_in_range * (self.properties.pin_0_value == 'High'))
-        
-            # Pin 1 #
-            if self.properties.pin_1_condition == "Satellites in Range":
-                self.properties.pin_1_state_set(satellites_in_range * (self.properties.pin_1_value == 'High'))
-
-            if self.properties.pin_1_condition == "No Satellites in Range":
-                self.properties.pin_1_state_set(not satellites_in_range * (self.properties.pin_1_value == 'High'))
-        
-            # Serial #
-            if self.properties.serial_value == "Satellites in Range":
-                self.serial_write(satellites_in_range)
-            
-            if self.properties.serial_value == "No Satellites in Range":
-                self.serial_write(not satellites_in_range)
-            
-            if self.properties.serial_value == "In Range Count":
-                self.serial_write(len(self.trajectories.in_range)) 
-
-        if task.subtype == 'sleeping' or task.subtype == None:
-            value_0 = None
-            value_1 = None
- 
-            if self.properties.pin_0_value == 'High':
-                value_0 = True
+        if self.properties.pin_0_condition == "Satellites in Range":
+            self.properties.pin_0_state_set(satellites_in_range * (self.properties.pin_0_value == 'High'))
+        elif self.properties.pin_0_condition == "No Satellites in Range":
+            self.properties.pin_0_state_set(not satellites_in_range * (self.properties.pin_0_value == 'High'))
+        elif self.properties.pin_0_condition == "Sleeping":
+            if sleeping:
+                self.properties.pin_0_state_set(self.properties.pin_0_value == 'High')
             else:
-                value_0 = False
+                self.properties.pin_0_state_set(self.properties.pin_0_value == 'Low')
 
-            if self.properties.pin_1_value == 'High':
-                value_1 = True
+        elif self.properties.pin_0_condition == "Not Sleeping":
+            if sleeping:
+                self.properties.pin_0_state_set(self.properties.pin_0_value == 'Low')
             else:
-                value_1 = False
- 
-            if self.properties.pin_0_condition == 'Sleeping' or sleeping == True:
-                value_0 = not value_0
-
-            if self.properties.pin_1_condition == 'Sleeping' or sleeping == True:
-                value_1 = not value_1
-            
-            if self.properties.pin_0_condition == "Sleeping" or self.properties.pin_0_condition == "Not Sleeping": 
-                self.properties.pin_0_state_set(value_0)
-            if self.properties.pin_1_condition == "Sleeping" or self.properties.pin_1_condition == "Not Sleeping": 
-                self.properties.pin_1_state_set(value_1)
-            
+                self.properties.pin_0_state_set(self.properties.pin_0_value == 'High')
 
 
+        if self.properties.pin_1_condition == "Satellites in Range":
+            self.properties.pin_1_state_set(satellites_in_range * (self.properties.pin_1_value == 'High'))
+        elif self.properties.pin_1_condition == "No Satellites in Range":
+            self.properties.pin_1_state_set(not satellites_in_range * (self.properties.pin_1_value == 'High'))
+        elif self.properties.pin_1_condition == "Sleeping":
+            if sleeping:
+                self.properties.pin_1_state_set(self.properties.pin_1_value == 'High')
+            else:
+                self.properties.pin_1_state_set(self.properties.pin_1_value == 'Low')
 
-
-
-            # TODO: What is the difference in boolean algrebra between in_range_list and sleep???
-            # if self.properties.pin_0_condition == "Sleeping":
-            #     self.properties.pin_0_state_set((not sleeping) * (self.properties.pin_0_value != 'High'))
-
-            # if self.properties.pin_0_condition == "Not Sleeping":
-            #     self.properties.pin_0_state_set((not sleeping) * (self.properties.pin_0_value == 'High'))
-               
-            # if self.properties.pin_1_condition == "Sleeping":
-            #     print(self.properties.pin_1_value)
-            #     self.properties.pin_1_state_set((not sleeping) * (self.properties.pin_1_value != 'High'))
-
-            # if self.properties.pin_1_condition == "Not Sleeping":
-            #     self.properties.pin_1_state_set((not sleeping) * (self.properties.pin_1_value == 'High'))
-            
-
-        
+        elif self.properties.pin_1_condition == "Not Sleeping":
+            if sleeping:
+                self.properties.pin_1_state_set(self.properties.pin_1_value == 'Low')
+            else:
+                self.properties.pin_1_state_set(self.properties.pin_1_value == 'High')
 
 
     ######## Session ########
