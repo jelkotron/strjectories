@@ -57,7 +57,7 @@ class ConfigIo():
                 self.input_q.task_done()
           
 
-    def sleep_schedule(self, sleep_time, wake_time, clear=False,):
+    def sleep_schedule(self, sleep_time, wake_time, clear=False):
         self.schedule.clear()
         if clear == False:
             if sleep_time == None:
@@ -93,6 +93,9 @@ class ConfigIo():
             if task.subtype == 'timezone':
                 os.environ['TZ'] = self.properties.timezone
                 self.time.tzset()
+
+            if task.subtype == 'in_range_list':
+                pass
             
 
             self.ui_q.put(task)
@@ -562,6 +565,11 @@ class ConfigIo():
         self.properties.tle_file_set(None, single=False)
         self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file', data=None))
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
+
+
+    def data_refresh(self):
+        self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
+
 
 
     ######## Time ########

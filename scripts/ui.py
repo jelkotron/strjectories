@@ -620,12 +620,18 @@ class AutomationBox(ttk.Frame):
 
         automsim_w = ttk.Checkbutton(self.frame,var=self.auto_simulate, command=self.auto_simulate_set, text="Simulate",style="Dark.TCheckbutton")
         self.auto_simulate.set(False)
-        automsim_w.grid(row=0, column=5, sticky="W")
+        automsim_w.grid(row=0, column=6, sticky="W")
 
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
-        auto_render_w.grid(row=0, column=6, sticky="W")
-        
+        auto_render_w.grid(row=0, column=5, sticky="W")
+        self.choices_auto_render_range = ['All', 'In Range', 'Primary', 'Secondary']
+        self.auto_render_range = tk.StringVar(self.root)
+        self.auto_render_range.set(self.choices_auto_render_range[0])
+        self.auto_render_range_box = ttk.OptionMenu(self.frame, self.auto_render_range, self.choices_auto_render_range[0], *self.choices_auto_render_range, command=None, style="Dark.TMenubutton")
+        self.auto_render_range_box.grid(row=1, column=5, sticky='W')
+        self.auto_render_range_box.configure(state='disabled')
+
         self.choices_auto_save_interval = ['1 minute', '10 minutes', '30 minutes', '60 minutes', '90 minutes', '120 minutes']
         self.auto_save_interval = tk.StringVar(self.root)
         self.auto_save_interval.set(self.choices_auto_save_interval[1])
@@ -644,7 +650,7 @@ class AutomationBox(ttk.Frame):
         auto_sleep_w.grid(row=0, column=3, sticky="W")
         self.auto_sleep.set(False)
 
-        self.until_label = ttk.Label(self.frame, text="Until", style="Dark.TLabel")
+        self.until_label = ttk.Label(self.frame, text="Wake", style="Dark.TLabel")
         self.until_label.grid(row=0, column=4, sticky='W')
 
         self.sleep_time_entry = ttk.Entry(self.frame, textvariable=self.sleep_time, justify='center', validate="focusout", validatecommand=self.sleep_time_set, width=10, style="Dark.TEntry")
@@ -714,6 +720,8 @@ class AutomationBox(ttk.Frame):
             val = self.config.properties.auto_render
             if type(val) == bool:
                 self.auto_render.set(val)
+                state = 'normal' if val == True else 'disabled'
+                self.auto_render_range_box.configure(state=state)
 
         if task.subtype == 'auto_sleep':
             val = self.config.properties.auto_sleep
@@ -775,6 +783,11 @@ class AutomationBox(ttk.Frame):
         self.config.properties.auto_render_set(val)
         if self.viewer:
             self.viewer.rendering = val
+        if val == True:
+            self.auto_render_range_box.configure(state='normal')
+        else:
+            self.auto_render_range_box.configure(state='disabled')
+
         
     def auto_sleep_set(self):
         autosleep = self.auto_sleep.get()
@@ -904,43 +917,40 @@ class OutputBox(ttk.Frame):
         
         #### Pin 0 Row 0 ####
         pin_0_row_0 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
-        # pin_0_label = ttk.Label(pin_0_row_0, text="Pin:", style="Dark.TLabel")
         pin_0_label = ttk.Checkbutton(pin_0_row_0, var=self.pin_0_use, command=self.pin_0_use_set, text="Pin",style="Dark.TCheckbutton")
         self.pin_0_use.set(False)
-
-
-        pin_0_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
-
+        pin_0_label.grid(row=0, column=0, sticky="E", padx=(0,2), pady=0)
         self.pin_0_box = ttk.OptionMenu(pin_0_row_0, self.pin_0, self.choices_pin[-1], *self.choices_pin, command=self.pin_0_set, direction='above', style="Dark.TMenubutton")
         self.pin_0_box.grid(row=0, column=1, padx=0, ipadx=0)
-    
         self.pin_0_state_box = ttk.OptionMenu(pin_0_row_0, self.pin_0_state, self.choices_pin_state[0], *self.choices_pin_state, command=self.pin_0_state_set, style="Dark.TMenubutton")
         self.pin_0_state_box.grid(row=0, column=2, padx=0, ipadx=0)
-
         pin_0_row_0.columnconfigure((0,1,2), minsize=50, weight=0)
         pin_0_row_0.pack(padx=20, pady=(20,0), anchor='nw')
 
+
+
         #### Pin 0 Row 1 ####
         pin_0_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
-        pin_0_value_label = ttk.Label(pin_0_row_1, text="if", style="Dark.TLabel")
-        pin_0_value_label.grid(row=1, column=0, sticky="E")
+        pin_0_value_label = ttk.Label(pin_0_row_1, text="If", style="Dark.TLabel")
+        pin_0_value_label.grid(row=1, column=0, sticky="E", padx=(0,2))
 
         self.pin_0_value_box = ttk.OptionMenu(pin_0_row_1, self.pin_0_value, self.choices_pin_value[0], *self.choices_pin_value, command=self.pin_0_value_set, style="DarkFixed.TMenubutton")
         self.pin_0_value_box.grid(row=1, column=1, sticky='W', padx=0, ipadx=0)
         
         self.pin_0_display = ttk.Label(pin_0_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_0_display.grid(row=1, column=2, sticky='E')
-        # self.pin_0_display.configure(text=" True")
+        self.pin_0_display.configure(text=" True")
         
         pin_0_row_1.columnconfigure((0), minsize=50, weight=0)
         pin_0_row_1.pack(padx=20, pady=(0,20), anchor='nw')
+
 
 
         #### Pin 1 Row 0 ####
         pin_1_row_0 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
         pin_1_label = ttk.Checkbutton(pin_1_row_0, var=self.pin_1_use, command=self.pin_1_use_set, text="Pin",style="Dark.TCheckbutton")
         self.pin_1_use.set(False)
-        pin_1_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
+        pin_1_label.grid(row=0, column=0, sticky="E", padx=(0,2), pady=0)
 
         self.pin_1_box = ttk.OptionMenu(pin_1_row_0, self.pin_1, self.choices_pin[-2], *self.choices_pin, command=self.pin_1_set, direction='above', style="Dark.TMenubutton")
         self.pin_1_box.grid(row=0, column=1, padx=0, ipadx=0)
@@ -953,15 +963,15 @@ class OutputBox(ttk.Frame):
 
         #### Pin 1 Row 1 ####
         pin_1_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
-        pin_1_value_label = ttk.Label(pin_1_row_1, text="if", style="Dark.TLabel")
-        pin_1_value_label.grid(row=1, column=0, sticky="E")
+        pin_1_value_label = ttk.Label(pin_1_row_1, text="If", style="Dark.TLabel")
+        pin_1_value_label.grid(row=1, column=0, sticky="E", padx=(0,2))
 
         self.pin_1_value_box = ttk.OptionMenu(pin_1_row_1, self.pin_1_value, self.choices_pin_value[2], *self.choices_pin_value, command=self.pin_1_value_set, style="DarkFixed.TMenubutton")
         self.pin_1_value_box.grid(row=1, column=1, sticky='W', padx=0, ipadx=0)
         
         self.pin_1_display = ttk.Label(pin_1_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_1_display.grid(row=1, column=2, sticky='E')
-        # self.pin_1_display.configure(text=" False")
+        self.pin_1_display.configure(text=" False")
         
         pin_1_row_1.columnconfigure((0), minsize=50, weight=0)
         pin_1_row_1.pack(padx=20, pady=(0,20), anchor='nw')
@@ -1502,7 +1512,7 @@ class Gui(ttk.Frame):
                 elif task.subtype == 't0_max' or task.subtype == 't1_max':
                     self.simulation_box.update(task)
 
-                elif task.subtype == 'list':
+                elif task.subtype == 'in_range_list':
                     self.satellite_box.update()
 
                 elif task.subtype == 'toggle':

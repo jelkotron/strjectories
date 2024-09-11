@@ -147,7 +147,7 @@ class Satellite():
                             self.trajectories.in_range.remove(self.id)
                             self.trajectories.num_in_range -= 1
                     if self.in_range != previous:
-                        self.config.input_q.put(Task(type='SIMULATION', subtype='list')) 
+                        self.config.input_q.put(Task(type='SIMULATION', subtype='in_range_list')) 
                         if callback:
                             callback()
                             
@@ -386,7 +386,7 @@ class Trajectories():
             now = np.datetime64(now)
             delta = np.timedelta64((now - then), 'h')
             self.tle_age = delta
-            
+
             self.config.input_q.put(Task(type='INFO_UPDATE', callback=None, subtype='tle_age'))
 
             if self.config.properties.auto_download:
@@ -484,10 +484,13 @@ class Trajectories():
         self.saved_set(False)
 
 
-    def tle_request(self):
-        self.saved_set(False)
+    def tle_request(self, new_file=False):
         self.timestamp = time.gmtime()
-        self.config.data_new()
+        if new_file == False:
+            self.config.data_refresh()
+        else:
+            self.saved_set(False)
+            self.config.data_new()
 
 
     def tle_update(self, data, mode=None):
@@ -495,6 +498,7 @@ class Trajectories():
         self.simulating = False
         
         if mode == 'QUERY':
+            self.timestamp = time.gmtime()
             text = data.text.split("\n")
             objects = self.tle_parse(data.text)
 
