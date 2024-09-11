@@ -147,7 +147,7 @@ class Satellite():
                             self.trajectories.in_range.remove(self.id)
                             self.trajectories.num_in_range -= 1
                     if self.in_range != previous:
-                        self.config.input_q.put(Task(type='SIMULATION', subtype='in_range_list')) 
+                        self.config.input_q.put(Task(type='IO', subtype='in_range_list')) 
                         if callback:
                             callback()
                             
@@ -312,9 +312,6 @@ class Trajectories():
                     if self.config.properties.auto_render:
                         self.render_queue.put(sat)
                 
-                    if self.config.serial:
-                        self.config.input_q.put(Task(type='SERIAL_WRITE'))
-
                     self.calc_q_0.task_done()
 
 
@@ -336,9 +333,6 @@ class Trajectories():
 
                         if self.config.properties.auto_render:
                             self.render_queue.put(sat)
-                    
-                        if self.config.serial:
-                            self.config.input_q.put(Task(type='SERIAL_WRITE'))
                     
                     self.calc_q_1.task_done()
 
@@ -464,7 +458,7 @@ class Trajectories():
                 
             self.render_queue.put(obj)
 
-        self.config.input_q.put(Task(type='SIMULATION', subtype='list'))
+        self.config.input_q.put(Task(type='IO', subtype='in_range_list'))
 
 
         if callback:

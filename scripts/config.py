@@ -21,6 +21,7 @@ class ConfigIo():
         self.ui_q = queue.Queue()
         
         self.running = False
+        self.sleeping = False
         self.io_thread = None
 
         self.serial = None
@@ -69,12 +70,12 @@ class ConfigIo():
 
 
     def sleep(self):
-        print("Going to sleep")
-        self.input_q.put(Task(type='SIMULATION', subtype='sleep'))
+        self.sleeping = True
+        self.input_q.put(Task(type='IO', subtype='sleep'))
 
     def wake(self):
-        print("Waking up")
-        self.input_q.put(Task(type='SIMULATION', subtype='wake'))
+        self.sleeping = False
+        self.input_q.put(Task(type='IO', subtype='sleep'))
 
 
     def process(self, task):
@@ -83,22 +84,27 @@ class ConfigIo():
             if task.subtype == 'sort_by':
                 if self.trajectories:
                     self.trajectories.simulation_update()
-
+               
             if task.subtype == 'selection' or task.subtype == 'radius':
                 self.trajectories.update_target_location()
-
+               
             if task.subtype in ['filter','threads', 'classification']:
                 self.trajectories.update_filter()
-
+               
             if task.subtype == 'timezone':
                 os.environ['TZ'] = self.properties.timezone
                 self.time.tzset()
 
-            if task.subtype == 'in_range_list':
-                pass
-            
-
             self.ui_q.put(task)
+
+
+        if task.type == 'IO':
+            self.io_update(task)
+            self.ui_q.put(task)
+            # if task.subtype == 'in_range_list':
+            #     self.ui_q.put(Task(type='SIMULATION', subtype='in_range_list'))
+
+
 
         #### Automation ####
         if task.type == 'AUTOMATION_UPDATE':
@@ -141,9 +147,8 @@ class ConfigIo():
                 
             self.serial_write(data)
         
-        #### Pin ####
-        if task.type == 'PIN_SET':
-            self.pin_set()
+       
+           
         
         #### Info ####
         #TODO: evaluate elegance of this
@@ -257,13 +262,13 @@ class ConfigIo():
 
                                 "pin_0_use": data.get("pin_0_use"),
                                 "pin_0": data.get("pin_0"),
-                                "pin_0_state": data.get("pin_0_state"), 
-                                "pin_0_value": data.get("pin_0_value"),
+                                "pin_0_value": data.get("pin_0_value"), 
+                                "pin_0_condition": data.get("pin_0_condition"),
                                 
                                 "pin_1_use": data.get("pin_1_use"),
                                 "pin_1": data.get("pin_1"),
-                                "pin_1_state": data.get("pin_1_state"),
                                 "pin_1_value": data.get("pin_1_value"),
+                                "pin_1_condition": data.get("pin_1_condition"),
                                 
                             
                                 }   
@@ -430,6 +435,7 @@ class ConfigIo():
     def serial_write(self, data):
         if self.serial:
             if data != self.serial_data_previous:
+                data = str(data)
                 self.serial.write(data.encode('ascii'))
                 time.sleep(0.01)
             self.serial_data_previous = data
@@ -443,9 +449,82 @@ class ConfigIo():
     def log(self, msg):
         self.input_q.put(Task(type='LOG_WRITE', message=msg))
 
-    ######## Pin ########
-    def pin_set(self):
-        pass
+    ######## IO ########
+
+    def io_update(self, task):
+        satellites_in_range = (len(self.trajectories.in_range) > 0)
+        sleeping = self.sleeping
+
+        if task.subtype == 'in_range_list' or task.subtype == None:
+            # Pin 0 #
+            if self.properties.pin_0_condition == "Satellites in Range":
+                self.properties.pin_0_state_set(satellites_in_range * (self.properties.pin_0_value == 'High'))
+            if self.properties.pin_0_condition == "No Satellites in Range":
+                self.properties.pin_0_state_set(not satellites_in_range * (self.properties.pin_0_value == 'High'))
+        
+            # Pin 1 #
+            if self.properties.pin_1_condition == "Satellites in Range":
+                self.properties.pin_1_state_set(satellites_in_range * (self.properties.pin_1_value == 'High'))
+
+            if self.properties.pin_1_condition == "No Satellites in Range":
+                self.properties.pin_1_state_set(not satellites_in_range * (self.properties.pin_1_value == 'High'))
+        
+            # Serial #
+            if self.properties.serial_value == "Satellites in Range":
+                self.serial_write(satellites_in_range)
+            
+            if self.properties.serial_value == "No Satellites in Range":
+                self.serial_write(not satellites_in_range)
+            
+            if self.properties.serial_value == "In Range Count":
+                self.serial_write(len(self.trajectories.in_range)) 
+
+        if task.subtype == 'sleeping' or task.subtype == None:
+            value_0 = None
+            value_1 = None
+ 
+            if self.properties.pin_0_value == 'High':
+                value_0 = True
+            else:
+                value_0 = False
+
+            if self.properties.pin_1_value == 'High':
+                value_1 = True
+            else:
+                value_1 = False
+ 
+            if self.properties.pin_0_condition == 'Sleeping' or sleeping == True:
+                value_0 = not value_0
+
+            if self.properties.pin_1_condition == 'Sleeping' or sleeping == True:
+                value_1 = not value_1
+            
+            if self.properties.pin_0_condition == "Sleeping" or self.properties.pin_0_condition == "Not Sleeping": 
+                self.properties.pin_0_state_set(value_0)
+            if self.properties.pin_1_condition == "Sleeping" or self.properties.pin_1_condition == "Not Sleeping": 
+                self.properties.pin_1_state_set(value_1)
+            
+
+
+
+
+
+            # TODO: What is the difference in boolean algrebra between in_range_list and sleep???
+            # if self.properties.pin_0_condition == "Sleeping":
+            #     self.properties.pin_0_state_set((not sleeping) * (self.properties.pin_0_value != 'High'))
+
+            # if self.properties.pin_0_condition == "Not Sleeping":
+            #     self.properties.pin_0_state_set((not sleeping) * (self.properties.pin_0_value == 'High'))
+               
+            # if self.properties.pin_1_condition == "Sleeping":
+            #     print(self.properties.pin_1_value)
+            #     self.properties.pin_1_state_set((not sleeping) * (self.properties.pin_1_value != 'High'))
+
+            # if self.properties.pin_1_condition == "Not Sleeping":
+            #     self.properties.pin_1_state_set((not sleeping) * (self.properties.pin_1_value == 'High'))
+            
+
+        
 
 
     ######## Session ########
@@ -500,6 +579,7 @@ class ConfigIo():
                 self.properties.set_all(data)
                 for key, value in self.properties.properties_get().items():
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
+                
             else: # default == True
                 self.properties.set_default()
                 self.properties.config_file_set(None, single = False) 
@@ -507,6 +587,7 @@ class ConfigIo():
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
 
             self.input_q.put(Task(type='SIMULATION', subtype='selection'))
+            self.input_q.put(Task(type='IO', subtype=None))
             
             if not init:
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
@@ -566,11 +647,8 @@ class ConfigIo():
         self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file', data=None))
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
 
-
     def data_refresh(self):
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
-
-
 
     ######## Time ########
     def time_get(self, tz=False, mode='STR'):
@@ -641,13 +719,15 @@ class ConfigData():
         
         self.pin_0_use = False
         self.pin_0 = 0
-        self.pin_0_state = 'High'
-        self.pin_0_value = False
+        self.pin_0_value = 'High'
+        self.pin_0_condition = False
+        self.pin_0_state = False # LO
         
         self.pin_1_use = False
         self.pin_1 = 1
-        self.pin_1_state = 'High'
-        self.pin_1_value = False
+        self.pin_1_value = 'High'
+        self.pin_1_condition = False
+        self.pin_1_state = False # LO
 
                 #### Save state ####
         self.saved = True
@@ -682,13 +762,13 @@ class ConfigData():
 
             "pin_0_use": False,
             "pin_0": 0,
-            "pin_0_state": 'High',
-            "pin_0_value": False,
+            "pin_0_value": 'High',
+            "pin_0_condition": False,
 
             "pin_1_use": False,
             "pin_1": 1,
-            "pin_1_state": 'High',
-            "pin_1_value": False,
+            "pin_1_value": 'High',
+            "pin_1_condition": False,
 
             "wake_time": "00:00",
             "sleep_time": "00:00",
@@ -733,13 +813,13 @@ class ConfigData():
 
                 "pin_0_use": self.pin_0_use,
                 "pin_0": self.pin_0,
-                "pin_0_state": self.pin_0_state,
                 "pin_0_value": self.pin_0_value,
+                "pin_0_condition": self.pin_0_condition,
 
                 "pin_1_use": self.pin_1_use,
                 "pin_1": self.pin_1,
-                "pin_1_state": self.pin_1_state,
                 "pin_1_value": self.pin_1_value,
+                "pin_1_condition": self.pin_1_condition,
         }
         return data
     
@@ -750,19 +830,11 @@ class ConfigData():
 
     def set_default(self):
         
-        
-        #self.sessiondata_file_set(self.default_values["sessiondata_file"], single=False)
-        # self.config_file_set(self.default_values["config_file"], single=False)
-        # self.tle_file_set(self.default_values["tle_file"], single=False)
-        
         self.loc_query_set(self.default_values["loc_query"], single=False)
         self.loc_list_set(self.default_values["loc_list"], single=False)
         
         self.selection_set(self.default_values["loc_index"], single=False)
-        # self.loc_index_set(self.default_values["loc_index"], single=False)
-        # self.lat_set(self.default_values["lat"], single=False)
-        # self.lon_set(self.default_values["lon"], single=False)
-        # self.timezone_set(self.default_values["timezone"], single=False)
+    
         self.radius_set(self.default_values["radius"], single=False)
         self.t0_max_set(self.default_values["t0_max"], single=False)
         self.t1_max_set(self.default_values["t1_max"], single=False)
@@ -783,39 +855,19 @@ class ConfigData():
         
         self.pin_0_use_set(self.default_values["pin_0_use"], single=False)
         self.pin_0_set(self.default_values["pin_0"], single=False)
-        self.pin_0_state_set(self.default_values["pin_0_state"], single=False)
         self.pin_0_value_set(self.default_values["pin_0_value"], single=False)
+        self.pin_0_condition_set(self.default_values["pin_0_condition"], single=False)
         
         self.pin_1_use_set(self.default_values["pin_1_use"], single=False)
         self.pin_1_set(self.default_values["pin_1"], single=False)
-        self.pin_1_state_set(self.default_values["pin_1_state"], single=False)
         self.pin_1_value_set(self.default_values["pin_1_value"], single=False)
+        self.pin_1_condition_set(self.default_values["pin_1_condition"], single=False)
 
         self.sleep_time_set(self.default_values["sleep_time"], single=False)
         self.wake_time_set(self.default_values["wake_time"], single=False)
         
     def set_all(self, data):
 
-        
-        # sessiondata_file = data.get("sessiondata_file")
-        # self.sessiondata_file_set(sessiondata_file if sessiondata_file != '' else self.default_values["sessiondata_file"], single=False)
-
-        # config_file = data.get("config_file")
-        # self.config_file_set(config_file if config_file else self.default_values["config_file"], single=False)
-        
-        # tle_file = data.get("tle_file")
-        # self.tle_file_set(tle_file if tle_file else self.default_values["tle_file"], single=False)
-        
-        # self.loc_index_set(loc_index if loc_index else self.default_values["loc_index"], single=False)
-        
-        # lat = data.get("lat")
-        # self.lat_set(lat if lat else self.default_values["lat"], single=False)
-        
-        # lon = data.get("lon")
-        # self.lon_set(lon if lon else self.default_values["lon"], single=False)
-        
-        # timezone = data.get("timezone")
-        # self.timezone_set(timezone if timezone else self.default_values["timezone"], single=False)
         loc_query = data.get("loc_query")
         self.loc_query_set(loc_query if loc_query else self.default_values["loc_query"], single=False)
         
@@ -855,8 +907,7 @@ class ConfigData():
         
         auto_save = data.get("auto_save")
         self.auto_save_set(auto_save if auto_save else self.default_values["auto_save"], single=False)
-        # self.auto_save_set(True, False)
-
+       
 
         auto_save_interval = data.get("auto_save_interval")
         self.auto_save_interval_set(auto_save_interval if auto_save_interval else self.default_values["auto_save_interval"], single=False)
@@ -891,29 +942,34 @@ class ConfigData():
 
         pin_0_use = data.get("pin_0_use")
         self.pin_0_use_set(pin_0_use, single=False)
+        
         pin_0 = data.get("pin_0")
         self.pin_0_set(pin_0, single=False)
-        pin_0_state = data.get("pin_0_state")
-        self.pin_0_state_set(pin_0_state, single=False)
+        
         pin_0_value = data.get("pin_0_value")
         self.pin_0_value_set(pin_0_value, single=False)
         
+        pin_0_condition = data.get("pin_0_condition")
+        self.pin_0_condition_set(pin_0_condition, single=False)
+        
         pin_1_use = data.get("pin_1_use")
         self.pin_1_use_set(pin_1_use, single=False)
+        
         pin_1 = data.get("pin_1")
         self.pin_1_set(pin_1, single=False)
-        pin_1_state = data.get("pin_1_state")
-        self.pin_1_state_set(pin_1_state, single=False)
+        
         pin_1_value = data.get("pin_1_value")
         self.pin_1_value_set(pin_1_value, single=False)
+        
+        pin_1_condition = data.get("pin_1_condition")
+        self.pin_1_condition_set(pin_1_condition, single=False)
         
 
     
     #### Files ####
     def sessiondata_file_set(self, value, single=True):
         self.sessiondata_file = value
-            
-                 
+                   
     def tle_file_set(self, value, single=True):
         if self.tle_file != value:
             if type(value == str):
@@ -923,9 +979,7 @@ class ConfigData():
                 self.input_q.put(Task(type='FILE_WRITE', subtype='SESSION'))
             
             self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file'))
-
-            
-
+          
     def config_file_set(self, value, single=True):
         if self.config_file != value:
             self.config_file = value
@@ -948,10 +1002,7 @@ class ConfigData():
                         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                     else:
                         self.saved_set(False)
-
-            
-               
-            
+        
     def lon_set(self, value, single=True):
         if self.lon != value:
             if type(value == float):
@@ -961,9 +1012,6 @@ class ConfigData():
                         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                     else:
                         self.saved_set(False)
-
-            
-            
 
     def timezone_set(self, value, single=True):
         self.timezone = value
@@ -976,8 +1024,6 @@ class ConfigData():
         self.input_q.put(Task(type='SIMULATION_UPDATE', subtype='timezone'))
         self.ui_q.put(Task(type='SELECTION_UPDATE', subtype='timezone', data=None))
             
-
-
     def loc_query_set(self, value, single=True):
         if self.loc_query != value and value != None:
             self.loc_query = value
@@ -987,7 +1033,6 @@ class ConfigData():
                 else:
                     self.saved_set(False)
             
-
     def loc_list_set(self, value, single=True):
         self.loc_list = value
         if single == True:
@@ -996,7 +1041,6 @@ class ConfigData():
             else:
                 self.saved_set(False)
             
-
     def loc_index_set(self, value, single=True):
         if self.loc_index != value and value != None: 
             self.loc_index = value
@@ -1005,8 +1049,6 @@ class ConfigData():
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                 else:
                     self.saved_set(False)
-
-            
 
     def selection_set(self, selection_index, single=True):
         self.loc_index_set(selection_index, single=False)
@@ -1059,8 +1101,6 @@ class ConfigData():
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
 
 
-
-
     #### Filter ####
     def radius_set(self, value, single=True):
         if self.radius != value and value != None:
@@ -1074,8 +1114,7 @@ class ConfigData():
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
                 else:
                     self.saved_set(False)
-            
-    
+              
     def classification_set(self, value, single=True):
         if self.classification != value and value != None:
             self.classification = value
@@ -1090,7 +1129,6 @@ class ConfigData():
                 else:
                     self.saved_set(False)
             
-    
     def filter_set(self, value, single=True):
         if not type(value) == list:
             value = [value]
@@ -1123,7 +1161,6 @@ class ConfigData():
                 else:
                     self.saved_set(False)
             
-   
     def t0_max_set(self, value, single=True):
         if self.t0_max != value:
             try:
@@ -1175,7 +1212,6 @@ class ConfigData():
             else:
                 self.saved_set(False)
             
-
     def auto_save_interval_set(self, value, single=True):
         if value != self.auto_save_interval: 
             self.auto_save_interval = value
@@ -1185,8 +1221,6 @@ class ConfigData():
                 else:
                     self.saved_set(False)
                     
-            
-
     def auto_download_set(self, value, single=True):
         if self.auto_download != value and value != None:
             self.auto_download = value
@@ -1197,7 +1231,6 @@ class ConfigData():
                 else:
                     self.saved_set(False)
             
-
     def auto_download_interval_set(self, value, single=True):
         if self.auto_download_interval != value and value != None:
             self.auto_download_interval = value
@@ -1207,7 +1240,6 @@ class ConfigData():
                 else:
                     self.saved_set(False)
             
-
     def auto_simulate_set(self, value, single=True):
         if self.auto_simulate != value and value != None:
             self.auto_simulate = value
@@ -1217,7 +1249,6 @@ class ConfigData():
                 else:
                     self.saved_set(False)
             
-
     def auto_sleep_set(self, value, single=True):
         if self.auto_sleep != value and value != None:
             self.auto_sleep = value
@@ -1230,7 +1261,6 @@ class ConfigData():
                 else:
                     self.saved_set(False)
             
-
     def auto_render_set(self, value, single=True):
         self.auto_render = value
         if single == True:
@@ -1241,7 +1271,6 @@ class ConfigData():
             if value == True:
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
             
-
     def wake_time_set(self, value, single=True):
         try:
             divisor = None
@@ -1283,7 +1312,6 @@ class ConfigData():
 
         except TypeError:
             return False
-
 
     def sleep_time_set(self, value, single=True):
         try:
@@ -1328,8 +1356,6 @@ class ConfigData():
             return False
             
 
-
-
     #### Pins ####
     def pin_0_use_set(self, value, single=True):
         self.pin_0_use = value      
@@ -1338,8 +1364,7 @@ class ConfigData():
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
                 self.saved_set(False)
-
-            
+   
     def pin_0_set(self, value, single=True):
         self.pin_0 = value
         if single == True:
@@ -1347,25 +1372,34 @@ class ConfigData():
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
                 self.saved_set(False)
-
-          
-    def pin_0_state_set(self, value, single=True):
-        self.pin_0_state = value
-        if single == True:
-            if self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
-            else:
-                self.saved_set(False)
-
-          
+   
     def pin_0_value_set(self, value, single=True):
         self.pin_0_value = value
         if single == True:
+            self.input_q.put(Task(type='IO', subtype=None))
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+         
+    def pin_0_condition_set(self, value, single=True):
+        self.pin_0_condition = value
+        if single == True:
+            self.input_q.put(Task(type='IO', subtype=None))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
                 self.saved_set(False)
 
+
+    def pin_0_state_set(self, value):
+        if value != self.pin_0_state:
+            if value == 0:
+                value = False
+            elif value == 1:
+                value = True
+            self.pin_0_state = value
+            self.ui_q.put(Task(type='UI_UPDATE', subtype='pin_0_state'))
 
     def pin_1_use_set(self, value, single=True):
         self.pin_1_use = value
@@ -1384,22 +1418,34 @@ class ConfigData():
             else:
                 self.saved_set(False)
 
-    def pin_1_state_set(self, value, single=True):
-        self.pin_1_state = value
-        if single == True:
-            if self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
-            else:
-                self.saved_set(False)
-
-
     def pin_1_value_set(self, value, single=True):
         self.pin_1_value = value
         if single == True:
+            self.input_q.put(Task(type='IO', subtype=None))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
                 self.saved_set(False)
+
+    def pin_1_condition_set(self, value, single=True):
+        self.pin_1_condition = value
+        if single == True:
+            self.input_q.put(Task(type='IO', subtype=None))
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+    def pin_1_state_set(self, value):
+        if value != self.pin_1_state:
+            if value == 0:
+                value = False
+            elif value == 1:
+                value = True
+            self.pin_1_state = value
+            self.ui_q.put(Task(type='UI_UPDATE', subtype='pin_1_state'))
+
+        
 
 
     #### Serial ####
