@@ -11,6 +11,15 @@ import timezonefinder
 from geopy import geocoders
 import schedule
 
+GPIO_CHIP = None
+try:
+    import gpiod
+    GPIO_CHIP = gpiod.Chip('gpiochip0')
+    
+except FileNotFoundError:
+    pass
+
+
 DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
 
 
@@ -457,8 +466,10 @@ class ConfigIo():
 
         if self.properties.pin_0_condition == "Satellites in Range":
             self.properties.pin_0_state_set(satellites_in_range * (self.properties.pin_0_value == 'High'))
+        
         elif self.properties.pin_0_condition == "No Satellites in Range":
             self.properties.pin_0_state_set(not satellites_in_range * (self.properties.pin_0_value == 'High'))
+        
         elif self.properties.pin_0_condition == "Sleeping":
             if sleeping:
                 self.properties.pin_0_state_set(self.properties.pin_0_value == 'High')
@@ -474,8 +485,10 @@ class ConfigIo():
 
         if self.properties.pin_1_condition == "Satellites in Range":
             self.properties.pin_1_state_set(satellites_in_range * (self.properties.pin_1_value == 'High'))
+        
         elif self.properties.pin_1_condition == "No Satellites in Range":
             self.properties.pin_1_state_set(not satellites_in_range * (self.properties.pin_1_value == 'High'))
+        
         elif self.properties.pin_1_condition == "Sleeping":
             if sleeping:
                 self.properties.pin_1_state_set(self.properties.pin_1_value == 'High')
@@ -684,12 +697,14 @@ class ConfigData():
         self.pin_0_value = 'High'
         self.pin_0_condition = False
         self.pin_0_state = False # LO
-        
+        self.pin_0_line = None
+
         self.pin_1_use = False
         self.pin_1 = 1
         self.pin_1_value = 'High'
         self.pin_1_condition = False
         self.pin_1_state = False # LO
+        self.pin_1_line = None
 
                 #### Save state ####
         self.saved = True
@@ -1328,7 +1343,16 @@ class ConfigData():
                 self.saved_set(False)
    
     def pin_0_set(self, value, single=True):
-        self.pin_0 = value
+        if type(value) == int and value < 0 and value > 25:
+            self.pin_0 = value
+            if GPIO_CHIP:
+                if not self.pin_0_line:
+                    self.pin_0_line = GPIO_CHIP.get_line(value)
+                else:
+                    self.pin_0_line.release()
+                
+                self.pin_0_line.request(consumer="strwueue", type=gpiod.LINE_REQ_DIR_OUT, default_val=0)
+
         if single == True:
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
@@ -1356,6 +1380,9 @@ class ConfigData():
 
     def pin_0_state_set(self, value):
         if value != self.pin_0_state:
+            if self.pin_0_line:
+                self.pin_0_line.set_value(int(value))
+
             if value == 0:
                 value = False
             elif value == 1:
@@ -1373,12 +1400,22 @@ class ConfigData():
 
 
     def pin_1_set(self, value, single=True):
-        self.pin_1 = value
-        if single == True:
-            if self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
-            else:
-                self.saved_set(False)
+        if type(value) == int and value < 0 and value > 25:
+            self.pin_1 = value
+            if GPIO_CHIP:
+                if not self.pin_1_line:
+                    self.pin_1_line = GPIO_CHIP.get_line(value)
+                else:
+                    self.pin_1_line.release()
+                
+                self.pin_1_line.request(consumer="strwueue", type=gpiod.LINE_REQ_DIR_OUT, default_val=0)
+                
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
+
 
     def pin_1_value_set(self, value, single=True):
         self.pin_1_value = value
