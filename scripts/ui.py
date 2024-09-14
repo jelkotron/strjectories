@@ -1440,6 +1440,9 @@ class Gui(ttk.Frame):
         self.satellite_box = SatelliteBox(self.satcom_box, config)
         self.output_box = OutputBox(self.satcom_box, config)
 
+        root.bind('<F12>', self.config.toggle_sleep)
+
+
         self.task_map = {
             "loc_query": "LOCATION_UPDATE",
             "loc_list": "LOCATION_UPDATE",
@@ -1545,7 +1548,6 @@ class Gui(ttk.Frame):
                     
             if task.type == 'IO':
                 if task.subtype == 'sleep':
-                    print("Sleep?")
                     self.selection_box.update(task)
                     self.output_box.update(task)
 

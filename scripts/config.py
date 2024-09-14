@@ -10,14 +10,7 @@ import serial
 import timezonefinder
 from geopy import geocoders
 import schedule
-
-GPIO_CHIP = None
-try:
-    import gpiod
-    GPIO_CHIP = gpiod.Chip('gpiochip0')
-    
-except FileNotFoundError:
-    pass
+import gpiod
 
 
 DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
@@ -78,9 +71,17 @@ class ConfigIo():
             self.schedule.every().day.at(wake_time).do(self.wake)
 
 
+    def toggle_sleep(self, event=None):
+        if self.sleeping:
+            self.wake()
+        else:
+            self.sleep()
+        self.toggle_line_value("/dev/gpiochip0", 18)
+
     def sleep(self):
         self.sleeping = True
         self.input_q.put(Task(type='IO', subtype='sleep'))
+
 
     def wake(self):
         self.sleeping = False
@@ -501,6 +502,24 @@ class ConfigIo():
             else:
                 self.properties.pin_1_state_set(self.properties.pin_1_value == 'High')
 
+    def toggle_io_value(self, value):
+        if value == gpiod.line.Value.INACTIVE:
+            return gpiod.line.Value.ACTIVE
+        return gpiod.line.Value.INACTIVE
+    
+    def toggle_line_value(self, chip_path, line_offset):
+        value = gpiod.line.Value
+
+        with gpiod.request_lines(
+                chip_path, 
+                consumer="toggle_line_value", 
+                config={
+                    line_offset: gpiod.LineSettings(
+                        direction=gpiod.line.Direction.OUTPUT, 
+                        output_value=value
+                        )}
+        ) as request:
+            value = self.toggle_io_value(value)
 
     ######## Session ########
     def session_load(self):
@@ -1345,13 +1364,6 @@ class ConfigData():
     def pin_0_set(self, value, single=True):
         if type(value) == int and value < 0 and value > 25:
             self.pin_0 = value
-            if GPIO_CHIP:
-                if not self.pin_0_line:
-                    self.pin_0_line = GPIO_CHIP.get_line(value)
-                else:
-                    self.pin_0_line.release()
-                
-                self.pin_0_line.request(consumer="strwueue", type=gpiod.LINE_REQ_DIR_OUT, default_val=0)
 
         if single == True:
             if self.auto_save:
@@ -1402,13 +1414,6 @@ class ConfigData():
     def pin_1_set(self, value, single=True):
         if type(value) == int and value < 0 and value > 25:
             self.pin_1 = value
-            if GPIO_CHIP:
-                if not self.pin_1_line:
-                    self.pin_1_line = GPIO_CHIP.get_line(value)
-                else:
-                    self.pin_1_line.release()
-                
-                self.pin_1_line.request(consumer="strwueue", type=gpiod.LINE_REQ_DIR_OUT, default_val=0)
                 
             if single == True:
                 if self.auto_save:
