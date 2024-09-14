@@ -1021,7 +1021,7 @@ class OutputBox(ttk.Frame):
         
         self.choices_serial_value = ['In Range Count', 'Satellites in Range', 'No Satellites in Range']
         self.serial_value = tk.StringVar()
-        serial_value_box = ttk.OptionMenu(serial_frame, self.serial_value, self.choices_serial_value[0], *self.choices_serial_value, command=self.serial_value_set, style="Dark.TMenubutton")
+        serial_value_box = ttk.OptionMenu(serial_frame, self.serial_value, self.choices_serial_value[0], *self.choices_serial_value, command=self.serial_value_set, style="DarkFixed.TMenubutton")
         serial_value_box.grid(row=3, column=1, columnspan=2, sticky='EW')
 
         serial_frame.columnconfigure((0,1), minsize=20, weight=1)

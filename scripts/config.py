@@ -469,7 +469,7 @@ class ConfigIo():
         sleeping = self.sleeping
         state_0 = None
         state_1 = None
-
+        #### PIN 0 ####
         if self.properties.pin_0_condition == "Satellites in Range":
             if satellites_in_range:
                 state_0 = self.properties.pin_0_value == 'High'
@@ -498,7 +498,7 @@ class ConfigIo():
         if state_0 != None:
             self.pin_state_update(CHIPPATH, 'pin_0', state_0)
 
-
+        #### PIN 1 ####
         if self.properties.pin_1_condition == "Satellites in Range":
             if satellites_in_range:
                 state_1 = self.properties.pin_1_value == 'High'
@@ -528,32 +528,52 @@ class ConfigIo():
         if state_1 != None:
             self.pin_state_update(CHIPPATH, 'pin_1', state_1)
 
+        #### Serial ####
+        if self.properties.serial_value == 'In Range Count':
+            self.serial_write(len(self.trajectories.in_range))
+        elif self.properties.serial_value == 'Satellites in Range':
+            self.serial_write(satellites_in_range)
+        elif self.properties.serial_value == 'No Satellites in Range':
+            self.serial_write(not satellites_in_range)
+
+
+
+
    
     def pin_state_update(self, chip_path, pin_path, state):
         pin = None
         callback = None
 
         if pin_path == 'pin_0':
+            use = self.properties.pin_0_use
             pin = self.properties.pin_0
             callback = lambda: self.properties.pin_0_state_set(state)
         elif pin_path == 'pin_1':
+            use = self.properties.pin_0_use
             pin = self.properties.pin_1
             callback = lambda: self.properties.pin_1_state_set(state)
 
-        if pin:
+        if use and pin != None:
             pin_state = Value.ACTIVE if state else Value.INACTIVE
-            with gpiod.request_lines(
-                    chip_path, 
-                    consumer="pin-state-update", 
-                    config={
-                        pin: gpiod.LineSettings(
-                            direction=Direction.OUTPUT, 
-                            output_value=pin_state
-                            )}
-            ) as request:
-                request.set_value(pin, pin_state)
+            try:
+                with gpiod.request_lines(
+                        chip_path, 
+                        consumer="pin-state-update", 
+                        config={
+                            pin: gpiod.LineSettings(
+                                direction=Direction.OUTPUT, 
+                                output_value=pin_state
+                                )}
+                ) as request:
+                    request.set_value(pin, pin_state)
+            
+            except PermissionError:
+                msg = "%s Warning: Permission to I/O chip denied"%(time.strftime("%H:%M:%S"))
+                print(msg)
+                self.log(msg)
 
-            callback()
+        callback()
+
 
 
     ######## Session ########
@@ -1410,7 +1430,6 @@ class ConfigData():
                 self.saved_set(False)
    
     def pin_0_value_set(self, value, single=True):
-        print("Pipi")
         self.pin_0_value = value
         if single == True:
             self.input_q.put(Task(type='IO', subtype='pin_0'))
@@ -1460,7 +1479,6 @@ class ConfigData():
 
     def pin_1_value_set(self, value, single=True):
         self.pin_1_value = value
-        print("Kaka")
         if single == True:
             self.input_q.put(Task(type='IO', subtype='pin_1'))
             if self.auto_save:
@@ -1509,6 +1527,7 @@ class ConfigData():
         if self.serial_value != value and value != None:
             self.serial_value = value
             if single == True:
+                self.input_q.put(Task(type='IO', subtype='serial'))
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
                 else:
