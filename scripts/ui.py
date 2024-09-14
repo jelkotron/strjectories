@@ -636,7 +636,7 @@ class AutomationBox(ttk.Frame):
         self.choices_auto_render_range = ['All', 'In Range', 'Primary', 'Secondary']
         self.auto_render_range = tk.StringVar(self.root)
         self.auto_render_range.set(self.choices_auto_render_range[0])
-        self.auto_render_range_box = ttk.OptionMenu(self.frame, self.auto_render_range, self.choices_auto_render_range[0], *self.choices_auto_render_range, command=None, style="Dark.TMenubutton")
+        self.auto_render_range_box = ttk.OptionMenu(self.frame, self.auto_render_range, self.choices_auto_render_range[0], *self.choices_auto_render_range, command=self.auto_render_range_set, style="Dark.TMenubutton")
         self.auto_render_range_box.grid(row=1, column=5, sticky='W')
         self.auto_render_range_box.configure(state='disabled')
 
@@ -730,6 +730,17 @@ class AutomationBox(ttk.Frame):
                 self.auto_render.set(val)
                 state = 'normal' if val == True else 'disabled'
                 self.auto_render_range_box.configure(state=state)
+
+        if task.subtype == 'auto_render_range':
+            val = self.config.properties.auto_render_range
+            index = 0
+            for i in range(len(self.choices_auto_render_range)):
+                if val == self.choices_auto_render_range[i]:
+                    index = i
+            self.auto_render_range.set(self.choices_auto_render_range[index])
+
+
+
 
         if task.subtype == 'auto_sleep':
             val = self.config.properties.auto_sleep
@@ -828,6 +839,10 @@ class AutomationBox(ttk.Frame):
             self.sleep_time.set(self.config.properties.sleep_time)
         else:
             self.sleep_time.set(update) # correcting user input
+
+    
+    def auto_render_range_set(self, event=None):
+        self.config.properties.auto_render_range_set(self.auto_render_range.get())
 
 
 class SatelliteBox(ttk.Frame):
@@ -1480,6 +1495,7 @@ class Gui(ttk.Frame):
             "auto_sleep": "AUTOMATION_UPDATE",
             "auto_pin": "AUTOMATION_UPDATE",
             "auto_render": "AUTOMATION_UPDATE",
+            "auto_render_range": "AUTOMATION_UPDATE",
             "wake_time": "AUTOMATION_UPDATE",
             "sleep_time": "AUTOMATION_UPDATE",
 

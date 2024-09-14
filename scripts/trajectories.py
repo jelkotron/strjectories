@@ -39,6 +39,7 @@ class Satellite():
             self.engine = None
             self.priority = None 
             self.highlight = False
+            self.calculate = True
             self.render = True 
             
 
@@ -100,6 +101,7 @@ class Satellite():
             "color": self.color,
             "highlight": self.highlight,
             "render": self.render,
+            "calculate": self.calculate,
             "render_obj": None
         }
         return data
@@ -125,6 +127,7 @@ class Satellite():
         self.highlight = data.get("highlight")
         self.render_obj = data.get("render_obj")
         self.render = data.get("render")
+        self.calculate = data.get("calculate")
 
 
     def distance_2D_from(self, callback=None):
@@ -174,7 +177,7 @@ class Satellite():
         self.distance_2D_from()
         self.update_pixel_coordinates()
 
-        if self.render == False:
+        if self.calculate == False:
             if self.id in self.trajectories.in_range:
                 self.trajectories.in_range.remove(self.id)
         else:
@@ -306,11 +309,22 @@ class Trajectories():
                     task = self.calc_q_0.get() 
 
                     sat = task.data
-                    if sat.render:
+                    if sat.calculate:
                         sat.update()
 
                     if self.config.properties.auto_render:
-                        self.render_queue.put(sat)
+                        r_range = self.config.properties.auto_render_range
+                        render = False
+
+                        if r_range == 'Primary' or r_range == 'All':
+                            render = True
+
+                        if r_range == 'In Range' and sat.in_range:
+                            render = True
+
+                        if render == True:
+                            self.render_queue.put(sat)
+                            
                 
                     self.calc_q_0.task_done()
 
@@ -326,14 +340,22 @@ class Trajectories():
                     self.populate_calc_q_1()
                 else:
                     task = self.calc_q_1.get()
-                    if task.type == 'CALCULATION':
-                        sat = task.data
-                        if sat.render:
-                            sat.update()
-
-                        if self.config.properties.auto_render:
-                            self.render_queue.put(sat)
                     
+                    sat = task.data
+                    if sat.calculate:
+                        sat.update()
+
+                    if self.config.properties.auto_render:
+                        r_range = self.config.properties.auto_render_range
+                        render = False
+                        if r_range == 'Secondary' or r_range == 'All':
+                            render = True
+                        if r_range == 'In Range' and sat.in_range:
+                            render = True
+                        
+                        if render == True:
+                            self.render_queue.put(sat)
+
                     self.calc_q_1.task_done()
 
     
@@ -348,25 +370,29 @@ class Trajectories():
         
         for i in range(len(self.satellites)):
             sat = self.satellites[i]
-            render = 1 # True
+            calculate = 1 # True
 
             if len(filter) > 0:
                 if mode == 'AND':
                     for f in self.config.properties.filter:
-                        render *= (f.lower() in sat.id.lower())
+                        calculate *= (f.lower() in sat.id.lower())
                 elif mode == 'OR':
                     for f in self.config.properties.filter:
-                        render += (f in sat.id)
+                        calculate += (f in sat.id)
 
             if classification != 'All':
-                render *= (sat.classification == c_map[classification])
+                calculate *= (sat.classification == c_map[classification])
 
             # set state
-            if render == 0 or i > self.config.properties.t1_max:
-                sat.render = False
+            if calculate == 0 or i > self.config.properties.t1_max:
+                sat.calculate = False
             else:
-                sat.render = True
+                sat.calculate = True
     
+    
+    def update_render_list(self):
+        print(self.config.properties.auto_render_range)
+
 
     def calculate_tle_age(self):
         if self.timestamp:
@@ -416,7 +442,7 @@ class Trajectories():
     def in_range_update(self):
         for i in range(len(self.satellites)):
             sat = self.satellites[i]
-            if sat.render == False:
+            if sat.calculate == False:
                 if sat.id in self.in_range:
                     self.in_range.remove(sat.id)
             else:

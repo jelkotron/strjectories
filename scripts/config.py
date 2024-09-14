@@ -114,9 +114,10 @@ class ConfigIo():
         if task.type == 'IO':
             self.io_update(task)
             self.ui_q.put(task)
-            # if task.subtype == 'in_range_list':
-            #     self.ui_q.put(Task(type='SIMULATION', subtype='in_range_list'))
+            
 
+        if task.type == 'RENDERING':
+            self.trajectories.update_render_list()
 
 
         #### Automation ####
@@ -263,7 +264,7 @@ class ConfigIo():
                                 "auto_simulate" : data.get("auto_simulate"),
                                 "auto_sleep" : data.get("auto_sleep"),
                                 "auto_render" : data.get("auto_render"),
-                                
+                                "auto_render_range": data.get("auto_render_range"),
                                 "sort_by": data.get("sort_by"),
                                 "sleep_time": data.get("sleep_time"),
                                 "wake_time": data.get("wake_time"),
@@ -679,6 +680,7 @@ class ConfigIo():
         self.ui_q.put(Task(type='FILE_UPDATE', subtype="tle_file", data=None))
         self.ui_q.put(Task(type='SIMULATION', subtype="sort_by", data=None))
         self.ui_q.put(Task(type='RENDERING', subtype="reset", data=None))
+
         if self.properties.auto_render:
             self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer', data=None))
 
@@ -812,7 +814,7 @@ class ConfigData():
             "auto_sleep" : False,
             "auto_serial" : False,
             "auto_render" : False,
-
+            "auto_render_range": 'Primary',
             "pin_0_use": False,
             "pin_0": 0,
             "pin_0_value": 'High',
@@ -859,6 +861,7 @@ class ConfigData():
                 "auto_sleep" : self.auto_sleep,
                 "auto_serial" : self.auto_serial,
                 "auto_render" : self.auto_render,
+                "auto_render_range": self.auto_render_range,
                 "sort_by" : self.sort_by, 
                 
                 "sleep_time": self.sleep_time,
@@ -904,6 +907,7 @@ class ConfigData():
         self.auto_sleep_set(self.default_values["auto_sleep"], single=False)
         self.auto_serial_set(self.default_values["auto_serial"], single=False)
         self.auto_render_set(self.default_values["auto_render"], single=False)
+        self.auto_render_range_set(self.default_values["auto_render_range"], single=False)
         self.sort_by_set(self.default_values["sort_by"], single=False)
         
         self.pin_0_use_set(self.default_values["pin_0_use"], single=False)
@@ -983,6 +987,9 @@ class ConfigData():
         
         auto_render = data.get("auto_render")
         self.auto_render_set(auto_render if auto_render else self.default_values["auto_render"], single=False)
+
+        auto_render_range = data.get("auto_render_range")
+        self.auto_render_range_set(auto_render_range if auto_render_range else self.default_values["auto_render_range"], single=False)
 
         sort_by = data.get("sort_by")
         self.sort_by_set(sort_by if sort_by else self.default_values["sort_by"], single=False)
@@ -1324,6 +1331,18 @@ class ConfigData():
             if value == True:
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
             
+
+    def auto_render_range_set(self, value, single=True):
+        self.auto_render_range = value
+        if single == True:
+            self.input_q.put(Task(type='RENDERING', subtype='RANGE'))
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+
+
     def wake_time_set(self, value, single=True):
         try:
             divisor = None
