@@ -11,10 +11,11 @@ import timezonefinder
 from geopy import geocoders
 import schedule
 import gpiod
+from gpiod.line import Direction, Value
 
 
 DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
-
+CHIPPATH = '/dev/gpiochip0'
 
 class ConfigIo():
     def __init__(self):
@@ -76,16 +77,18 @@ class ConfigIo():
             self.wake()
         else:
             self.sleep()
-        self.toggle_line_value("/dev/gpiochip0", 18)
 
     def sleep(self):
         self.sleeping = True
         self.input_q.put(Task(type='IO', subtype='sleep'))
+        # self.toggle_pin_value(CHIPPATH, 18)
 
 
     def wake(self):
         self.sleeping = False
         self.input_q.put(Task(type='IO', subtype='sleep'))
+        # self.toggle_pin_value(CHIPPATH, 18)
+
 
 
     def process(self, task):
@@ -464,64 +467,94 @@ class ConfigIo():
     def io_update(self, task):
         satellites_in_range = (len(self.trajectories.in_range) > 0)
         sleeping = self.sleeping
+        state_0 = None
+        state_1 = None
 
         if self.properties.pin_0_condition == "Satellites in Range":
-            self.properties.pin_0_state_set(satellites_in_range * (self.properties.pin_0_value == 'High'))
+            if satellites_in_range:
+                state_0 = self.properties.pin_0_value == 'High'
+            else:
+                state_0 = self.properties.pin_0_value == 'Low'
         
         elif self.properties.pin_0_condition == "No Satellites in Range":
-            self.properties.pin_0_state_set(not satellites_in_range * (self.properties.pin_0_value == 'High'))
+            if satellites_in_range:
+                state_0 = self.properties.pin_0_value == 'Low'
+            else:
+                state_0 = self.properties.pin_0_value == 'High'
+            
         
         elif self.properties.pin_0_condition == "Sleeping":
             if sleeping:
-                self.properties.pin_0_state_set(self.properties.pin_0_value == 'High')
+                state_0 = self.properties.pin_0_value == 'High'
             else:
-                self.properties.pin_0_state_set(self.properties.pin_0_value == 'Low')
-
+                state_0 = self.properties.pin_0_value == 'Low'
+        
         elif self.properties.pin_0_condition == "Not Sleeping":
             if sleeping:
-                self.properties.pin_0_state_set(self.properties.pin_0_value == 'Low')
+                state_0 = self.properties.pin_0_value == 'Low'
             else:
-                self.properties.pin_0_state_set(self.properties.pin_0_value == 'High')
+                state_0 = self.properties.pin_0_value == 'High'
+                
+        if state_0 != None:
+            self.pin_state_update(CHIPPATH, 'pin_0', state_0)
 
 
         if self.properties.pin_1_condition == "Satellites in Range":
-            self.properties.pin_1_state_set(satellites_in_range * (self.properties.pin_1_value == 'High'))
-        
+            if satellites_in_range:
+                state_1 = self.properties.pin_1_value == 'High'
+            else:
+                state_1 = self.properties.pin_1_value == 'Low'
+
+
         elif self.properties.pin_1_condition == "No Satellites in Range":
-            self.properties.pin_1_state_set(not satellites_in_range * (self.properties.pin_1_value == 'High'))
+            if satellites_in_range:
+                state_1 = self.properties.pin_1_value == 'Low'
+            else:
+                state_1 = self.properties.pin_1_value == 'High'
+
         
         elif self.properties.pin_1_condition == "Sleeping":
             if sleeping:
-                self.properties.pin_1_state_set(self.properties.pin_1_value == 'High')
+                state_1 = self.properties.pin_1_value == 'High'
             else:
-                self.properties.pin_1_state_set(self.properties.pin_1_value == 'Low')
-
+                state_1 = self.properties.pin_1_value == 'Low'
+        
         elif self.properties.pin_1_condition == "Not Sleeping":
             if sleeping:
-                self.properties.pin_1_state_set(self.properties.pin_1_value == 'Low')
+                state_1 = self.properties.pin_1_value == 'Low'
             else:
-                self.properties.pin_1_state_set(self.properties.pin_1_value == 'High')
+                state_1 = self.properties.pin_1_value == 'High'
+        
+        if state_1 != None:
+            self.pin_state_update(CHIPPATH, 'pin_1', state_1)
 
-    def toggle_io_value(self, value):
-        if value == gpiod.line.Value.INACTIVE:
-            return gpiod.line.Value.ACTIVE
-        return gpiod.line.Value.INACTIVE
-    
-    def toggle_line_value(self, chip_path, line_offset):
-        value = gpiod.line.Value.ACTIVE
+   
+    def pin_state_update(self, chip_path, pin_path, state):
+        pin = None
+        callback = None
 
-        with gpiod.request_lines(
-                chip_path, 
-                consumer="toggle_line_value", 
-                config={
-                    line_offset: gpiod.LineSettings(
-                        direction=gpiod.line.Direction.OUTPUT, 
-                        output_value=value
-                        )}
-        ) as request:
-            value = self.toggle_io_value(value)
-            request.set_value(line_offset, value)
-            print(value)
+        if pin_path == 'pin_0':
+            pin = self.properties.pin_0
+            callback = lambda: self.properties.pin_0_state_set(state)
+        elif pin_path == 'pin_1':
+            pin = self.properties.pin_1
+            callback = lambda: self.properties.pin_1_state_set(state)
+
+        if pin:
+            pin_state = Value.ACTIVE if state else Value.INACTIVE
+            with gpiod.request_lines(
+                    chip_path, 
+                    consumer="pin-state-update", 
+                    config={
+                        pin: gpiod.LineSettings(
+                            direction=Direction.OUTPUT, 
+                            output_value=pin_state
+                            )}
+            ) as request:
+                request.set_value(pin, pin_state)
+
+            callback()
+
 
     ######## Session ########
     def session_load(self):
@@ -583,10 +616,11 @@ class ConfigIo():
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
 
             self.input_q.put(Task(type='SIMULATION', subtype='selection'))
-            self.input_q.put(Task(type='IO', subtype=None))
+            
             
             if not init:
-                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
+                if self.properties.auto_render:
+                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
         
         self.input_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
 
@@ -625,7 +659,10 @@ class ConfigIo():
         self.ui_q.put(Task(type='FILE_UPDATE', subtype="tle_file", data=None))
         self.ui_q.put(Task(type='SIMULATION', subtype="sort_by", data=None))
         self.ui_q.put(Task(type='RENDERING', subtype="reset", data=None))
-        self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer', data=None))
+        if self.properties.auto_render:
+            self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer', data=None))
+
+        self.input_q.put(Task(type='IO', subtype=None))
 
         if self.properties.auto_simulate == True:
             self.simulation_start()
@@ -718,15 +755,13 @@ class ConfigData():
         self.pin_0_value = 'High'
         self.pin_0_condition = False
         self.pin_0_state = False # LO
-        self.pin_0_line = None
 
         self.pin_1_use = False
         self.pin_1 = 1
         self.pin_1_value = 'High'
         self.pin_1_condition = False
         self.pin_1_state = False # LO
-        self.pin_1_line = None
-
+        
                 #### Save state ####
         self.saved = True
         self.sort_by = None
@@ -1364,19 +1399,21 @@ class ConfigData():
                 self.saved_set(False)
    
     def pin_0_set(self, value, single=True):
-        if type(value) == int and value < 0 and value > 25:
-            self.pin_0 = value
+        self.pin_0 = value
+        self.input_q.put(Task(type='IO', subtype='pin_0'))
 
         if single == True:
+
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
                 self.saved_set(False)
    
     def pin_0_value_set(self, value, single=True):
+        print("Pipi")
         self.pin_0_value = value
         if single == True:
-            self.input_q.put(Task(type='IO', subtype=None))
+            self.input_q.put(Task(type='IO', subtype='pin_0'))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
@@ -1385,7 +1422,7 @@ class ConfigData():
     def pin_0_condition_set(self, value, single=True):
         self.pin_0_condition = value
         if single == True:
-            self.input_q.put(Task(type='IO', subtype=None))
+            self.input_q.put(Task(type='IO', subtype='pin_0'))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
@@ -1394,9 +1431,6 @@ class ConfigData():
 
     def pin_0_state_set(self, value):
         if value != self.pin_0_state:
-            if self.pin_0_line:
-                self.pin_0_line.set_value(int(value))
-
             if value == 0:
                 value = False
             elif value == 1:
@@ -1414,20 +1448,21 @@ class ConfigData():
 
 
     def pin_1_set(self, value, single=True):
-        if type(value) == int and value < 0 and value > 25:
-            self.pin_1 = value
-                
-            if single == True:
-                if self.auto_save:
-                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
-                else:
-                    self.saved_set(False)
+        self.pin_1 = value
+            
+        if single == True:
+            self.input_q.put(Task(type='IO', subtype='pin_1'))
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
 
 
     def pin_1_value_set(self, value, single=True):
         self.pin_1_value = value
+        print("Kaka")
         if single == True:
-            self.input_q.put(Task(type='IO', subtype=None))
+            self.input_q.put(Task(type='IO', subtype='pin_1'))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
@@ -1436,7 +1471,7 @@ class ConfigData():
     def pin_1_condition_set(self, value, single=True):
         self.pin_1_condition = value
         if single == True:
-            self.input_q.put(Task(type='IO', subtype=None))
+            self.input_q.put(Task(type='IO', subtype='pin_1'))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:
