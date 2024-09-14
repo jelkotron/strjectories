@@ -518,9 +518,10 @@ class ConfigIo():
                         direction=gpiod.line.Direction.OUTPUT, 
                         output_value=value
                         )}
-        ) as line_request:
+        ) as request:
             value = self.toggle_io_value(value)
-            line_request.set_value(line_offset, value)
+            request.set_value(line_offset, value)
+            print(value)
 
     ######## Session ########
     def session_load(self):
