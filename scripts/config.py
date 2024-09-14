@@ -508,7 +508,7 @@ class ConfigIo():
         return gpiod.line.Value.INACTIVE
     
     def toggle_line_value(self, chip_path, line_offset):
-        value = gpiod.line.Value
+        value = gpiod.line.Value.ACTIVE
 
         with gpiod.request_lines(
                 chip_path, 
