@@ -547,10 +547,12 @@ class ConfigIo():
 
         if pin_path == 'pin_0':
             use = self.properties.pin_0_use
+            use_set = self.properties.pin_0_use_set
             pin = self.properties.pin_0
             callback = lambda: self.properties.pin_0_state_set(state)
         elif pin_path == 'pin_1':
-            use = self.properties.pin_0_use
+            use = self.properties.pin_1_use
+            use_set = self.properties.pin_1_use_set
             pin = self.properties.pin_1
             callback = lambda: self.properties.pin_1_state_set(state)
 
@@ -569,6 +571,9 @@ class ConfigIo():
                     request.set_value(pin, pin_state)
             
             except PermissionError:
+                callback = lambda: use_set(False)
+                subtype = 'pin_0_use' if pin_path == 'pin_0' else 'pin_1_use'
+                self.ui_q.put(Task(type='UI_UPDATE', subtype=subtype)) 
                 msg = "%s Warning: Permission to I/O chip denied"%(time.strftime("%H:%M:%S"))
                 print(msg)
                 self.log(msg)
@@ -1433,7 +1438,7 @@ class ConfigData():
 
     #### Pins ####
     def pin_0_use_set(self, value, single=True):
-        self.pin_0_use = value      
+        self.pin_0_use = value     
         if single == True:
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))

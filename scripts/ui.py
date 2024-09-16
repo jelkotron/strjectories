@@ -45,8 +45,7 @@ class LocationBox(ttk.Frame):
 
 
 
-    def location_set(self, event, selection_index=None):
-        self.root.configure(cursor="watch")       
+    def location_set(self, event, selection_index=None): 
         index = 0
         if selection_index != None:
             index = selection_index
@@ -63,7 +62,6 @@ class LocationBox(ttk.Frame):
 
 
     def update(self, task):
-        self.root.configure(cursor="watch")
 
         if task.subtype == 'loc_list' or task.subtype == 'all':
             if self.config.properties.loc_list:
@@ -94,7 +92,6 @@ class LocationBox(ttk.Frame):
                 self.location.set("")
 
 
-        self.root.configure(cursor="")
         
           
 
@@ -157,8 +154,7 @@ class SelectionBox(ttk.Frame):
 
 
     def update(self, task):
-        self.root.configure(cursor="watch")
-
+        
         if task.subtype == 'timezone':
             if self.config.properties.timezone:
                 self.timezone.configure(text=self.config.properties.timezone)
@@ -194,7 +190,6 @@ class SelectionBox(ttk.Frame):
             else:
                 self.city.configure(text="")
             
-        self.root.configure(cursor="")
             
 
 class FileBox(ttk.Frame):
@@ -244,8 +239,7 @@ class FileBox(ttk.Frame):
 
 
     def update(self, task):
-        self.root.configure(cursor="watch")
- 
+        
         if task.subtype == 'config_file':
             if self.config.properties.config_file:
                 self.config_open_button.configure(text=self.config.properties.config_file)
@@ -285,8 +279,7 @@ class FileBox(ttk.Frame):
 
         self.info_0_val.configure(text=info)
  
-        self.root.configure(cursor="")
-
+        
 
     def config_new(self):
         self.config.new()
@@ -362,7 +355,6 @@ class OptionBox(ttk.Frame):
 
 
     def update(self, task):
-        self.root.configure(cursor="watch")
         if task.subtype == 'radius':
             index = 0
             for i in range(len(self.choices_radius)):
@@ -379,24 +371,17 @@ class OptionBox(ttk.Frame):
 
         if task.subtype == 'filter':
             self.filter.set(", ".join(self.config.properties.filter))
-        self.root.configure(cursor="")
-
+        
 
     def radius_set(self, event):
-        self.root.configure(cursor="watch")
         self.config.properties.radius_set(self.radius.get())
-        self.root.configure(cursor="")
         
     def classification_set(self, event):
-        self.root.configure(cursor="watch")
         self.config.properties.classification_set(self.classification.get())
-        self.root.configure(cursor="")
-
+        
     def filter_set(self, event=None):
-        self.root.configure(cursor="watch")
         self.config.properties.filter_set(self.filter.get())
-        self.root.configure(cursor="")
-
+        
 
 class SimulationBox(ttk.Frame):
     def __init__(self, root, config, viewer=None):
@@ -467,8 +452,7 @@ class SimulationBox(ttk.Frame):
         self.clock_update()
 
     def update(self, task):
-        self.root.configure(cursor="watch")
-
+        
         if task.subtype == 'toggle':
             value = task.data
             if value == 1: # start
@@ -500,8 +484,6 @@ class SimulationBox(ttk.Frame):
                 self.t1_max.set(val)
             except ValueError:
                 pass
-
-        self.root.configure(cursor="")
 
 
     def clock_update(self):
@@ -682,8 +664,7 @@ class AutomationBox(ttk.Frame):
         # self.frame.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
 
     def update(self, task):
-        self.root.configure(cursor="watch")
-
+        
         if task.subtype == 'auto_save':
             val = self.config.properties.auto_save
             if type(val) == bool:
@@ -764,8 +745,7 @@ class AutomationBox(ttk.Frame):
         if task.subtype == 'wake_time':
             self.wake_time.set(self.config.properties.wake_time)
             
-        self.root.configure(cursor="")
-
+        
     def auto_save_set(self):
         autosave = self.auto_save.get()
         self.config.properties.auto_save_set(autosave)
@@ -940,8 +920,11 @@ class OutputBox(ttk.Frame):
         self.pin_0_use.set(False)
         pin_0_label.grid(row=0, column=0, sticky="E", padx=(0,2), pady=0)
         self.pin_0_box = ttk.OptionMenu(pin_0_row_0, self.pin_0, self.choices_pin[-1], *self.choices_pin, command=self.pin_0_set, direction='above', style="Dark.TMenubutton")
+        self.pin_0_box.configure(state='disabled')
         self.pin_0_box.grid(row=0, column=1, padx=0, ipadx=0)
+        
         self.pin_0_value_box = ttk.OptionMenu(pin_0_row_0, self.pin_0_value, self.choices_pin_state[0], *self.choices_pin_state, command=self.pin_0_value_set, style="Dark.TMenubutton")
+        self.pin_0_value_box.configure(state='disabled')
         self.pin_0_value_box.grid(row=0, column=2, padx=0, ipadx=0)
         pin_0_row_0.columnconfigure((0,1,2), minsize=50, weight=0)
         pin_0_row_0.pack(padx=20, pady=(20,0), anchor='nw')
@@ -955,6 +938,7 @@ class OutputBox(ttk.Frame):
 
         self.pin_0_condition_box = ttk.OptionMenu(pin_0_row_1, self.pin_0_condition, self.choices_pin_value[0], *self.choices_pin_value, command=self.pin_0_condition_set, style="DarkFixed.TMenubutton")
         self.pin_0_condition_box.grid(row=1, column=1, sticky='W', padx=0, ipadx=0)
+        self.pin_0_condition_box.configure(state='disabled')
         pin_0_row_1.columnconfigure((0), minsize=50, weight=0)
         
         pin_0_row_2 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
@@ -964,7 +948,7 @@ class OutputBox(ttk.Frame):
         pin_0_display_label.grid(row=2, column=0, padx=(0,2), sticky='E')
         self.pin_0_display = ttk.Label(pin_0_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_0_display.grid(row=2, column=1, sticky='W')
-        self.pin_0_display.configure(text="None")
+        self.pin_0_display.configure(text="None", state='disabled')
         pin_0_row_1.pack(padx=20, pady=(0,0), anchor='nw')
 
 
@@ -977,10 +961,11 @@ class OutputBox(ttk.Frame):
 
         self.pin_1_box = ttk.OptionMenu(pin_1_row_0, self.pin_1, self.choices_pin[-2], *self.choices_pin, command=self.pin_1_set, direction='above', style="Dark.TMenubutton")
         self.pin_1_box.grid(row=0, column=1, padx=0, ipadx=0)
-    
+        self.pin_1_box.configure(state='disabled')
+
         self.pin_1_value_box = ttk.OptionMenu(pin_1_row_0, self.pin_1_value, self.choices_pin_state[1], *self.choices_pin_state, command=self.pin_1_value_set, style="Dark.TMenubutton")
         self.pin_1_value_box.grid(row=0, column=2, padx=0, ipadx=0)
-
+        self.pin_1_value_box.configure(state='disabled')
         pin_1_row_0.columnconfigure((0,1,2), minsize=50, weight=0)
         pin_1_row_0.pack(padx=20, pady=(20,0), anchor='nw')
 
@@ -991,13 +976,14 @@ class OutputBox(ttk.Frame):
 
         self.pin_1_condition_box = ttk.OptionMenu(pin_1_row_1, self.pin_1_condition, self.choices_pin_value[2], *self.choices_pin_value, command=self.pin_1_condition_set, style="DarkFixed.TMenubutton")
         self.pin_1_condition_box.grid(row=1, column=1, sticky='W', padx=0, ipadx=0)
-        
+        self.pin_1_condition_box.configure(state='disabled')
+
         pin_1_display_label = ttk.Label(pin_1_row_1, text="State", justify='center', width=5, style="Dark.TLabel")
         pin_1_display_label.grid(row=2, column=0, padx=(0,2), sticky='E')
 
         self.pin_1_display = ttk.Label(pin_1_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_1_display.grid(row=2, column=1, sticky='W')
-        self.pin_1_display.configure(text="None")
+        self.pin_1_display.configure(text="None", state='disabled')
         
         pin_1_row_1.columnconfigure((0), minsize=50, weight=0)
         pin_1_row_1.pack(padx=20, pady=(0,0), anchor='nw')
@@ -1079,7 +1065,6 @@ class OutputBox(ttk.Frame):
         root.pack(padx=(0,0), ipadx=0, pady=(4,4), expand=1, fill=tk.BOTH)
 
     def update(self, task):
-        self.root.configure(cursor="watch")
         if task.subtype == 'auto_serial':
             self.auto_serial.set(self.config.properties.auto_serial)
         if task.subtype == 'serial_port':
@@ -1098,6 +1083,8 @@ class OutputBox(ttk.Frame):
         if task.subtype == 'pin_0_use':
             pin_use = self.config.properties.pin_0_use
             self.pin_0_use.set(pin_use)
+            state = 'normal' if pin_use == True else 'disabled'
+            self.box_state_set([self.pin_0_box, self.pin_0_value_box, self.pin_0_condition_box, self.pin_0_display], state)
 
         if task.subtype == 'pin_0':
             self.pin_0.set(self.config.properties.pin_0)
@@ -1116,6 +1103,9 @@ class OutputBox(ttk.Frame):
         if task.subtype == 'pin_1_use':
             pin_use = self.config.properties.pin_1_use
             self.pin_1_use.set(pin_use)
+            state = 'normal' if pin_use == True else 'disabled'
+            self.box_state_set([self.pin_1_box, self.pin_1_value_box, self.pin_1_condition_box, self.pin_1_display], state)
+            
            
         if task.subtype == 'pin_1':
             self.pin_1.set(self.config.properties.pin_1)
@@ -1131,37 +1121,29 @@ class OutputBox(ttk.Frame):
             txt = "HIGH" if val == True else "LOW"
             self.pin_1_display.configure(text=txt)
 
-        self.root.configure(cursor="")
-
     def pin_0_use_set(self, event=None):
         pin_use = self.pin_0_use.get()
         if pin_use == True:
-            self.pin_0_box.configure(state='normal')
-            self.pin_0_value_box.configure(state='normal')
-            self.pin_0_condition_box.configure(state='normal')
-            self.pin_0_display.configure(state='normal')
-
+            state = 'normal'
         else:
-            self.pin_0_box.configure(state='disabled')
-            self.pin_0_value_box.configure(state='disabled')
-            self.pin_0_condition_box.configure(state='disabled')
-            self.pin_0_display.configure(state='disabled')
-        
+            state = 'disabled'
+        self.box_state_set([self.pin_0_box, self.pin_0_value_box, self.pin_0_condition_box, self.pin_0_display], state)
         self.config.properties.pin_0_use_set(pin_use)
+
+    def box_state_set(self, boxes, state):
+        if type(boxes) != list:
+            boxes = [boxes]
+        for box in boxes:
+            box.configure(state=state)
+
 
     def pin_1_use_set(self, event=None):
         pin_use = self.pin_1_use.get()
         if pin_use == True:
-            self.pin_1_box.configure(state='normal')
-            self.pin_1_value_box.configure(state='normal')
-            self.pin_1_condition_box.configure(state='normal')
-            self.pin_1_display.configure(state='normal')
+            state = 'normal'
         else:
-            self.pin_1_box.configure(state='disabled')
-            self.pin_1_value_box.configure(state='disabled')
-            self.pin_1_condition_box.configure(state='disabled')
-            self.pin_1_display.configure(state='disabled')
-
+            state = 'disabled'
+        self.box_state_set([self.pin_1_box, self.pin_1_value_box, self.pin_1_condition_box, self.pin_1_display], state)
         self.config.properties.pin_1_use_set(pin_use)
 
     def pin_0_set(self, event=None):
@@ -1398,10 +1380,8 @@ class Viewer(ttk.Frame):
                         self.render_satellite()
         
         if self.render_once == True:
-            self.parent.configure(cursor="watch")
             while not self.config.trajectories.render_queue.empty():
                 self.render_satellite()
-            self.parent.configure(cursor="")
             self.render_once = False
            
 
@@ -1409,12 +1389,10 @@ class Viewer(ttk.Frame):
 
 
     def update_once(self):
-        self.parent.configure(cursor="watch")
         self.config.trajectories.reset_render_queue(repopulate=True)
         self.update_inrange_colors()
         self.render_once = True
-        self.parent.configure(cursor="")
-
+        
 
     def clear(self):
         for o in self.objects:
