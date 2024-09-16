@@ -835,6 +835,7 @@ class ConfigData():
             "sort_by": "Proximity"
         }
 
+        self.set_default()
 
     def properties_get(self):
         data = {
