@@ -783,6 +783,8 @@ class ConfigData():
         self.pin_1_value = 'High'
         self.pin_1_condition = False
         self.pin_1_state = False # LO
+
+        self.auto_render_range = None
         
                 #### Save state ####
         self.saved = True
