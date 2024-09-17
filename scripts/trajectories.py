@@ -326,6 +326,10 @@ class Trajectories():
                             sat.render = render
                             sat.render_step = 0
                             self.render_queue.put(sat)
+                        elif render == False:
+                            sat.render = render
+                            self.render_queue.put(sat)
+                            sat.render_step = 0
                         else:
                             sat.render_step += 1
                             
@@ -363,8 +367,12 @@ class Trajectories():
                         
                         if sat.render_step >= self.config.properties.render_step_get():
                             sat.render = render
-                            sat.render_step = 0
                             self.render_queue.put(sat)
+                            sat.render_step = 0
+                        elif render == False:
+                            sat.render = render
+                            self.render_queue.put(sat)
+                            sat.render_step = 0
                         else:
                             sat.render_step += 1
 

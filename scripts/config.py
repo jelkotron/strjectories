@@ -1247,6 +1247,7 @@ class ConfigData():
                 self.t0_max = value
                 if single == True:
                     if self.auto_render:
+                        self.input_q.put(Task(type='RENDERING', subtype='RANGE'))
                         self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                     if self.auto_save:
                         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
@@ -1257,7 +1258,6 @@ class ConfigData():
                 
             except ValueError:
                 return False
-
         return False
 
     def t1_max_set(self, value, single=True):
@@ -1268,6 +1268,7 @@ class ConfigData():
                 self.input_q.put(Task(type='SIMULATION', subtype='threads'))
                 if single == True:
                     if self.auto_render:
+                        self.input_q.put(Task(type='RENDERING', subtype='RANGE'))
                         self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
                     if self.auto_save:
                         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
@@ -1278,6 +1279,7 @@ class ConfigData():
 
             except ValueError:
                 return False
+        self.input_q.put(Task(type='RENDERING', subtype='RANGE'))
         return False
 
 
