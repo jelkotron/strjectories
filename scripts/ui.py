@@ -1372,7 +1372,8 @@ class Viewer(ttk.Frame):
 
     def update(self):
         if self.rendering == True:
-            render_step = 100
+            render_step = 1
+            print(self.config.trajectories.render_queue.qsize())
             if self.config and self.config.trajectories and self.config.trajectories.render_queue:
                 for i in range(render_step):
                     if self.rendering == False:

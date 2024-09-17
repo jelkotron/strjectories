@@ -303,6 +303,7 @@ class Trajectories():
             else:
                 if self.calc_q_0.empty():
                     self.sat_sort()
+                    self.trim_render_queue()
                     self.populate_calc_q_0()
                     # TODO: populate q_1 and make t_1 start from last
                 else:
@@ -329,6 +330,9 @@ class Trajectories():
                             
                 
                     self.calc_q_0.task_done()
+
+
+
 
 
     def thread_1_run(self):
@@ -487,6 +491,25 @@ class Trajectories():
                         if sat.id in self.in_range:
                             self.in_range.remove(sat.id)
 
+
+    def trim_render_queue(self, factor=2):
+        r_range = self.config.properties.auto_render_range
+        if r_range == 'In Range':
+            while self.render_queue.qsize() > len(self.in_range) * factor:
+                self.render_queue.task_done()
+
+        if r_range == 'Primary':
+            while self.render_queue.qsize() > self.config.properties.t0_max * factor:
+                self.render_queue.task_done()
+
+        if r_range == 'Secondary':
+            while self.render_queue.qsize() > self.config.properties.t1_max * factor:
+                self.render_queue.task_done()
+
+        if r_range == 'All':
+            maxcount = self.config.properties.t0_max + self.config.properties.t1_max 
+            while self.render_queue.qsize() >  maxcount * factor:
+                self.render_queue.task_done()
 
     def reset_render_queue(self, repopulate=True):
         self.render_queue = queue.Queue()
