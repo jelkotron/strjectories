@@ -1284,7 +1284,7 @@ class Viewer(ttk.Frame):
         
     def render_satellite(self):
         obj = self.config.trajectories.render_queue.get()
-        if not self.config.properties.auto_render and self.render_once == False:
+        if not self.config.properties.auto_render:
             self.config.trajectories.render_queue.task_done()
 
         else:
@@ -1333,8 +1333,8 @@ class Viewer(ttk.Frame):
                                                                 )
                         # obj.color = col
                         self.objects.append(obj.render_obj)
-
             self.config.trajectories.render_queue.task_done()
+            
 
 
     def render_objects_reset(self):
@@ -1372,7 +1372,7 @@ class Viewer(ttk.Frame):
 
     def update(self):
         if self.rendering == True:
-            render_step = 1
+            render_step = 10
             print(self.config.trajectories.render_queue.qsize())
             if self.config and self.config.trajectories and self.config.trajectories.render_queue:
                 for i in range(render_step):
@@ -1380,6 +1380,8 @@ class Viewer(ttk.Frame):
                         break
                     if not self.config.trajectories.render_queue.empty():
                         self.render_satellite()
+                self.config.trajectories.trim_render_queue()
+                        
 
         
         if self.render_once == True:

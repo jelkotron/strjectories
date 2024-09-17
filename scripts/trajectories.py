@@ -303,7 +303,6 @@ class Trajectories():
             else:
                 if self.calc_q_0.empty():
                     self.sat_sort()
-                    self.trim_render_queue()
                     self.populate_calc_q_0()
                     # TODO: populate q_1 and make t_1 start from last
                 else:
@@ -328,7 +327,6 @@ class Trajectories():
                         if render == True:
                             self.render_queue.put(sat)
                             
-                
                     self.calc_q_0.task_done()
 
 
@@ -495,21 +493,21 @@ class Trajectories():
     def trim_render_queue(self, factor=2):
         r_range = self.config.properties.auto_render_range
         if r_range == 'In Range':
-            while self.render_queue.qsize() > len(self.in_range) * factor:
-                self.render_queue.task_done()
+            if self.render_queue.qsize() > len(self.in_range) * factor and not self.render_queue.empty():
+                self.reset_render_queue()
 
         if r_range == 'Primary':
-            while self.render_queue.qsize() > self.config.properties.t0_max * factor:
-                self.render_queue.task_done()
+            if self.render_queue.qsize() > self.config.properties.t0_max * factor and not self.render_queue.empty():
+                self.reset_render_queue()
 
         if r_range == 'Secondary':
-            while self.render_queue.qsize() > self.config.properties.t1_max * factor:
-                self.render_queue.task_done()
+            if self.render_queue.qsize() > self.config.properties.t1_max * factor and not self.render_queue.empty():
+                self.reset_render_queue()
 
         if r_range == 'All':
             maxcount = self.config.properties.t0_max + self.config.properties.t1_max 
-            while self.render_queue.qsize() >  maxcount * factor:
-                self.render_queue.task_done()
+            if self.render_queue.qsize() >  maxcount * factor and not self.render_queue.empty():
+                self.reset_render_queue()
 
     def reset_render_queue(self, repopulate=True):
         self.render_queue = queue.Queue()
