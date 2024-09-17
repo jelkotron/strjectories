@@ -602,35 +602,35 @@ class AutomationBox(ttk.Frame):
 
         auto_save_w = ttk.Checkbutton(self.frame,var=self.auto_save, command=self.auto_save_set, text="Save",style="Dark.TCheckbutton")
         self.auto_save.set(False)
-        auto_save_w.grid(row=0, column=1, sticky="W")
+        auto_save_w.grid(row=1, column=1, sticky="W")
 
         auto_download_w = ttk.Checkbutton(self.frame,var=self.auto_download, command=self.auto_download_set, text="Download", style="Dark.TCheckbutton")
         self.auto_download.set(False)
-        auto_download_w.grid(row=0, column=2, sticky="W")
+        auto_download_w.grid(row=1, column=2, sticky="W")
 
         automsim_w = ttk.Checkbutton(self.frame,var=self.auto_simulate, command=self.auto_simulate_set, text="Simulate",style="Dark.TCheckbutton")
         self.auto_simulate.set(False)
-        automsim_w.grid(row=2, column=1, pady=(10,0), sticky="W")
+        automsim_w.grid(row=0, column=1, pady=(0,0), sticky="W")
 
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
-        auto_render_w.grid(row=0, column=5, sticky="W")
+        auto_render_w.grid(row=1, column=5, sticky="W")
         self.choices_auto_render_range = ['In Range', 'Primary', 'Secondary', 'All']
         self.auto_render_range = tk.StringVar(self.root)
         self.auto_render_range.set(self.choices_auto_render_range[0])
         self.auto_render_range_box = ttk.OptionMenu(self.frame, self.auto_render_range, self.choices_auto_render_range[0], *self.choices_auto_render_range, command=self.auto_render_range_set, style="Dark.TMenubutton")
-        self.auto_render_range_box.grid(row=1, column=5, sticky='W')
+        self.auto_render_range_box.grid(row=2, column=5, sticky='W')
         self.auto_render_range_box.configure(state='disabled')
 
         self.render_step_label = ttk.Label(self.frame, text="Step", style="Dark.TLabel")
-        self.render_step_label.grid(row=0, column=6, padx=(0,2), sticky='W')
+        self.render_step_label.grid(row=1, column=6, padx=(0,2), sticky='W')
         self.render_step_label.configure(state='disabled')
 
         self.choices_render_step = [0, 1, 2, 4, 8, 16, 24, 48]
         self.render_step = tk.IntVar(self.root)
         self.render_step.set(self.choices_render_step[0])
         self.render_step_box = ttk.OptionMenu(self.frame, self.render_step, self.choices_render_step[0], *self.choices_render_step, command=self.render_step_set, style="Dark.TMenubutton")
-        self.render_step_box.grid(row=1, column=6, sticky='W')
+        self.render_step_box.grid(row=2, column=6, sticky='W')
         self.render_step_box.configure(state='disabled')
 
 
@@ -640,30 +640,30 @@ class AutomationBox(ttk.Frame):
         self.auto_save_interval = tk.StringVar(self.root)
         self.auto_save_interval.set(self.choices_auto_save_interval[1])
         self.auto_save_interval_box = ttk.OptionMenu(self.frame, self.auto_save_interval, self.choices_auto_save_interval[1], *self.choices_auto_save_interval, command=self.auto_save_interval_set, style="Dark.TMenubutton")
-        self.auto_save_interval_box.grid(row=1, column=1, sticky='W')
+        self.auto_save_interval_box.grid(row=2, column=1, sticky='W')
         self.auto_save_interval_box.configure(state='disabled')
 
         self.choices_auto_download_interval = ['1 hour', '2 hours', '4 hours', '8 hours', '12 hours', '24 hours', '48 hours']
         self.auto_download_interval = tk.StringVar(self.root)
         self.auto_download_interval.set(self.choices_auto_download_interval[0])
         self.auto_download_interval_box = ttk.OptionMenu(self.frame, self.auto_download_interval, self.choices_auto_download_interval[0], *self.choices_auto_download_interval, command=self.auto_download_interval_set, style="Dark.TMenubutton")
-        self.auto_download_interval_box.grid(row=1, column=2, sticky='W')
+        self.auto_download_interval_box.grid(row=2, column=2, sticky='W')
         self.auto_download_interval_box.configure(state='disabled')
         
         auto_sleep_w = ttk.Checkbutton(self.frame, var=self.auto_sleep, command=self.auto_sleep_set, text="Sleep",style="Dark.TCheckbutton")
-        auto_sleep_w.grid(row=0, column=3, sticky="W")
+        auto_sleep_w.grid(row=1, column=3, sticky="W")
         self.auto_sleep.set(False)
 
         self.until_label = ttk.Label(self.frame, text="Wake", style="Dark.TLabel")
-        self.until_label.grid(row=0, column=4, sticky='W')
+        self.until_label.grid(row=1, column=4, sticky='W')
 
         self.sleep_time_entry = ttk.Entry(self.frame, textvariable=self.sleep_time, justify='center', validate="focusout", validatecommand=self.sleep_time_set, width=10, style="Dark.TEntry")
-        self.sleep_time_entry.grid(row=1, column=3, sticky='EW')
+        self.sleep_time_entry.grid(row=2, column=3, sticky='EW')
         self.sleep_time.set("23:33")
         self.sleep_time_entry.configure(state='disabled')
 
         self.wake_time_entry = ttk.Entry(self.frame, textvariable=self.wake_time, justify='center', validate="focusout", validatecommand=self.wake_time_set, width=10, style="Dark.TEntry")
-        self.wake_time_entry.grid(row=1, column=4, sticky='EW')
+        self.wake_time_entry.grid(row=2, column=4, sticky='EW')
         self.wake_time.set("08:15")
         self.wake_time_entry.configure(state='disabled')
 
