@@ -41,7 +41,6 @@ class Satellite():
             self.highlight = False
             self.calculate = True
             self.render = True 
-            
 
         if self.tle_1 and self.tle_2:
             blocks1 = self.tle_1.split(" ")
@@ -57,6 +56,8 @@ class Satellite():
         self.config = config
         if self.config.properties.lat and self.config.properties.lon:
             self.distance_from = [self.config.properties.lat, self.config.properties.lon]
+
+        self.render_step = 0
 
     
     def update_target_location(self):
@@ -191,7 +192,7 @@ class Satellite():
                     if self.id in self.trajectories.in_range:
                         self.trajectories.in_range.remove(self.id)
 
-        self.trajectories.render_queue.put(self)
+        # self.trajectories.render_queue.put(self)
 
 
 
@@ -290,7 +291,6 @@ class Trajectories():
 
     def thread_0_run(self):
         while True:
-
             dt = time.perf_counter() - self.time_age_check 
             if dt >= 30: # check age twice a minute
                 self.calculate_sim_age()
@@ -322,11 +322,14 @@ class Trajectories():
                         if r_range == 'In Range' and sat.in_range:
                             render = True
 
-                        sat.render = render
-
-                        if render == True:
+                        if sat.render_step >= self.config.properties.render_step_get():
+                            sat.render = render
+                            sat.render_step = 0
                             self.render_queue.put(sat)
+                        else:
+                            sat.render_step += 1
                             
+                    
                     self.calc_q_0.task_done()
 
 
@@ -349,6 +352,7 @@ class Trajectories():
                     if sat.calculate:
                         sat.update()
 
+
                     if self.config.properties.auto_render:
                         r_range = self.config.properties.auto_render_range
                         render = False
@@ -357,10 +361,13 @@ class Trajectories():
                         if r_range == 'In Range' and sat.in_range:
                             render = True
                         
-                        sat.render = render
-
-                        if render == True:
+                        if sat.render_step >= self.config.properties.render_step_get():
+                            sat.render = render
+                            sat.render_step = 0
                             self.render_queue.put(sat)
+                        else:
+                            sat.render_step += 1
+
 
                     self.calc_q_1.task_done()
 
@@ -505,7 +512,7 @@ class Trajectories():
                 self.reset_render_queue()
 
         if r_range == 'All':
-            maxcount = self.config.properties.t0_max + self.config.properties.t1_max 
+            maxcount = self.config.properties.t0_max + self.config.properties.t1_max  
             if self.render_queue.qsize() >  maxcount * factor and not self.render_queue.empty():
                 self.reset_render_queue()
 
@@ -516,6 +523,7 @@ class Trajectories():
         self.in_range_update()
         for obj in self.satellites:
             self.render_queue.put(obj)
+            
 
 
     def update_once(self, update_coords=True, update_dist=True, callback=None):

@@ -117,6 +117,9 @@ class ConfigIo():
             
 
         if task.type == 'RENDERING':
+            if task.subtype == 'render_step':
+                pass
+
             self.trajectories.sat_visibilit_set()
             if self.properties.auto_render:
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='range'))
@@ -823,6 +826,7 @@ class ConfigData():
             "auto_sleep" : False,
             "auto_serial" : False,
             "auto_render" : False,
+            "render_step": 0,
             "auto_render_range": 'In Range',
             "pin_0_use": False,
             "pin_0": 0,
@@ -871,6 +875,7 @@ class ConfigData():
                 "auto_sleep" : self.auto_sleep,
                 "auto_serial" : self.auto_serial,
                 "auto_render" : self.auto_render,
+                "render_step": self.render_step,
                 "auto_render_range": self.auto_render_range,
                 "sort_by" : self.sort_by, 
                 
@@ -918,6 +923,7 @@ class ConfigData():
         self.auto_serial_set(self.default_values["auto_serial"], single=False)
         self.auto_render_set(self.default_values["auto_render"], single=False)
         self.auto_render_range_set(self.default_values["auto_render_range"], single=False)
+        self.render_step_set(self.default_values["render_step"], single=False)
         self.sort_by_set(self.default_values["sort_by"], single=False)
         
         self.pin_0_use_set(self.default_values["pin_0_use"], single=False)
@@ -1000,6 +1006,9 @@ class ConfigData():
 
         auto_render_range = data.get("auto_render_range")
         self.auto_render_range_set(auto_render_range if auto_render_range else self.default_values["auto_render_range"], single=False)
+
+        render_step = data.get("render_step")
+        self.render_step_set(render_step if render_step else self.default_values["render_step"], single=False)
 
         sort_by = data.get("sort_by")
         self.sort_by_set(sort_by if sort_by else self.default_values["sort_by"], single=False)
@@ -1352,6 +1361,18 @@ class ConfigData():
                 self.saved_set(False)
 
 
+    def render_step_set(self, value, single=True):
+        self.render_step = value
+        print(value)
+        if single == True:
+            self.input_q.put(Task(type='RENDERING', subtype='STEP'))
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+    def render_step_get(self):
+        return self.render_step
 
     def wake_time_set(self, value, single=True):
         try:

@@ -622,6 +622,20 @@ class AutomationBox(ttk.Frame):
         self.auto_render_range_box.grid(row=1, column=5, sticky='W')
         self.auto_render_range_box.configure(state='disabled')
 
+        self.render_step_label = ttk.Label(self.frame, text="Step:", style="Dark.TLabel")
+        self.render_step_label.grid(row=2, column=4, padx=(0,2), pady=(2,0), sticky='E')
+        self.render_step_label.configure(state='disabled')
+
+        self.choices_render_step = [0, 1, 2, 4, 8, 16, 24, 48]
+        self.render_step = tk.IntVar(self.root)
+        self.render_step.set(self.choices_render_step[0])
+        self.render_step_box = ttk.OptionMenu(self.frame, self.render_step, self.choices_render_step[0], *self.choices_render_step, command=self.render_step_set, style="Dark.TMenubutton")
+        self.render_step_box.grid(row=2, column=5, pady=(2,0), sticky='W')
+        self.render_step_box.configure(state='disabled')
+
+
+
+
         self.choices_auto_save_interval = ['1 minute', '10 minutes', '30 minutes', '60 minutes', '90 minutes', '120 minutes']
         self.auto_save_interval = tk.StringVar(self.root)
         self.auto_save_interval.set(self.choices_auto_save_interval[1])
@@ -663,7 +677,7 @@ class AutomationBox(ttk.Frame):
 
         # self.frame.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
 
-    def update(self, task):
+    def update(self, task, event=None):
         
         if task.subtype == 'auto_save':
             val = self.config.properties.auto_save
@@ -711,6 +725,8 @@ class AutomationBox(ttk.Frame):
                 self.auto_render.set(val)
                 state = 'normal' if val == True else 'disabled'
                 self.auto_render_range_box.configure(state=state)
+                self.render_step_label.configure(state=state)
+                self.render_step_box.configure(state=state)
 
         if task.subtype == 'auto_render_range':
             val = self.config.properties.auto_render_range
@@ -746,7 +762,7 @@ class AutomationBox(ttk.Frame):
             self.wake_time.set(self.config.properties.wake_time)
             
         
-    def auto_save_set(self):
+    def auto_save_set(self, event=None):
         autosave = self.auto_save.get()
         self.config.properties.auto_save_set(autosave)
         if autosave == False:
@@ -759,7 +775,7 @@ class AutomationBox(ttk.Frame):
         val = int(self.auto_save_interval.get().split(" ")[0])
         self.config.properties.auto_save_interval_set(val)
         
-    def auto_download_set(self):
+    def auto_download_set(self, event=None):
         autodownload = self.auto_download.get()
         self.config.properties.auto_download_set(autodownload)
         if autodownload == False:
@@ -774,21 +790,26 @@ class AutomationBox(ttk.Frame):
         val = int(self.auto_download_interval.get().split(" ")[0])
         self.config.properties.auto_download_interval_set(val)
         
-    def auto_simulate_set(self):
+    def auto_simulate_set(self, event=None):
         self.config.properties.auto_simulate_set(self.auto_simulate.get())
         
-    def auto_render_set(self):
+    def auto_render_set(self, event=None):
         val = self.auto_render.get()
         self.config.properties.auto_render_set(val)
         if self.viewer:
             self.viewer.rendering = val
-        if val == True:
-            self.auto_render_range_box.configure(state='normal')
-        else:
-            self.auto_render_range_box.configure(state='disabled')
+        state = 'normal'
+        if val == False:
+            state = 'disabled'
 
+        self.auto_render_range_box.configure(state=state)
+        self.render_step_label.configure(state=state)
+        self.render_step_box.configure(state=state)
         
-    def auto_sleep_set(self):
+    def render_step_set(self, event=None):
+        self.config.properties.render_step_set(self.render_step.get())
+
+    def auto_sleep_set(self, event=None):
         autosleep = self.auto_sleep.get()
         self.config.properties.auto_sleep_set(autosleep)
         if autosleep == False:
@@ -823,6 +844,7 @@ class AutomationBox(ttk.Frame):
     
     def auto_render_range_set(self, event=None):
         self.config.properties.auto_render_range_set(self.auto_render_range.get())
+        self.config.trajectories.trim_render_queue()
 
 
 class SatelliteBox(ttk.Frame):
@@ -1372,19 +1394,19 @@ class Viewer(ttk.Frame):
 
     def update(self):
         if self.rendering == True:
-            render_step = 10
-            print(self.config.trajectories.render_queue.qsize())
+            render_step = 1000
+            # print(self.config.trajectories.render_queue.qsize())
             if self.config and self.config.trajectories and self.config.trajectories.render_queue:
                 for i in range(render_step):
                     if self.rendering == False:
                         break
                     if not self.config.trajectories.render_queue.empty():
                         self.render_satellite()
-                self.config.trajectories.trim_render_queue()
                         
 
         
         if self.render_once == True:
+            self.config.trajectories.trim_render_queue()
             while not self.config.trajectories.render_queue.empty():
                 self.render_satellite()
             self.render_once = False
