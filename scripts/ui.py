@@ -1360,7 +1360,7 @@ class Viewer(ttk.Frame):
                     else:
                         sat.highlight = False
 
-                    if sat.render_obj:
+                    if sat.render and sat.render_obj:
                         outline = 'black'
                         if sat.highlight:
                             outline = 'yellow'
