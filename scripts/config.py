@@ -117,7 +117,9 @@ class ConfigIo():
             
 
         if task.type == 'RENDERING':
-            self.trajectories.update_render_list()
+            self.trajectories.sat_visibilit_set()
+            if self.properties.auto_render:
+                self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='range'))
 
 
         #### Automation ####
@@ -821,7 +823,7 @@ class ConfigData():
             "auto_sleep" : False,
             "auto_serial" : False,
             "auto_render" : False,
-            "auto_render_range": 'Primary',
+            "auto_render_range": 'In Range',
             "pin_0_use": False,
             "pin_0": 0,
             "pin_0_value": 'High',

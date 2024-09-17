@@ -615,7 +615,7 @@ class AutomationBox(ttk.Frame):
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
         auto_render_w.grid(row=0, column=5, sticky="W")
-        self.choices_auto_render_range = ['All', 'In Range', 'Primary', 'Secondary']
+        self.choices_auto_render_range = ['In Range', 'Primary', 'Secondary', 'All']
         self.auto_render_range = tk.StringVar(self.root)
         self.auto_render_range.set(self.choices_auto_render_range[0])
         self.auto_render_range_box = ttk.OptionMenu(self.frame, self.auto_render_range, self.choices_auto_render_range[0], *self.choices_auto_render_range, command=self.auto_render_range_set, style="Dark.TMenubutton")
@@ -1293,6 +1293,7 @@ class Viewer(ttk.Frame):
                 if not obj.render:
                     if obj.render_obj:
                         self.canvas.itemconfigure(obj.render_obj, state='hidden')
+                
                 else:
                     outline = 'black'
                     if obj.highlight:
@@ -1378,6 +1379,7 @@ class Viewer(ttk.Frame):
                         break
                     if not self.config.trajectories.render_queue.empty():
                         self.render_satellite()
+
         
         if self.render_once == True:
             while not self.config.trajectories.render_queue.empty():

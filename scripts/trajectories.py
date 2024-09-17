@@ -322,6 +322,8 @@ class Trajectories():
                         if r_range == 'In Range' and sat.in_range:
                             render = True
 
+                        sat.render = render
+
                         if render == True:
                             self.render_queue.put(sat)
                             
@@ -353,6 +355,8 @@ class Trajectories():
                         if r_range == 'In Range' and sat.in_range:
                             render = True
                         
+                        sat.render = render
+
                         if render == True:
                             self.render_queue.put(sat)
 
@@ -390,8 +394,35 @@ class Trajectories():
                 sat.calculate = True
     
     
-    def update_render_list(self):
-        print(self.config.properties.auto_render_range)
+    def sat_visibilit_set(self):
+        for i in range(len(self.satellites)):
+            sat = self.satellites[i]
+            r_range = self.config.properties.auto_render_range
+            render = False
+            
+            if r_range == 'In Range':
+                if sat.in_range:
+                    render = True
+                else:
+                    render = False
+
+            if r_range == 'Primary':
+                if i <= self.config.properties.t0_max:
+                    render = True
+                else:
+                    render = False
+
+            if r_range == 'Secondary':
+                if i > self.config.properties.t0_max:
+                    render = True
+                else:
+                    render = False
+                    
+            if r_range == 'All':
+                render = True
+            
+            sat.render = render
+
 
 
     def calculate_tle_age(self):
@@ -469,7 +500,6 @@ class Trajectories():
     def update_once(self, update_coords=True, update_dist=True, callback=None):
         was_simulating = self.simulating
         self.simulating = False
-
         self.sat_sort()
         self.update_filter()
         self.reset_render_queue(repopulate=False)
