@@ -610,7 +610,7 @@ class AutomationBox(ttk.Frame):
 
         automsim_w = ttk.Checkbutton(self.frame,var=self.auto_simulate, command=self.auto_simulate_set, text="Simulate",style="Dark.TCheckbutton")
         self.auto_simulate.set(False)
-        automsim_w.grid(row=0, column=6, sticky="W")
+        automsim_w.grid(row=2, column=1, pady=(10,0), sticky="W")
 
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
@@ -622,15 +622,15 @@ class AutomationBox(ttk.Frame):
         self.auto_render_range_box.grid(row=1, column=5, sticky='W')
         self.auto_render_range_box.configure(state='disabled')
 
-        self.render_step_label = ttk.Label(self.frame, text="Step:", style="Dark.TLabel")
-        self.render_step_label.grid(row=2, column=4, padx=(0,2), pady=(2,0), sticky='E')
+        self.render_step_label = ttk.Label(self.frame, text="Step", style="Dark.TLabel")
+        self.render_step_label.grid(row=0, column=6, padx=(0,2), sticky='W')
         self.render_step_label.configure(state='disabled')
 
         self.choices_render_step = [0, 1, 2, 4, 8, 16, 24, 48]
         self.render_step = tk.IntVar(self.root)
         self.render_step.set(self.choices_render_step[0])
         self.render_step_box = ttk.OptionMenu(self.frame, self.render_step, self.choices_render_step[0], *self.choices_render_step, command=self.render_step_set, style="Dark.TMenubutton")
-        self.render_step_box.grid(row=2, column=5, pady=(2,0), sticky='W')
+        self.render_step_box.grid(row=1, column=6, sticky='W')
         self.render_step_box.configure(state='disabled')
 
 
