@@ -12,7 +12,7 @@ from geopy import geocoders
 import schedule
 import gpiod
 from gpiod.line import Direction, Value
-
+import random
 
 DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
 CHIPPATH = '/dev/gpiochip0'
@@ -118,7 +118,9 @@ class ConfigIo():
 
         if task.type == 'RENDERING':
             if task.subtype == 'render_step':
-                pass
+                if self.properties.render_step != 0:
+                    for sat in self.trajectories.satellites:
+                        sat.render_step = random.randint(0, self.properties.render_step_get())
 
             self.trajectories.sat_visibilit_set()
             if self.properties.auto_render:
@@ -1365,9 +1367,8 @@ class ConfigData():
 
     def render_step_set(self, value, single=True):
         self.render_step = value
-        print(value)
         if single == True:
-            self.input_q.put(Task(type='RENDERING', subtype='STEP'))
+            self.input_q.put(Task(type='RENDERING', subtype='render_step'))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
             else:

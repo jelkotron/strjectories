@@ -322,14 +322,11 @@ class Trajectories():
                         if r_range == 'In Range' and sat.in_range:
                             render = True
 
-                        if sat.render_step >= self.config.properties.render_step_get():
+                        step = self.config.properties.render_step_get()
+                        if step == 0 or sat.render_step >= step or render == False:
                             sat.render = render
                             sat.render_step = 0
                             self.render_queue.put(sat)
-                        elif render == False:
-                            sat.render = render
-                            self.render_queue.put(sat)
-                            sat.render_step = 0
                         else:
                             sat.render_step += 1
                             
@@ -365,11 +362,8 @@ class Trajectories():
                         if r_range == 'In Range' and sat.in_range:
                             render = True
                         
-                        if sat.render_step >= self.config.properties.render_step_get():
-                            sat.render = render
-                            self.render_queue.put(sat)
-                            sat.render_step = 0
-                        elif render == False:
+                        step = self.config.properties.render_step_get()
+                        if step == 0 or sat.render_step >= step or render == False:
                             sat.render = render
                             self.render_queue.put(sat)
                             sat.render_step = 0
