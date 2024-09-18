@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from tkinter.filedialog import asksaveasfile
 from tkinter import ttk
-from style import style as strwueuestyle
+from style import StrStyle
 
 
 RESOLUTION_X = 800
@@ -14,10 +14,10 @@ RESOLUTION_Y = 600
 
 
 class LocationBox(ttk.Frame):
-    def __init__(self, root, config):
+    def __init__(self, root, config, style=None):
         self.config = config
         self.root = root
-
+        self.style = style
         self.location = tk.StringVar()
         self.frame = ttk.Frame(self.root, style="Dark.TFrame")
         self.frame.pack(padx=0, pady=(4,0), fill='both', expand=True)
@@ -36,7 +36,8 @@ class LocationBox(ttk.Frame):
         location_button.grid(row=0, column=6, padx=2, pady=2)
         
         self.loc_list_ui.grid(row=1, column=1, columnspan=6, rowspan=8, padx=2, pady=2, sticky='EW')
-
+        if self.style:
+            self.loc_list_ui.configure(background=self.style.bg_alt2, foreground=self.style.txt_2)
         self.frame.columnconfigure((0,1,2,3,4,5,6,7,8,9,10),minsize=100, weight=1)
         
 
@@ -73,9 +74,10 @@ class LocationBox(ttk.Frame):
                 for i in range(len(loc_list)):
                     s =  loc_list[i]
                     self.loc_list_ui.insert(tk.END, s) 
-                    self.loc_list_ui.itemconfig(i, 
-                            bg = "grey20" if i % 2 == 0 else "grey10",
-                            fg="grey50")     
+                    if self.style:
+                        self.loc_list_ui.itemconfig(i, 
+                                bg = self.style.bg_alt1 if i % 2 == 0 else self.style.bg_alt2,
+                                fg=self.style.txt_3)     
 
                 self.loc_list_ui.select_clear(0, "end")
                 self.loc_list_ui.selection_set(loc_index)
@@ -848,9 +850,10 @@ class AutomationBox(ttk.Frame):
 
 
 class SatelliteBox(ttk.Frame):
-    def __init__(self, root, config):
+    def __init__(self, root, config, style=None):
         self.root = root
         self.config = config
+        self.style = style
         frame = ttk.Frame(root, style="Dark.TFrame")
         frame.pack(padx=0, pady=(4,0), fill='both', expand=True)
         inrange_label = ttk.Label(frame, text="In Range:", style="BoldDark.TLabel")
@@ -858,6 +861,8 @@ class SatelliteBox(ttk.Frame):
         
         var = tk.Variable()
         self.inrange_list_ui = tk.Listbox(frame, listvariable=var, selectmode = tk.SINGLE, exportselection=False, width=28, height=12)
+        if self.style:
+            self.inrange_list_ui.configure(background=self.style.bg_alt2, foreground=self.style.txt_5)
         self.inrange_list_ui.grid(row=0, column=1, columnspan=1, sticky='W')
         self.num_in_range = tk.Variable(value = 0)
         self.numinrange_label = ttk.Label(frame, text="0", width=2, style="BoldDark.TLabel")
@@ -881,8 +886,6 @@ class SatelliteBox(ttk.Frame):
                 
                 for i in range(len(new)):
                     self.inrange_list_ui.insert(tk.END, new[i])
-
-                self.inrange_list_ui.configure(fg='grey50')
             
             self.numinrange_label.configure(text=len(self.config.trajectories.in_range))
         
@@ -1445,11 +1448,11 @@ class Gui(ttk.Frame):
         root.title(title_main)
         root.resizable(resizable_main[0], resizable_main[1])
         self.root = root
-        # root.configure(background='#2C2C2C')
-        self.style = strwueuestyle()
+        self.style = StrStyle()
+        root.configure(background=self.style.bg_alt2)
 
         self.viewer = Viewer(self.root, config, title_viewer, resizable_viewer, geometry_viewer, background_viewer, *args, **kwargs)
-        self.location_box = LocationBox(root, config)
+        self.location_box = LocationBox(root, config, self.style)
         self.selection_box = SelectionBox(root, config)
         self.file_box = FileBox(root, config)
         self.option_box = OptionBox(root, config)
@@ -1457,7 +1460,7 @@ class Gui(ttk.Frame):
         self.automation_box = AutomationBox(root, config, self.viewer)
         
         self.satcom_box = ttk.Frame(root, style="Dark.TFrame")
-        self.satellite_box = SatelliteBox(self.satcom_box, config)
+        self.satellite_box = SatelliteBox(self.satcom_box, config, self.style)
         self.output_box = OutputBox(self.satcom_box, config)
 
         root.bind('<F12>', self.config.toggle_sleep)
