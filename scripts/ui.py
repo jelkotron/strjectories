@@ -327,7 +327,7 @@ class OptionBox(ttk.Frame):
         self.frame.pack(padx=0, pady=(4,0), fill='both', expand=True)
 
         ################################ RADIUS ################################
-        radius_label = ttk.Label(self.frame, text="Radius(km):", style="BoldDark.TLabel")
+        radius_label = ttk.Label(self.frame, text="Range(km):", style="BoldDark.TLabel")
         radius_label.grid(row=0, column=0, sticky="E", padx=(0,4))
         self.choices_radius = [0, 0.001, 0.01, 0.1, 1, 10, 50, 100, 200, 500, 1000, 1500, 2000, 4000, 8000]
         
@@ -536,9 +536,6 @@ class SimulationBox(ttk.Frame):
         self.highlight_t1(event)
         
 
-        
-
-
     def highlight_t0(self, event=None):
         if self.viewer:
             if event:
@@ -598,7 +595,7 @@ class AutomationBox(ttk.Frame):
         self.wake_time = tk.StringVar()
         self.auto_render = tk.BooleanVar()
         self.frame = ttk.Frame(self.root, style="Dark.TFrame")
-        self.frame.pack(padx=0, pady=(4,0), ipady=2, fill=tk.BOTH, expand=True)
+        
         automation_label = ttk.Label(self.frame, text="Auto:", style="BoldDark.TLabel")
         automation_label.grid(row=0, column=0, sticky="E", padx=(0,4))
 
@@ -610,9 +607,9 @@ class AutomationBox(ttk.Frame):
         self.auto_download.set(False)
         auto_download_w.grid(row=1, column=2, sticky="W")
 
-        automsim_w = ttk.Checkbutton(self.frame,var=self.auto_simulate, command=self.auto_simulate_set, text="Simulate",style="Dark.TCheckbutton")
+        automsim_w = ttk.Checkbutton(self.frame,var=self.auto_simulate, command=self.auto_simulate_set, text="Start Simulation",style="Dark.TCheckbutton")
         self.auto_simulate.set(False)
-        automsim_w.grid(row=0, column=1, pady=(0,0), sticky="W")
+        automsim_w.grid(row=0, column=1, columnspan=2, pady=(0,0), sticky="W")
 
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
@@ -625,14 +622,14 @@ class AutomationBox(ttk.Frame):
         self.auto_render_range_box.configure(state='disabled')
 
         self.render_step_label = ttk.Label(self.frame, text="Step", style="Dark.TLabel")
-        self.render_step_label.grid(row=1, column=6, padx=(0,2), sticky='W')
+        self.render_step_label.grid(row=1, column=6, padx=(0,100), sticky='W')
         self.render_step_label.configure(state='disabled')
 
         self.choices_render_step = [0, 1, 2, 4, 8, 16, 24, 48]
         self.render_step = tk.IntVar(self.root)
         self.render_step.set(self.choices_render_step[0])
         self.render_step_box = ttk.OptionMenu(self.frame, self.render_step, self.choices_render_step[0], *self.choices_render_step, command=self.render_step_set, style="Dark.TMenubutton")
-        self.render_step_box.grid(row=2, column=6, sticky='W')
+        self.render_step_box.grid(row=2, column=6, padx=(0,100),sticky='W')
         self.render_step_box.configure(state='disabled')
 
 
@@ -675,8 +672,9 @@ class AutomationBox(ttk.Frame):
 
 
         self.frame.columnconfigure((0),minsize=100, weight=0)
-        self.frame.columnconfigure((1,2,3,4,5),minsize=100, weight=0)
-
+        self.frame.columnconfigure((1,2,3,4),minsize=100, weight=0)
+        self.frame.columnconfigure((5,6),minsize=50, weight=1)
+        self.frame.pack(padx=(0,0), pady=(4,0), ipady=2, fill=tk.BOTH, expand=True)
         # self.frame.columnconfigure((0,1,2,3,4,5,6,7,8),minsize=100, weight=0)
 
     def update(self, task, event=None):
@@ -1024,17 +1022,17 @@ class OutputBox(ttk.Frame):
         serial_tab = ttk.Frame(tabsystem, style="Dark.TNotebook.Tab")
         serial_frame = ttk.Frame(serial_tab, style="Dark.TNotebook.Tab")
         
-        serial_port_use_label = ttk.Label(serial_frame, text="Use:", style="Dark.TLabel")  
-        serial_port_use_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
-        serial_port_use = ttk.Checkbutton(serial_frame, var=self.auto_serial, command=self.auto_serial_set, text="", style="Dark.TCheckbutton")
-        serial_port_use.grid(row=0, column=1, columnspan=2, sticky="E", padx=0, pady=0)
+        # serial_port_use_label = ttk.Label(serial_frame, text="Use:", style="Dark.TLabel")  
+        # serial_port_use_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
+        serial_port_use = ttk.Checkbutton(serial_frame, var=self.auto_serial, command=self.auto_serial_set, text="Port", style="Dark.TCheckbutton")
+        serial_port_use.grid(row=0, column=0, sticky="E", padx=0, pady=0)
 
-        serial_port_label = ttk.Label(serial_frame, text="Port:", style="Dark.TLabel")
-        serial_port_label.grid(row=1, column=0, sticky="E", padx=0, pady=0)
+        # serial_port_label = ttk.Label(serial_frame, text="Port:", style="Dark.TLabel")
+        # serial_port_label.grid(row=1, column=0, sticky="E", padx=0, pady=0)
         self.serial_port = tk.StringVar()
         self.serial_port_input = ttk.Entry(serial_frame, textvariable=self.serial_port, validate='focusout', validatecommand=self.serial_port_set, style="Dark.TEntry")
         self.serial_port_input.bind('<Return>', self.serial_port_set)
-        self.serial_port_input.grid(row=1, column=1, columnspan=2, padx=0, sticky='EW')
+        self.serial_port_input.grid(row=0, column=1, columnspan=2, padx=0, sticky='EW')
 
         serial_baud_label = ttk.Label(serial_frame, text="Baud:", style="Dark.TLabel")
         serial_baud_label.grid(row=2, column=0, sticky="E")
@@ -1047,8 +1045,8 @@ class OutputBox(ttk.Frame):
         
         self.choices_serial_value = ['In Range Count', 'Satellites in Range', 'No Satellites in Range']
         self.serial_value = tk.StringVar()
-        serial_value_box = ttk.OptionMenu(serial_frame, self.serial_value, self.choices_serial_value[0], *self.choices_serial_value, command=self.serial_value_set, style="DarkFixed.TMenubutton")
-        serial_value_box.grid(row=3, column=1, columnspan=2, sticky='EW')
+        self.serial_value_box = ttk.OptionMenu(serial_frame, self.serial_value, self.choices_serial_value[0], *self.choices_serial_value, command=self.serial_value_set, style="DarkFixed.TMenubutton")
+        self.serial_value_box.grid(row=3, column=1, columnspan=2, sticky='EW')
 
         serial_frame.columnconfigure((0,1), minsize=20, weight=1)
         serial_frame.pack(padx=20, pady=20, anchor='nw')
@@ -1091,7 +1089,16 @@ class OutputBox(ttk.Frame):
 
     def update(self, task):
         if task.subtype == 'auto_serial':
-            self.auto_serial.set(self.config.properties.auto_serial)
+            auto_serial = self.config.properties.auto_serial
+            state = 'disabled'
+            if auto_serial == True:
+                state = 'normal'
+            self.serial_port_input.configure(state=state)
+            self.serial_baud_input.configure(state=state)
+            self.serial_value_box.configure(state=state)
+
+            self.auto_serial.set(auto_serial)
+
         if task.subtype == 'serial_port':
             self.serial_port.set(self.config.properties.serial_port)
         if task.subtype == 'serial_baud':
@@ -1198,7 +1205,15 @@ class OutputBox(ttk.Frame):
 
     def auto_serial_set(self, event=None):
         if self.config and self.config.properties:
-            self.config.properties.auto_serial_set(self.auto_serial.get())
+            auto_serial = self.auto_serial.get()
+            state = 'disabled'
+            if auto_serial == True:
+                state = 'normal'
+            self.serial_port_input.configure(state=state)
+            self.serial_baud_input.configure(state=state)
+            self.serial_value_box.configure(state=state)
+
+            self.config.properties.auto_serial_set(auto_serial)
 
     def serial_port_set(self, event=None):
         if self.config and self.config.properties:
@@ -1455,9 +1470,9 @@ class Gui(ttk.Frame):
         self.location_box = LocationBox(root, config, self.style)
         self.selection_box = SelectionBox(root, config)
         self.file_box = FileBox(root, config)
-        self.option_box = OptionBox(root, config)
-        self.simulation_box = SimulationBox(root, config, self.viewer)
         self.automation_box = AutomationBox(root, config, self.viewer)
+        self.simulation_box = SimulationBox(root, config, self.viewer)
+        self.option_box = OptionBox(root, config)
         
         self.satcom_box = ttk.Frame(root, style="Dark.TFrame")
         self.satellite_box = SatelliteBox(self.satcom_box, config, self.style)
