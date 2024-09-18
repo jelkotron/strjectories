@@ -1025,7 +1025,7 @@ class OutputBox(ttk.Frame):
         # serial_port_use_label = ttk.Label(serial_frame, text="Use:", style="Dark.TLabel")  
         # serial_port_use_label.grid(row=0, column=0, sticky="E", padx=0, pady=0)
         serial_port_use = ttk.Checkbutton(serial_frame, var=self.auto_serial, command=self.auto_serial_set, text="Port", style="Dark.TCheckbutton")
-        serial_port_use.grid(row=0, column=0, sticky="E", padx=0, pady=0)
+        serial_port_use.grid(row=0, column=0, sticky="E", padx=(0,2))
 
         # serial_port_label = ttk.Label(serial_frame, text="Port:", style="Dark.TLabel")
         # serial_port_label.grid(row=1, column=0, sticky="E", padx=0, pady=0)
