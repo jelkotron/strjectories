@@ -329,7 +329,7 @@ class OptionBox(ttk.Frame):
         ################################ RADIUS ################################
         radius_label = ttk.Label(self.frame, text="Range(km):", style="BoldDark.TLabel")
         radius_label.grid(row=0, column=0, sticky="E", padx=(0,4))
-        self.choices_radius = [0, 0.001, 0.01, 0.1, 1, 10, 50, 100, 200, 500, 1000, 1500, 2000, 4000, 8000]
+        self.choices_radius = [0, 0.001, 0.01, 0.1, 1, 10, 50, 100, 200, 500, 1000, 1500, 2000, 5000, 8000]
         
         radius_box = ttk.OptionMenu(self.frame, self.radius, *self.choices_radius, command=self.radius_set, style="Dark.TMenubutton")
         radius_box.grid(row=0, column=1, sticky='W')
@@ -942,15 +942,19 @@ class OutputBox(ttk.Frame):
         pin_0_label = ttk.Checkbutton(pin_0_row_0, var=self.pin_0_use, command=self.pin_0_use_set, text="Pin",style="Dark.TCheckbutton")
         self.pin_0_use.set(False)
         pin_0_label.grid(row=0, column=0, sticky="E", padx=(0,2), pady=0)
+        
         self.pin_0_box = ttk.OptionMenu(pin_0_row_0, self.pin_0, self.choices_pin[-1], *self.choices_pin, command=self.pin_0_set, direction='above', style="Dark.TMenubutton")
-        self.pin_0_box.configure(state='disabled')
-        self.pin_0_box.grid(row=0, column=1, padx=0, ipadx=0)
+        self.pin_0_box.configure(width=4, state='disabled')
+        self.pin_0_box.grid(row=0, column=1, padx=0, ipadx=0, sticky='W')
         
         self.pin_0_value_box = ttk.OptionMenu(pin_0_row_0, self.pin_0_value, self.choices_pin_state[0], *self.choices_pin_state, command=self.pin_0_value_set, style="Dark.TMenubutton")
+        self.pin_0_value_box.configure(width=4)
         self.pin_0_value_box.configure(state='disabled')
-        self.pin_0_value_box.grid(row=0, column=2, padx=0, ipadx=0)
-        pin_0_row_0.columnconfigure((0,1,2), minsize=50, weight=0)
-        pin_0_row_0.pack(padx=20, pady=(20,0), anchor='nw')
+        self.pin_0_value_box.grid(row=0, column=2, padx=0, ipadx=0, sticky='E')
+
+        pin_0_row_0.columnconfigure((0), minsize=50, weight=0)
+        pin_0_row_0.columnconfigure((1,2), minsize=2, weight=0)
+        
 
 
 
@@ -960,19 +964,22 @@ class OutputBox(ttk.Frame):
         pin_0_condition_label.grid(row=1, column=0, sticky="E", padx=(0,2))
 
         self.pin_0_condition_box = ttk.OptionMenu(pin_0_row_1, self.pin_0_condition, self.choices_pin_value[0], *self.choices_pin_value, command=self.pin_0_condition_set, style="DarkFixed.TMenubutton")
-        self.pin_0_condition_box.grid(row=1, column=1, sticky='W', padx=0, ipadx=0)
+        self.pin_0_condition_box.grid(row=1, column=1, sticky='EW', padx=0, ipadx=0)
         self.pin_0_condition_box.configure(state='disabled')
         pin_0_row_1.columnconfigure((0), minsize=50, weight=0)
+        pin_0_row_1.columnconfigure((1), minsize=250, weight=1)
         
         pin_0_row_2 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
         
         
-        pin_0_display_label = ttk.Label(pin_0_row_1, text="State", justify='center', width=5, style="Dark.TLabel")
-        pin_0_display_label.grid(row=2, column=0, padx=(0,2), sticky='E')
-        self.pin_0_display = ttk.Label(pin_0_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
-        self.pin_0_display.grid(row=2, column=1, sticky='W')
+        pin_0_display_label = ttk.Label(pin_0_row_0, text="State", style="Dark.TLabel")
+        pin_0_display_label.grid(row=0, column=3, padx=(30,2), sticky='E')
+        self.pin_0_display = ttk.Label(pin_0_row_0, text="", style="Highlight.TLabel")
+        self.pin_0_display.grid(row=0, column=4, sticky='E')
         self.pin_0_display.configure(text="None", state='disabled')
-        pin_0_row_1.pack(padx=20, pady=(0,0), anchor='nw')
+        
+        pin_0_row_1.pack(padx=(20,0), pady=(20,0), anchor='nw')
+        pin_0_row_0.pack(padx=(20,0), pady=(0,0), anchor='nw')
 
 
 
@@ -983,14 +990,16 @@ class OutputBox(ttk.Frame):
         pin_1_label.grid(row=0, column=0, sticky="E", padx=(0,2), pady=0)
 
         self.pin_1_box = ttk.OptionMenu(pin_1_row_0, self.pin_1, self.choices_pin[-2], *self.choices_pin, command=self.pin_1_set, direction='above', style="Dark.TMenubutton")
-        self.pin_1_box.grid(row=0, column=1, padx=0, ipadx=0)
-        self.pin_1_box.configure(state='disabled')
+        self.pin_1_box.grid(row=0, column=1, padx=0, ipadx=0, sticky='EW')
+        self.pin_1_box.configure(width=4, state='disabled')
 
         self.pin_1_value_box = ttk.OptionMenu(pin_1_row_0, self.pin_1_value, self.choices_pin_state[1], *self.choices_pin_state, command=self.pin_1_value_set, style="Dark.TMenubutton")
-        self.pin_1_value_box.grid(row=0, column=2, padx=0, ipadx=0)
-        self.pin_1_value_box.configure(state='disabled')
-        pin_1_row_0.columnconfigure((0,1,2), minsize=50, weight=0)
-        pin_1_row_0.pack(padx=20, pady=(20,0), anchor='nw')
+        self.pin_1_value_box.grid(row=0, column=2, padx=0, ipadx=0, sticky='EW')
+        self.pin_1_value_box.configure(width=4, state='disabled')
+        pin_1_row_0.columnconfigure((0), minsize=50, weight=0)
+        pin_1_row_0.columnconfigure((1,2), minsize=2, weight=1)
+
+        
 
         #### Pin 1 Row 1 ####
         pin_1_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
@@ -998,18 +1007,21 @@ class OutputBox(ttk.Frame):
         pin_1_condition_label.grid(row=1, column=0, sticky="E", padx=(0,2))
 
         self.pin_1_condition_box = ttk.OptionMenu(pin_1_row_1, self.pin_1_condition, self.choices_pin_value[2], *self.choices_pin_value, command=self.pin_1_condition_set, style="DarkFixed.TMenubutton")
-        self.pin_1_condition_box.grid(row=1, column=1, sticky='W', padx=0, ipadx=0)
+        self.pin_1_condition_box.grid(row=1, column=1, sticky='EW', padx=0, ipadx=0)
         self.pin_1_condition_box.configure(state='disabled')
 
-        pin_1_display_label = ttk.Label(pin_1_row_1, text="State", justify='center', width=5, style="Dark.TLabel")
-        pin_1_display_label.grid(row=2, column=0, padx=(0,2), sticky='E')
+        pin_1_display_label = ttk.Label(pin_1_row_0, text="State", justify='center', style="Dark.TLabel")
+        pin_1_display_label.grid(row=0, column=3, padx=(30,2), sticky='E')
 
-        self.pin_1_display = ttk.Label(pin_1_row_1, text="", justify='center', width=5, style="Highlight.TLabel")
-        self.pin_1_display.grid(row=2, column=1, sticky='W')
+        self.pin_1_display = ttk.Label(pin_1_row_0, text="", justify='center', width=5, style="Highlight.TLabel")
+        self.pin_1_display.grid(row=0, column=4, sticky='W')
         self.pin_1_display.configure(text="None", state='disabled')
         
         pin_1_row_1.columnconfigure((0), minsize=50, weight=0)
-        pin_1_row_1.pack(padx=20, pady=(0,0), anchor='nw')
+        pin_1_row_1.columnconfigure((1), minsize=250, weight=1)
+
+        pin_1_row_1.pack(padx=20, pady=(20,0), anchor='nw')
+        pin_1_row_0.pack(padx=20, pady=(0,0), anchor='nw')
 
 
 
@@ -1054,32 +1066,51 @@ class OutputBox(ttk.Frame):
         
         ################################ Log Tab ################################
         log_tab = ttk.Frame(tabsystem, style="Dark.TNotebook.Tab")
-        log_frame = ttk.Frame(log_tab, style="Dark.TNotebook.Tab")
+        log_frame_0 = ttk.Frame(log_tab, style="Dark.TNotebook.Tab")
                 
-        log_use = ttk.Checkbutton(log_frame, var=self.auto_log, command=self.auto_log_set, text="Use", style="Dark.TCheckbutton")
-        log_use.grid(row=0, column=0, columnspan=2, sticky="W", padx=0, pady=0)
+        log_use = ttk.Checkbutton(log_frame_0, var=self.auto_log, command=self.auto_log_set, text="Max. Lines", style="Dark.TCheckbutton")
+        log_use.grid(row=0, column=0, columnspan=1, sticky="W", padx=0, pady=0)
         
-        log_engine = ttk.Checkbutton(log_frame, var=self.log_engine, command=self.log_engine_set, text="Engine", style="Dark.TCheckbutton")
-        log_engine.grid(row=1, column=0, columnspan=2, sticky="W", padx=0, pady=0)
+        self.log_lines = tk.StringVar()
+        log_lines_box = ttk.Entry(log_frame_0, textvariable=self.log_lines, justify='center', validate="focusout", validatecommand=None, style="Dark.TEntry")
+        log_lines_box.configure(width=8)
+        log_lines_box.grid(row=0, column=1, columnspan=1, sticky="W", padx=(25,0), pady=0)
+        self.log_lines.set("20000")
+
+        log_engine = ttk.Checkbutton(log_frame_0, var=self.log_engine, command=self.log_engine_set, text="Engine", style="Dark.TCheckbutton")
+        log_engine.grid(row=1, column=0, columnspan=1, sticky="W", padx=0, pady=0)
         
-        log_in_range = ttk.Checkbutton(log_frame, var=self.log_in_range, command=self.log_in_range_set, text="In Range", style="Dark.TCheckbutton")
-        log_in_range.grid(row=2, column=0, columnspan=2, sticky="W", padx=0, pady=0)
+        log_in_range = ttk.Checkbutton(log_frame_0, var=self.log_in_range, command=self.log_in_range_set, text="In Range", style="Dark.TCheckbutton")
+        log_in_range.grid(row=2, column=0, columnspan=1, sticky="W", padx=0, pady=0)
 
-        log_num_in_range = ttk.Checkbutton(log_frame, var=self.log_num_in_range, command=self.log_num_in_range_set, text="Number In Range", style="Dark.TCheckbutton")
+        log_num_in_range = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=self.log_num_in_range_set, text="Count", style="Dark.TCheckbutton")
+        log_num_in_range.grid(row=2, column=1, columnspan=1, sticky="W", padx=(25,0), pady=0)
         
-        log_num_in_range.grid(row=3, column=0, columnspan=2, sticky="W", padx=0, pady=0)
+        log_autosave = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Saving", style="Dark.TCheckbutton")
+        log_autosave.grid(row=1, column=1, columnspan=1, sticky="W", padx=(25,0), pady=0)
 
-        # log_file_label = ttk.Label(log_frame, text="File:", style="Dark.TLabel")  
-        # log_file_label.grid(row=4, column=0, sticky="W", padx=0, pady=0)
+        log_download = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Download", style="Dark.TCheckbutton")
+        log_download.grid(row=1, column=2, columnspan=1, sticky="SW", padx=(35,0), pady=0)
 
+        log_sleep = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Sleep", style="Dark.TCheckbutton")
+        log_sleep.grid(row=2, column=2, columnspan=1, sticky="SW", padx=(35,0), pady=0)
+        
+        log_frame_0.columnconfigure((0,1,2), minsize=50, weight=1)
 
-        self.log_file_open_button = ttk.Button(log_frame, text="Open", command=self.log_file_open, style="Dark.TButton")
-        self.log_file_open_button.grid(row=4, column=0, columnspan=4, sticky='EW', padx=0)
+        log_frame_0.pack(padx=20, pady=(20,0), anchor='w')
 
+        log_frame_1 = ttk.Frame(log_tab, style="Dark.TNotebook.Tab")
+        self.log_file_open_button = ttk.Button(log_frame_1, text="Open", command=self.log_file_open, style="Dark.TButton")
+        self.log_file_open_button.grid(row=4, column=0, columnspan=2, padx=(0,0), pady=(0,0),ipadx=0, sticky='EW')
 
-        log_frame.columnconfigure((0,1,2), minsize=20, weight=1)
+        self.log_file_new_button = ttk.Button(log_frame_1, text="New", command=self.log_file_open, style="Dark.TButton")
+        self.log_file_new_button.grid(row=4, column=2, columnspan=1, ipadx=20, sticky='WE')
 
-        log_frame.pack(padx=20, pady=20, anchor='w')
+        log_frame_1.columnconfigure((0,1), minsize=120, weight=1)
+        log_frame_1.columnconfigure((2), minsize=24, weight=1)
+
+        log_frame_1.pack(padx=20, pady=(20,0), anchor='w')
+
         tabsystem.add(log_tab, text="Log")
 
 
