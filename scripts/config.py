@@ -197,9 +197,9 @@ class ConfigIo():
             self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=1))
 
     def simulation_stop(self):
+        self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=0))
         if self.trajectories:
             self.trajectories.simulation_stop()
-            self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=0))
             
 
     ######## File ########
@@ -278,10 +278,16 @@ class ConfigIo():
                                 "auto_simulate" : data.get("auto_simulate"),
                                 "auto_sleep" : data.get("auto_sleep"),
                                 "auto_render" : data.get("auto_render"),
-                                "auto_render_range": data.get("auto_render_range"),
+                                "render_range": data.get("render_range"),
+                                "render_step": data.get("render_step"),
                                 "sort_by": data.get("sort_by"),
                                 "sleep_time": data.get("sleep_time"),
                                 "wake_time": data.get("wake_time"),
+                                
+                                "log_file": data.get("log_file"),
+                                "log_use": data.get("log_use"),
+                                "log_lines": data.get("log_lines"),
+                                "log_types": data.get("log_types"),                                
                                 
                                 "auto_serial": data.get("auto_serial"),
                                 "serial_port" : data.get("serial_port"),
@@ -333,6 +339,9 @@ class ConfigIo():
             if subtype == 'SESSION':
                 path = self.properties.sessiondata_file
 
+            if subtype == 'LOG':
+                path = self.properties.log_file
+
         if not data:
             if subtype == 'CONFIG':
                 data = self.properties.properties_get()
@@ -344,19 +353,26 @@ class ConfigIo():
                 data = self.session_data()
 
         if path and data:
-            with open(path, 'w', encoding='utf-8') as file:
-                if type(data) == dict:
-                    json.dump(data, file, ensure_ascii=False, indent=4)
-                elif type(data) == str:
+            if subtype == 'LOG':
+                with open(path, 'a') as file:
                     file.write(data)
-            file.close()
+                    if not data.endswith('\n'):
+                        file.write('\n')
+                    file.close()
+            else:
+                with open(path, 'w', encoding='utf-8') as file:
+                    if type(data) == dict:
+                        json.dump(data, file, ensure_ascii=False, indent=4)
+                    elif type(data) == str:
+                        file.write(data)
+                file.close()
 
-            msg = "%s File written: %s"%(time.strftime("%H:%M:%S"), path)
-            if subtype:
-                msg = msg.replace("File", subtype.title())
+                msg = "%s File written: %s"%(time.strftime("%H:%M:%S"), path)
+                if subtype:
+                    msg = msg.replace("File", subtype.title())
 
-            print(msg)    
-            self.log(msg)
+                print(msg)    
+                self.log(msg)
 
 
         if callback:
@@ -471,8 +487,9 @@ class ConfigIo():
         
     ######## Log ########
     def log_write(self, msg):
-        # print(msg)
-        pass
+        msg = self.time.strftime("%d.%m.%Y ") + msg
+        self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+
 
     def log(self, msg):
         self.input_q.put(Task(type='LOG_WRITE', message=msg))
@@ -647,13 +664,13 @@ class ConfigIo():
                 self.properties.config_file_set(data.get("config_file"), single = not init) 
                 self.properties.set_all(data)
                 for key, value in self.properties.properties_get().items():
-                    self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
+                    self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=value))
                 
             else: # default == True
                 self.properties.set_default()
                 self.properties.config_file_set(None, single = False) 
                 for key, value in self.properties.properties_get().items():
-                    self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=None))
+                    self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=value))
 
             self.input_q.put(Task(type='SIMULATION', subtype='selection'))
             
@@ -662,7 +679,7 @@ class ConfigIo():
                 if self.properties.auto_render:
                     self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
 
-            if self.properties.auto_save:
+            if self.properties.auto_save and init == False:
                 self.session_save()
         
         self.input_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
@@ -812,16 +829,22 @@ class ConfigData():
         self.pin_1_condition = False
         self.pin_1_state = False # LO
 
-        self.auto_render_range = None
-        
+        self.render_range = None
                 #### Save state ####
         self.saved = True
         self.sort_by = None
+
+        self.log_file = None
+        self.log_use = False
+        self.log_lines = None
+        self.log_types = None
 
         self.default_values = {
             "sessiondata_file" : "", 
             "config_file" : "",
             "tle_file" : "",
+            "log_file": "",
+            "log_use": False,
             "lat" : None,
             "lon" : None,
             "timezone" : None,
@@ -845,7 +868,7 @@ class ConfigData():
             "auto_serial" : False,
             "auto_render" : False,
             "render_step": 0,
-            "auto_render_range": 'In Range',
+            "render_range": 'In Range',
             "pin_0_use": False,
             "pin_0": 0,
             "pin_0_value": 'High',
@@ -859,10 +882,23 @@ class ConfigData():
             "wake_time": "00:00",
             "sleep_time": "00:00",
 
+            "log_lines": 9999,
+            "log_types": {
+                "engine": False,
+                "saving": False,
+                "update": False,
+                "sleep": False,
+                "in_range_list": False,
+                "num_in_range": False,
+                "pin": False,
+                "serial": False,
+            },
 
             "saved" : True, 
             "sort_by": "Proximity"
         }
+
+        
 
         self.set_default()
 
@@ -894,9 +930,12 @@ class ConfigData():
                 "auto_serial" : self.auto_serial,
                 "auto_render" : self.auto_render,
                 "render_step": self.render_step,
-                "auto_render_range": self.auto_render_range,
+                "render_range": self.render_range,
                 "sort_by" : self.sort_by, 
-                
+                "log_file": self.log_file,
+                "log_use": self.log_use,
+                "log_lines": self.log_lines,
+                "log_types": self.log_types,
                 "sleep_time": self.sleep_time,
                 "wake_time": self.wake_time,
 
@@ -940,7 +979,7 @@ class ConfigData():
         self.auto_sleep_set(self.default_values["auto_sleep"], single=False)
         self.auto_serial_set(self.default_values["auto_serial"], single=False)
         self.auto_render_set(self.default_values["auto_render"], single=False)
-        self.auto_render_range_set(self.default_values["auto_render_range"], single=False)
+        self.render_range_set(self.default_values["render_range"], single=False)
         self.render_step_set(self.default_values["render_step"], single=False)
         self.sort_by_set(self.default_values["sort_by"], single=False)
         
@@ -953,9 +992,9 @@ class ConfigData():
         self.pin_1_set(self.default_values["pin_1"], single=False)
         self.pin_1_value_set(self.default_values["pin_1_value"], single=False)
         self.pin_1_condition_set(self.default_values["pin_1_condition"], single=False)
-
         self.sleep_time_set(self.default_values["sleep_time"], single=False)
         self.wake_time_set(self.default_values["wake_time"], single=False)
+        self.log_types_set_all(self.default_values["log_types"], single=False)
         
     def set_all(self, data):
 
@@ -1022,12 +1061,24 @@ class ConfigData():
         auto_render = data.get("auto_render")
         self.auto_render_set(auto_render if auto_render else self.default_values["auto_render"], single=False)
 
-        auto_render_range = data.get("auto_render_range")
-        self.auto_render_range_set(auto_render_range if auto_render_range else self.default_values["auto_render_range"], single=False)
+        render_range = data.get("render_range")
+        self.render_range_set(render_range if render_range else self.default_values["render_range"], single=False)
 
         render_step = data.get("render_step")
         self.render_step_set(render_step if render_step else self.default_values["render_step"], single=False)
 
+        log_file = data.get("log_file")
+        self.log_file_set(log_file if log_file else None, single=False)
+
+        log_use = data.get("log_use")
+        self.log_use_set(log_use if log_use else False, single=False)
+
+        log_lines = data.get("log_lines")
+        self.log_lines_set(log_lines if log_lines else self.default_values["log_lines"], single=False)
+
+        log_types = data.get("log_types")
+        self.log_types_set_all(log_types if log_types else self.default_values["log_types"], single=False)
+    
         sort_by = data.get("sort_by")
         self.sort_by_set(sort_by if sort_by else self.default_values["sort_by"], single=False)
 
@@ -1371,8 +1422,8 @@ class ConfigData():
                 self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
             
 
-    def auto_render_range_set(self, value, single=True):
-        self.auto_render_range = value
+    def render_range_set(self, value, single=True):
+        self.render_range = value
         if single == True:
             self.input_q.put(Task(type='RENDERING', subtype='RANGE'))
             if self.auto_save:
@@ -1627,8 +1678,58 @@ class ConfigData():
             except ValueError:
                 msg = "%s Invalid Baud Rate: %s"%(time.strftime("%H:%M:%S"), value)
                 print(msg)
-                self.input_q.put(Task(type='LOG_WRITE', message=msg))
+                self.log(msg)
                 self.ui_q.put(Task(type='OUTPUT_UPDATE', subtype='serial_baud'))
+
+
+    def log_file_set(self, value, single=True):
+        self.log_file = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+    def log_use_set(self, value, single=True):
+        self.log_use = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+    def log_lines_set(self, value, single=True):
+        try:
+            value = int(value)
+            self.log_lines = value
+            if single == True:
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
+            return True
+        except ValueError:
+            return False
+        
+    def log_types_set_all(self, value, single=True):
+        self.log_types = value
+        self.ui_q.put(Task(type='UI_UPDATE', subtype='log_types', data=value))
+
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+
+    def log_type_set(self, key, value, single=True):
+        self.log_types[key] = value
+        if single == True:
+            if self.auto_save:
+                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+            else:
+                self.saved_set(False)
+        
+
 
 
     def saved_set(self, value):

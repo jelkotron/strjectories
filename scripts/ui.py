@@ -282,10 +282,9 @@ class FileBox(ttk.Frame):
         self.info_0_val.configure(text=info)
  
         
-
     def config_new(self):
         self.config.new()
-
+        
 
     def config_open(self):
         filename = askopenfilename(title="Load Config")
@@ -314,76 +313,7 @@ class FileBox(ttk.Frame):
             self.config.data_save(filename.name)
 
 
-class OptionBox(ttk.Frame):
-    def __init__(self, root, config):
-        self.config = config
-        self.root = root
-
-        self.radius = tk.IntVar()
-        self.filter = tk.StringVar()
-        self.classification = tk.StringVar()
-
-        self.frame = ttk.Frame(self.root, style="Dark.TFrame")
-        self.frame.pack(padx=0, pady=(4,0), fill='both', expand=True)
-
-        ################################ RADIUS ################################
-        radius_label = ttk.Label(self.frame, text="Range(km):", style="BoldDark.TLabel")
-        radius_label.grid(row=0, column=0, sticky="E", padx=(0,4))
-        self.choices_radius = [0, 0.001, 0.01, 0.1, 1, 10, 50, 100, 200, 500, 1000, 1500, 2000, 5000, 8000]
-        
-        radius_box = ttk.OptionMenu(self.frame, self.radius, *self.choices_radius, command=self.radius_set, style="Dark.TMenubutton")
-        radius_box.grid(row=0, column=1, sticky='W')
-        self.radius.set(self.choices_radius[3])
-        
-        ################################ CLASSIFICATION ################################
-        classification_label = ttk.Label(self.frame, text="Class:", style="BoldDark.TLabel")
-        classification_label.grid(row=0, column=2, sticky="E")
-        self.choices_class = ['Classification', 'All', 'Unclassified', 'Classified', 'Secret']
-        classification_box = ttk.OptionMenu(self.frame, self.classification, *self.choices_class, command=self.classification_set, style="Dark.TMenubutton")
-        classification_box.grid(row=0, column=3, sticky='W')
-        self.classification.set(self.choices_class[1])
-        
-        ################################ FILTERS ################################
-        filter_label = ttk.Label(self.frame, text="Filter:", style="BoldDark.TLabel")
-        filter_label.grid(row=0, column=4, sticky="E")
-        
-        filter_box = ttk.Entry(self.frame, textvariable=self.filter, validate="focusout", validatecommand=self.filter_set, style="Dark.TEntry")
-        filter_box.bind('<Return>', self.filter_set)
-        filter_box.grid(row=0, column=5, columnspan=2, sticky='EW', padx=(0,100))
-
-        self.frame.columnconfigure((0,1,2,3,4),minsize=100, weight=0)
-        self.frame.columnconfigure((5),minsize=200, weight=1)
-
-
-
-    def update(self, task):
-        if task.subtype == 'radius':
-            index = 0
-            for i in range(len(self.choices_radius)):
-                if self.config.properties.radius == self.choices_radius[i]:
-                    index = i
-            self.radius.set(self.choices_radius[index])
-
-        if task.subtype == 'class':
-            index = 0
-            for i in range(len(self.choices_class)):
-                if self.config.properties.classification == self.choices_class[i]:
-                    index = i
-            self.radius.set(self.choices_radius[index])
-
-        if task.subtype == 'filter':
-            self.filter.set(", ".join(self.config.properties.filter))
-        
-
-    def radius_set(self, event):
-        self.config.properties.radius_set(self.radius.get())
-        
-    def classification_set(self, event):
-        self.config.properties.classification_set(self.classification.get())
-        
-    def filter_set(self, event=None):
-        self.config.properties.filter_set(self.filter.get())
-        
+      
 
 class SimulationBox(ttk.Frame):
     def __init__(self, root, config, viewer=None):
@@ -674,12 +604,12 @@ class AutomationBox(ttk.Frame):
         auto_render_w = ttk.Checkbutton(self.frame, var=self.auto_render, command=self.auto_render_set, text="Render",style="Dark.TCheckbutton")
         self.auto_render.set(False)
         auto_render_w.grid(row=1, column=5, sticky="W")
-        self.choices_auto_render_range = ['In Range', 'Primary', 'Secondary', 'All']
-        self.auto_render_range = tk.StringVar(self.root)
-        self.auto_render_range.set(self.choices_auto_render_range[0])
-        self.auto_render_range_box = ttk.OptionMenu(self.frame, self.auto_render_range, self.choices_auto_render_range[0], *self.choices_auto_render_range, command=self.auto_render_range_set, style="Dark.TMenubutton")
-        self.auto_render_range_box.grid(row=2, column=5, sticky='W')
-        self.auto_render_range_box.configure(state='disabled')
+        self.choices_render_range = ['In Range', 'Primary', 'Secondary', 'All']
+        self.render_range = tk.StringVar(self.root)
+        self.render_range.set(self.choices_render_range[0])
+        self.render_range_box = ttk.OptionMenu(self.frame, self.render_range, self.choices_render_range[0], *self.choices_render_range, command=self.render_range_set, style="Dark.TMenubutton")
+        self.render_range_box.grid(row=2, column=5, sticky='W')
+        self.render_range_box.configure(state='disabled')
 
         self.render_step_label = ttk.Label(self.frame, text="Step", style="Dark.TLabel")
         self.render_step_label.grid(row=1, column=6, padx=(0,100), sticky='W')
@@ -784,17 +714,26 @@ class AutomationBox(ttk.Frame):
             if type(val) == bool:
                 self.auto_render.set(val)
                 state = 'normal' if val == True else 'disabled'
-                self.auto_render_range_box.configure(state=state)
+                self.render_range_box.configure(state=state)
                 self.render_step_label.configure(state=state)
                 self.render_step_box.configure(state=state)
 
-        if task.subtype == 'auto_render_range':
-            val = self.config.properties.auto_render_range
+        if task.subtype == 'render_range':
+            val = self.config.properties.render_range
             index = 0
-            for i in range(len(self.choices_auto_render_range)):
-                if val == self.choices_auto_render_range[i]:
+            for i in range(len(self.choices_render_range)):
+                if val == self.choices_render_range[i]:
                     index = i
-            self.auto_render_range.set(self.choices_auto_render_range[index])
+            self.render_range.set(self.choices_render_range[index])
+
+        if task.subtype == 'render_step':
+            val = self.config.properties.render_step
+            index = 0
+            for i in range(len(self.choices_render_step)):
+                if val == self.choices_render_step[i]:
+                    index = i
+            self.render_step.set(self.choices_render_step[index])
+
 
 
 
@@ -862,7 +801,7 @@ class AutomationBox(ttk.Frame):
         if val == False:
             state = 'disabled'
 
-        self.auto_render_range_box.configure(state=state)
+        self.render_range_box.configure(state=state)
         self.render_step_label.configure(state=state)
         self.render_step_box.configure(state=state)
         
@@ -902,8 +841,8 @@ class AutomationBox(ttk.Frame):
             self.sleep_time.set(update) # correcting user input
 
     
-    def auto_render_range_set(self, event=None):
-        self.config.properties.auto_render_range_set(self.auto_render_range.get())
+    def render_range_set(self, event=None):
+        self.config.properties.render_range_set(self.render_range.get())
         self.config.trajectories.trim_render_queue()
 
 
@@ -975,15 +914,17 @@ class OutputBox(ttk.Frame):
         self.serial_value = tk.StringVar()
         self.serial_ignore = tk.StringVar()
 
-        self.auto_log = tk.BooleanVar()
-        self.log_engine = tk.BooleanVar()
-        self.log_num_in_range = tk.BooleanVar()
-        self.log_in_range = tk.BooleanVar()
-        self.log_none_in_range = tk.BooleanVar()
-
+        self.log_use = tk.BooleanVar()
         self.log_file = tk.StringVar()
 
-
+        self.log_engine = tk.BooleanVar()
+        self.log_saving = tk.BooleanVar()
+        self.log_update = tk.BooleanVar()
+        self.log_sleep = tk.BooleanVar()
+        self.log_in_range_list = tk.BooleanVar()
+        self.log_num_in_range = tk.BooleanVar()
+        self.log_pin = tk.BooleanVar()
+        self.log_serial = tk.BooleanVar()
          
         tabsystem = ttk.Notebook(root, style="Dark.TNotebook")
         
@@ -997,10 +938,6 @@ class OutputBox(ttk.Frame):
         self.choices_pin_value = ['Satellites in Range', 'No Satellites in Range', 'Sleeping', 'Not Sleeping']
         pin_tab = ttk.Frame(tabsystem, style="Dark.TNotebook.Tab")
         
-        
-
-
-
         #### Pin 0 Row 0 ####
         pin_0_row_0 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
         self.pin_0_use_btn = ttk.Checkbutton(pin_0_row_0, var=self.pin_0_use, command=self.pin_0_use_set, text="",style="Dark.TCheckbutton")
@@ -1131,36 +1068,45 @@ class OutputBox(ttk.Frame):
         log_tab = ttk.Frame(tabsystem, style="Dark.TNotebook.Tab")
         log_frame_0 = ttk.Frame(log_tab, style="Dark.TNotebook.Tab")
                 
-        log_use = ttk.Checkbutton(log_frame_0, var=self.auto_log, command=self.auto_log_set, text="Write", style="Dark.TCheckbutton")
+        log_use = ttk.Checkbutton(log_frame_0, var=self.log_use, command=self.log_use_set, text="Log", style="Dark.TCheckbutton")
         log_use.grid(row=0, column=0, columnspan=1, sticky="W", padx=0, pady=0)
         
         lines = ttk.Label(log_frame_0, text="Lines max.", style="Dark.TLabel")
         lines.grid(row=0, column=2, columnspan=1, sticky="W", padx=0, pady=0)
 
         self.log_lines = tk.StringVar()
-        log_lines_box = ttk.Entry(log_frame_0, textvariable=self.log_lines, justify='center', validate="focusout", validatecommand=None, style="Dark.TEntry")
-        log_lines_box.configure(width=10)
-        log_lines_box.grid(row=0, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
+        self.log_lines_box = ttk.Entry(log_frame_0, textvariable=self.log_lines, justify='center', validate="focusout", validatecommand=self.log_lines_set, style="Dark.TEntry")
+        self.log_lines_box.configure(width=10)
+        self.log_lines_box.grid(row=0, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
         self.log_lines.set("20000")
 
         log_engine = ttk.Checkbutton(log_frame_0, var=self.log_engine, command=self.log_engine_set, text="Engine", style="Dark.TCheckbutton")
         log_engine.grid(row=1, column=0, columnspan=1, sticky="W", padx=0, pady=0)
         
-        log_in_range = ttk.Checkbutton(log_frame_0, var=self.log_in_range, command=self.log_in_range_set, text="In Range", style="Dark.TCheckbutton")
-        log_in_range.grid(row=2, column=0, columnspan=1, sticky="W", padx=0, pady=0)
+        log_num_in_range_btn = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=self.log_num_in_range_set, text="List Len.", style="Dark.TCheckbutton")
+        log_num_in_range_btn.grid(row=2, column=2, columnspan=1, sticky="W", padx=0, pady=0)
 
-        log_num_in_range = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=self.log_num_in_range_set, text="Count", style="Dark.TCheckbutton")
-        log_num_in_range.grid(row=2, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
+        log_in_range_list_btn = ttk.Checkbutton(log_frame_0, var=self.log_in_range_list, command=self.log_in_range_list_set, text="List", style="Dark.TCheckbutton")
+        log_in_range_list_btn.grid(row=2, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
         
-        log_autosave = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Saving", style="Dark.TCheckbutton")
-        log_autosave.grid(row=1, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
+        log_autosave_btn = ttk.Checkbutton(log_frame_0, var=self.log_saving, command=self.log_saving_set, text="Saving", style="Dark.TCheckbutton")
+        log_autosave_btn.grid(row=1, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
 
-        log_download = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Update", style="Dark.TCheckbutton")
-        log_download.grid(row=1, column=2, columnspan=1, sticky="SW", padx=(0,0), pady=0)
+        log_update_btn = ttk.Checkbutton(log_frame_0, var=self.log_update, command=self.log_update_set, text="Update", style="Dark.TCheckbutton")
+        log_update_btn.grid(row=1, column=2, columnspan=1, sticky="SW", padx=(0,0), pady=0)
 
-        log_sleep = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Sleep", style="Dark.TCheckbutton")
-        log_sleep.grid(row=2, column=2, columnspan=1, sticky="SW", padx=(0,0), pady=0)
+        log_sleep_btn = ttk.Checkbutton(log_frame_0, var=self.log_sleep, command=self.log_sleep_set, text="Sleep", style="Dark.TCheckbutton")
+        log_sleep_btn.grid(row=2, column=0, columnspan=1, sticky="SW", padx=(0,0), pady=0)
         
+        log_pin_btn = ttk.Checkbutton(log_frame_0, var=self.log_pin, command=self.log_pin_set, text="Pin I/O", style="Dark.TCheckbutton")
+        log_pin_btn.grid(row=3, column=0, columnspan=1, sticky="SW", padx=(0,0), pady=0)
+
+        log_serial_btn = ttk.Checkbutton(log_frame_0, var=self.log_serial, command=self.log_serial_set, text="Serial I/O", style="Dark.TCheckbutton")
+        log_serial_btn.grid(row=3, column=1, columnspan=1, sticky="SW", padx=(0,0), pady=0)
+        
+
+
+
         log_frame_0.columnconfigure((0,1,2), minsize=88, weight=1)
 
         log_frame_0.pack(padx=20, pady=(20,0), anchor='w')
@@ -1169,7 +1115,7 @@ class OutputBox(ttk.Frame):
         self.log_file_open_button = ttk.Button(log_frame_1, text="Open", command=self.log_file_open, style="Dark.TButton")
         self.log_file_open_button.grid(row=4, column=0, columnspan=2, padx=(0,0), pady=(0,0),ipadx=0, sticky='EW')
 
-        self.log_file_new_button = ttk.Button(log_frame_1, text="New", command=self.log_file_open, style="Dark.TButton")
+        self.log_file_new_button = ttk.Button(log_frame_1, text="New", command=self.log_file_new, style="Dark.TButton")
         self.log_file_new_button.grid(row=4, column=2, columnspan=1, ipadx=20, sticky='WE')
 
         log_frame_1.columnconfigure((0,1), minsize=100, weight=1)
@@ -1179,10 +1125,11 @@ class OutputBox(ttk.Frame):
 
         tabsystem.add(log_tab, text="Log")
 
-
-
         tabsystem.pack(expand=1, fill=tk.BOTH, padx=(20,100), pady=5)
         root.pack(padx=(0,0), ipadx=0, pady=(4,4), expand=1, fill=tk.BOTH)
+
+        self.log_lines_box.bind('<Return>', self.log_lines_set)
+
 
     def update(self, task):
         if task.subtype == 'auto_serial':
@@ -1249,6 +1196,34 @@ class OutputBox(ttk.Frame):
             val = self.config.properties.pin_1_state
             txt = "HIGH" if val == True else "LOW"
             self.pin_1_display.configure(text=txt)
+
+        if task.subtype == 'log_file':
+            self.log_file_button_conf(filename=self.config.properties.log_file)
+
+        if task.subtype == 'log_use':
+            self.log_use.set(self.config.properties.log_use)
+
+        if task.subtype == 'log_lines':
+            self.log_lines.set(self.config.properties.log_lines)
+
+        if task.subtype == 'log_types':
+            for key, value in task.data.items():
+                if key == "engine":
+                    self.log_engine.set(value)
+                if key == "saving":
+                    self.log_saving.set(value)
+                if key == "update":
+                    self.log_update.set(value)
+                if key == "sleep":
+                    self.log_sleep.set(value)
+                if key == "in_range_list":
+                    self.log_in_range_list.set(value)
+                if key == "log_num_in_range":
+                    self.log_num_in_range.set(value)
+                if key == "pin":
+                    self.log_pin.set(value)
+                if key == "serial":
+                    self.log_serial.set(value)
 
     def pin_0_use_set(self, event=None):
         pin_use = self.pin_0_use.get()
@@ -1324,26 +1299,61 @@ class OutputBox(ttk.Frame):
         if self.config and self.config.properties:
             self.config.properties.serial_value_set(self.serial_value.get())
 
-    def serial_ignore_set(self, event=None):
-        pass
+    def log_use_set(self, event=None):
+        self.config.properties.log_use_set(self.log_use.get())
 
-    def auto_log_set(self, event=None):
-        pass
+    def log_lines_set(self, event=None):
+        update = self.config.properties.log_lines_set(self.log_lines.get())
+        if update == False: 
+            self.log_lines.set(self.config.properties.log_lines)
 
-    def log_engine_set(self, event=None):
-        pass
-
-    def log_num_in_range_set(self, event=None):
-        pass
-
-    def log_in_range_set(self, event=None):
-        pass
-    
-    def log_none_in_range_set(self, event=None):
-        pass
 
     def log_file_open(self, event=None):
-        pass
+        filename = askopenfilename(title="Open Log")
+        self.config.properties.log_file_set(filename)
+        self.log_file_button_conf(filename)
+
+    def log_file_new(self, event=None):
+        filename = asksaveasfile(title="Save Log as")
+        self.config.properties.log_file_set(filename)
+        self.log_file_button_conf(filename.name)
+
+    def log_file_button_conf(self, filename=None):
+        if filename:
+            file = os.path.split(filename)[-1]
+            folder = os.path.split(os.path.split(filename)[0])[-1]
+            txt = "../" + os.path.join(folder, file)
+            self.log_file_open_button.configure(text=txt)
+        else:
+            self.log_file_open_button.configure(text="Open")
+
+    def log_engine_set(self, event=None):
+        self.config.properties.log_type_set("engine", self.log_engine.get())
+
+    def log_saving_set(self, event=None):
+        self.config.properties.log_type_set("saving", self.log_saving.get())
+
+    def log_update_set(self, event=None):
+        self.config.properties.log_type_set("update", self.log_update.get())
+
+    def log_sleep_set(self, event=None):
+        self.config.properties.log_type_set("sleep", self.log_sleep.get())
+
+    def log_in_range_list_set(self, event=None):
+        self.config.properties.log_type_set("in_range_list", self.log_in_range_list.get())
+
+    def log_num_in_range_set(self, event=None):
+        self.config.properties.log_type_set("num_in_range", self.log_num_in_range.get())
+
+    def log_pin_set(self, event=None):
+        self.config.properties.log_type_set("pin", self.log_pin.get())
+
+    def log_serial_set(self, event=None):
+        self.config.properties.log_type_set("serial", self.log_serial.get())
+
+
+
+
 
 
 class Viewer(ttk.Frame):
@@ -1569,7 +1579,6 @@ class Gui(ttk.Frame):
         self.file_box = FileBox(root, config)
         self.automation_box = AutomationBox(root, config, self.viewer)
         self.simulation_box = SimulationBox(root, config, self.viewer)
-        # self.option_box = OptionBox(root, config)
         
         self.satcom_box = ttk.Frame(root, style="Dark.TFrame")
         self.satellite_box = SatelliteBox(self.satcom_box, config, self.style)
@@ -1615,10 +1624,10 @@ class Gui(ttk.Frame):
             "auto_sleep": "AUTOMATION_UPDATE",
             "auto_pin": "AUTOMATION_UPDATE",
             "auto_render": "AUTOMATION_UPDATE",
-            "auto_render_range": "AUTOMATION_UPDATE",
+            "render_range": "AUTOMATION_UPDATE",
             "wake_time": "AUTOMATION_UPDATE",
             "sleep_time": "AUTOMATION_UPDATE",
-
+            "render_step": "AUTOMATION_UPDATE",
 
             "viewer": "VIEWER_UPDATE",
 
@@ -1627,6 +1636,11 @@ class Gui(ttk.Frame):
             "pin_0_value": "OUTPUT_UPDATE",
             "pin_0_condition": "OUTPUT_UPDATE",
             "pin_0_state": "OUTPUT_UPDATE",
+
+            "log_file": "OUTPUT_UPDATE",
+            "log_use": "OUTPUT_UPDATE",
+            "log_lines": "OUTPUT_UPDATE",
+            "log_types": "OUTPUT_UPDATE",
 
             "pin_1_use": "OUTPUT_UPDATE",
             "pin_1": "OUTPUT_UPDATE",

@@ -313,7 +313,7 @@ class Trajectories():
                         sat.update()
 
                     if self.config.properties.auto_render:
-                        r_range = self.config.properties.auto_render_range
+                        r_range = self.config.properties.render_range
                         render = False
 
                         if r_range == 'Primary' or r_range == 'All':
@@ -355,7 +355,7 @@ class Trajectories():
 
 
                     if self.config.properties.auto_render:
-                        r_range = self.config.properties.auto_render_range
+                        r_range = self.config.properties.render_range
                         render = False
                         if r_range == 'Secondary' or r_range == 'All':
                             render = True
@@ -408,7 +408,7 @@ class Trajectories():
     def sat_visibilit_set(self):
         for i in range(len(self.satellites)):
             sat = self.satellites[i]
-            r_range = self.config.properties.auto_render_range
+            r_range = self.config.properties.render_range
             render = False
             
             if r_range == 'In Range':
@@ -500,7 +500,7 @@ class Trajectories():
 
 
     def trim_render_queue(self, factor=2):
-        r_range = self.config.properties.auto_render_range
+        r_range = self.config.properties.render_range
         if r_range == 'In Range':
             if self.render_queue.qsize() > len(self.in_range) * factor and not self.render_queue.empty():
                 self.reset_render_queue()
