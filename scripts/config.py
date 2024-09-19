@@ -551,9 +551,6 @@ class ConfigIo():
         elif self.properties.serial_value == 'No Satellites in Range':
             self.serial_write(not satellites_in_range)
 
-
-
-
    
     def pin_state_update(self, chip_path, pin_path, state):
         pin = None
@@ -597,7 +594,6 @@ class ConfigIo():
         callback()
 
 
-
     ######## Session ########
     def session_load(self):
         if self.properties.sessiondata_file:
@@ -629,9 +625,11 @@ class ConfigIo():
     def session_data(self):
         s = ''
         if self.properties.config_file:
-            s += self.properties.config_file
+            s += self.properties.config_file + '\n'
+        else:
+            s += '\n'
         if self.properties.tle_file:
-            s += '\n' + self.properties.tle_file
+            s += self.properties.tle_file
         return s
 
     ######## Config ########
@@ -663,6 +661,9 @@ class ConfigIo():
             if not init:
                 if self.properties.auto_render:
                     self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
+
+            if self.properties.auto_save:
+                self.session_save()
         
         self.input_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
 
@@ -675,12 +676,15 @@ class ConfigIo():
         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.properties.saved_set, path=path))
         self.ui_q.put(Task(type='UI_UPDATE', subtype='config_file'))
         self.ui_q.put(Task(type='UI_UPDATE', subtype='saved'))
+        if self.properties.auto_save:
+            self.session_save()
 
     def new(self):
         self.set(data=None, default=True)
         self.properties.saved_set(False)
         self.ui_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
-        
+        self.properties.config_file_set(None)
+        self.session_save()
 
     ######## Data ########
     def data_load(self, path, init=False):
@@ -722,6 +726,9 @@ class ConfigIo():
         self.properties.tle_file_set(None, single=False)
         self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file', data=None))
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
+        self.properties.tle_file_set(None)
+        if self.properties.auto_save:
+            self.session_save()
 
     def data_refresh(self):
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
