@@ -394,6 +394,9 @@ class SimulationBox(ttk.Frame):
         self.sort_by = tk.StringVar()
         self.t0_max = tk.StringVar()
         self.t1_max = tk.StringVar()
+        self.radius = tk.IntVar()
+        self.filter = tk.StringVar()
+        self.classification = tk.StringVar()
 
         self.frame = ttk.Frame(self.root, style="Dark.TFrame")
         
@@ -445,7 +448,37 @@ class SimulationBox(ttk.Frame):
         self.frame.columnconfigure((5,6),minsize=50, weight=1)
 
         self.frame.pack(padx=0, pady=(4,0),fill='both', expand=True)
-        # self.frame.columnconfigure((5),minsize=50, weight=0)
+        
+        
+        # OPTIONBOX
+
+        ################################ RADIUS ################################
+        radius_label = ttk.Label(self.frame, text="Range(km):", style="BoldDark.TLabel")
+        radius_label.grid(row=3, column=0, sticky="E", padx=(0,4), pady=(10,0))
+        self.choices_radius = [0, 0.001, 0.01, 0.1, 1, 10, 50, 100, 200, 500, 1000, 1500, 2000, 5000, 8000]
+        
+        radius_box = ttk.OptionMenu(self.frame, self.radius, *self.choices_radius, command=self.radius_set, style="Dark.TMenubutton")
+        radius_box.grid(row=3, column=1, pady=(10,0), sticky='W')
+        self.radius.set(self.choices_radius[3])
+        
+        ################################ CLASSIFICATION ################################
+        classification_label = ttk.Label(self.frame, text="Class:", style="BoldDark.TLabel")
+        classification_label.grid(row=3, column=2, pady=(10,0),sticky="E")
+        self.choices_class = ['Classification', 'All', 'Unclassified', 'Classified', 'Secret']
+        classification_box = ttk.OptionMenu(self.frame, self.classification, *self.choices_class, command=self.classification_set, style="Dark.TMenubutton")
+        classification_box.grid(row=3, column=3, pady=(10,0), sticky='W')
+        self.classification.set(self.choices_class[1])
+        
+        ################################ FILTERS ################################
+        filter_label = ttk.Label(self.frame, text="Filter:", style="BoldDark.TLabel")
+        filter_label.grid(row=3, column=4, sticky="E", pady=(10,0))
+        
+        filter_box = ttk.Entry(self.frame, textvariable=self.filter, validate="focusout", validatecommand=self.filter_set, style="Dark.TEntry")
+        filter_box.bind('<Return>', self.filter_set)
+        filter_box.grid(row=3, column=5, columnspan=2, sticky='EW', padx=(0,100), pady=(10,0))
+
+        # self.frame.columnconfigure((0,1,2,3,4),minsize=100, weight=0)
+        # self.frame.columnconfigure((5),minsize=200, weight=1)
         
         
 
@@ -486,6 +519,23 @@ class SimulationBox(ttk.Frame):
                 self.t1_max.set(val)
             except ValueError:
                 pass
+
+        if task.subtype == 'radius':
+            index = 0
+            for i in range(len(self.choices_radius)):
+                if self.config.properties.radius == self.choices_radius[i]:
+                    index = i
+            self.radius.set(self.choices_radius[index])
+
+        if task.subtype == 'class':
+            index = 0
+            for i in range(len(self.choices_class)):
+                if self.config.properties.classification == self.choices_class[i]:
+                    index = i
+            self.radius.set(self.choices_radius[index])
+
+        if task.subtype == 'filter':
+            self.filter.set(", ".join(self.config.properties.filter))
 
 
     def clock_update(self):
@@ -535,6 +585,16 @@ class SimulationBox(ttk.Frame):
             self.t1_max.set(self.config.properties.t1_max)
         self.highlight_t1(event)
         
+
+    def radius_set(self, event):
+        self.config.properties.radius_set(self.radius.get())
+        
+    def classification_set(self, event):
+        self.config.properties.classification_set(self.classification.get())
+        
+    def filter_set(self, event=None):
+        self.config.properties.filter_set(self.filter.get())
+
 
     def highlight_t0(self, event=None):
         if self.viewer:
@@ -863,7 +923,7 @@ class SatelliteBox(ttk.Frame):
             self.inrange_list_ui.configure(background=self.style.bg_alt2, foreground=self.style.txt_5)
         self.inrange_list_ui.grid(row=0, column=1, columnspan=1, sticky='W')
         self.num_in_range = tk.Variable(value = 0)
-        self.numinrange_label = ttk.Label(frame, text="0", width=2, style="BoldDark.TLabel")
+        self.numinrange_label = ttk.Label(frame, text="0", width=5, style="BoldDark.TLabel")
         self.numinrange_label.grid(row=0, rowspan=1, column=2, sticky="SW", padx=(5,0), ipadx=0)
 
         frame.columnconfigure((0),minsize=100, weight=0)
@@ -939,7 +999,7 @@ class OutputBox(ttk.Frame):
         
         #### Pin 0 Row 0 ####
         pin_0_row_0 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
-        pin_0_label = ttk.Checkbutton(pin_0_row_0, var=self.pin_0_use, command=self.pin_0_use_set, text="Pin",style="Dark.TCheckbutton")
+        pin_0_label = ttk.Label(pin_0_row_0, text="Pin", style="Dark.TLabel")#ttk.Checkbutton(pin_0_row_0, var=self.pin_0_use, command=self.pin_0_use_set, text="Pin",style="Dark.TCheckbutton")
         self.pin_0_use.set(False)
         pin_0_label.grid(row=0, column=0, sticky="E", padx=(0,2), pady=0)
         
@@ -960,6 +1020,9 @@ class OutputBox(ttk.Frame):
 
         #### Pin 0 Row 1 ####
         pin_0_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
+        self.pin_0_use_btn = ttk.Checkbutton(pin_0_row_1, var=self.pin_0_use, command=self.pin_0_use_set, text="",style="Dark.TCheckbutton")
+        self.pin_0_use_btn.grid(row=1, column=0, sticky='W')
+        
         pin_0_condition_label = ttk.Label(pin_0_row_1, text="If", style="Dark.TLabel")
         pin_0_condition_label.grid(row=1, column=0, sticky="E", padx=(0,2))
 
@@ -967,13 +1030,13 @@ class OutputBox(ttk.Frame):
         self.pin_0_condition_box.grid(row=1, column=1, sticky='EW', padx=0, ipadx=0)
         self.pin_0_condition_box.configure(state='disabled')
         pin_0_row_1.columnconfigure((0), minsize=50, weight=0)
-        pin_0_row_1.columnconfigure((1), minsize=250, weight=1)
+        pin_0_row_1.columnconfigure((1), minsize=100, weight=1)
         
         pin_0_row_2 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
         
         
         pin_0_display_label = ttk.Label(pin_0_row_0, text="State", style="Dark.TLabel")
-        pin_0_display_label.grid(row=0, column=3, padx=(30,2), sticky='E')
+        pin_0_display_label.grid(row=0, column=3, padx=(20,2), sticky='E')
         self.pin_0_display = ttk.Label(pin_0_row_0, text="", style="Highlight.TLabel")
         self.pin_0_display.grid(row=0, column=4, sticky='E')
         self.pin_0_display.configure(text="None", state='disabled')
@@ -982,11 +1045,9 @@ class OutputBox(ttk.Frame):
         pin_0_row_0.pack(padx=(20,0), pady=(0,0), anchor='nw')
 
 
-
         #### Pin 1 Row 0 ####
         pin_1_row_0 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
-        pin_1_label = ttk.Checkbutton(pin_1_row_0, var=self.pin_1_use, command=self.pin_1_use_set, text="Pin",style="Dark.TCheckbutton")
-        self.pin_1_use.set(False)
+        pin_1_label = ttk.Label(pin_1_row_0, text="Pin",style="Dark.TLabel")
         pin_1_label.grid(row=0, column=0, sticky="E", padx=(0,2), pady=0)
 
         self.pin_1_box = ttk.OptionMenu(pin_1_row_0, self.pin_1, self.choices_pin[-2], *self.choices_pin, command=self.pin_1_set, direction='above', style="Dark.TMenubutton")
@@ -997,28 +1058,31 @@ class OutputBox(ttk.Frame):
         self.pin_1_value_box.grid(row=0, column=2, padx=0, ipadx=0, sticky='EW')
         self.pin_1_value_box.configure(width=4, state='disabled')
         pin_1_row_0.columnconfigure((0), minsize=50, weight=0)
-        pin_1_row_0.columnconfigure((1,2), minsize=2, weight=1)
+        pin_1_row_0.columnconfigure((1,2), minsize=2, weight=0)
 
         
 
         #### Pin 1 Row 1 ####
         pin_1_row_1 = ttk.Frame(pin_tab, style="Dark.TNotebook.Tab")
+        self.pin_1_use_btn = ttk.Checkbutton(pin_1_row_1, var=self.pin_1_use, command=self.pin_1_use_set, text="",style="Dark.TCheckbutton")
+        self.pin_1_use_btn.grid(row=1, column=0, sticky='W')
+        self.pin_1_use.set(False)
         pin_1_condition_label = ttk.Label(pin_1_row_1, text="If", style="Dark.TLabel")
-        pin_1_condition_label.grid(row=1, column=0, sticky="E", padx=(0,2))
+        pin_1_condition_label.grid(row=1, column=0, sticky="E")
 
         self.pin_1_condition_box = ttk.OptionMenu(pin_1_row_1, self.pin_1_condition, self.choices_pin_value[2], *self.choices_pin_value, command=self.pin_1_condition_set, style="DarkFixed.TMenubutton")
         self.pin_1_condition_box.grid(row=1, column=1, sticky='EW', padx=0, ipadx=0)
         self.pin_1_condition_box.configure(state='disabled')
 
         pin_1_display_label = ttk.Label(pin_1_row_0, text="State", justify='center', style="Dark.TLabel")
-        pin_1_display_label.grid(row=0, column=3, padx=(30,2), sticky='E')
+        pin_1_display_label.grid(row=0, column=3, padx=(20,2), sticky='E')
 
         self.pin_1_display = ttk.Label(pin_1_row_0, text="", justify='center', width=5, style="Highlight.TLabel")
         self.pin_1_display.grid(row=0, column=4, sticky='W')
         self.pin_1_display.configure(text="None", state='disabled')
         
         pin_1_row_1.columnconfigure((0), minsize=50, weight=0)
-        pin_1_row_1.columnconfigure((1), minsize=250, weight=1)
+        pin_1_row_1.columnconfigure((1), minsize=100, weight=1)
 
         pin_1_row_1.pack(padx=20, pady=(20,0), anchor='nw')
         pin_1_row_0.pack(padx=20, pady=(0,0), anchor='nw')
@@ -1068,13 +1132,16 @@ class OutputBox(ttk.Frame):
         log_tab = ttk.Frame(tabsystem, style="Dark.TNotebook.Tab")
         log_frame_0 = ttk.Frame(log_tab, style="Dark.TNotebook.Tab")
                 
-        log_use = ttk.Checkbutton(log_frame_0, var=self.auto_log, command=self.auto_log_set, text="Max. Lines", style="Dark.TCheckbutton")
+        log_use = ttk.Checkbutton(log_frame_0, var=self.auto_log, command=self.auto_log_set, text="Write", style="Dark.TCheckbutton")
         log_use.grid(row=0, column=0, columnspan=1, sticky="W", padx=0, pady=0)
         
+        lines = ttk.Label(log_frame_0, text="Lines", style="Dark.TLabel")
+        lines.grid(row=0, column=2, columnspan=1, sticky="W", padx=0, pady=0)
+
         self.log_lines = tk.StringVar()
         log_lines_box = ttk.Entry(log_frame_0, textvariable=self.log_lines, justify='center', validate="focusout", validatecommand=None, style="Dark.TEntry")
-        log_lines_box.configure(width=8)
-        log_lines_box.grid(row=0, column=1, columnspan=1, sticky="W", padx=(25,0), pady=0)
+        log_lines_box.configure(width=10)
+        log_lines_box.grid(row=0, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
         self.log_lines.set("20000")
 
         log_engine = ttk.Checkbutton(log_frame_0, var=self.log_engine, command=self.log_engine_set, text="Engine", style="Dark.TCheckbutton")
@@ -1084,18 +1151,18 @@ class OutputBox(ttk.Frame):
         log_in_range.grid(row=2, column=0, columnspan=1, sticky="W", padx=0, pady=0)
 
         log_num_in_range = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=self.log_num_in_range_set, text="Count", style="Dark.TCheckbutton")
-        log_num_in_range.grid(row=2, column=1, columnspan=1, sticky="W", padx=(25,0), pady=0)
+        log_num_in_range.grid(row=2, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
         
         log_autosave = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Saving", style="Dark.TCheckbutton")
-        log_autosave.grid(row=1, column=1, columnspan=1, sticky="W", padx=(25,0), pady=0)
+        log_autosave.grid(row=1, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
 
-        log_download = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Download", style="Dark.TCheckbutton")
-        log_download.grid(row=1, column=2, columnspan=1, sticky="SW", padx=(35,0), pady=0)
+        log_download = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Update", style="Dark.TCheckbutton")
+        log_download.grid(row=1, column=2, columnspan=1, sticky="SW", padx=(0,0), pady=0)
 
         log_sleep = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=None, text="Sleep", style="Dark.TCheckbutton")
-        log_sleep.grid(row=2, column=2, columnspan=1, sticky="SW", padx=(35,0), pady=0)
+        log_sleep.grid(row=2, column=2, columnspan=1, sticky="SW", padx=(0,0), pady=0)
         
-        log_frame_0.columnconfigure((0,1,2), minsize=50, weight=1)
+        log_frame_0.columnconfigure((0,1,2), minsize=88, weight=1)
 
         log_frame_0.pack(padx=20, pady=(20,0), anchor='w')
 
@@ -1106,7 +1173,7 @@ class OutputBox(ttk.Frame):
         self.log_file_new_button = ttk.Button(log_frame_1, text="New", command=self.log_file_open, style="Dark.TButton")
         self.log_file_new_button.grid(row=4, column=2, columnspan=1, ipadx=20, sticky='WE')
 
-        log_frame_1.columnconfigure((0,1), minsize=120, weight=1)
+        log_frame_1.columnconfigure((0,1), minsize=100, weight=1)
         log_frame_1.columnconfigure((2), minsize=24, weight=1)
 
         log_frame_1.pack(padx=20, pady=(20,0), anchor='w')
@@ -1115,7 +1182,7 @@ class OutputBox(ttk.Frame):
 
 
 
-        tabsystem.pack(expand=1, fill=tk.BOTH, padx=(0,100), pady=5)
+        tabsystem.pack(expand=1, fill=tk.BOTH, padx=(20,100), pady=5)
         root.pack(padx=(0,0), ipadx=0, pady=(4,4), expand=1, fill=tk.BOTH)
 
     def update(self, task):
@@ -1503,7 +1570,7 @@ class Gui(ttk.Frame):
         self.file_box = FileBox(root, config)
         self.automation_box = AutomationBox(root, config, self.viewer)
         self.simulation_box = SimulationBox(root, config, self.viewer)
-        self.option_box = OptionBox(root, config)
+        # self.option_box = OptionBox(root, config)
         
         self.satcom_box = ttk.Frame(root, style="Dark.TFrame")
         self.satellite_box = SatelliteBox(self.satcom_box, config, self.style)
@@ -1600,7 +1667,7 @@ class Gui(ttk.Frame):
                 self.file_box.update(task)
 
             if task.type == 'OPTION_UPDATE':
-                self.option_box.update(task)
+                self.simulation_box.update(task)
 
             if task.type == 'SIMULATION':
                 if task.subtype == 'sort_by':

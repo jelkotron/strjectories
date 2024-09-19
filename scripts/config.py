@@ -81,14 +81,21 @@ class ConfigIo():
     def sleep(self):
         self.sleeping = True
         self.input_q.put(Task(type='IO', subtype='sleep'))
-        # self.toggle_pin_value(CHIPPATH, 18)
+        msg = "%s Going to sleep"%(time.strftime("%H:%M:%S"))
+        print(msg)    
+        self.log(msg)
+        self.simulation_stop()
+        
 
 
     def wake(self):
         self.sleeping = False
         self.input_q.put(Task(type='IO', subtype='sleep'))
-        # self.toggle_pin_value(CHIPPATH, 18)
-
+        msg = "%s Waking up"%(time.strftime("%H:%M:%S"))
+        print(msg)    
+        self.log(msg)
+        if self.properties.auto_simulate == True:
+            self.simulation_start()
 
 
     def process(self, task):
