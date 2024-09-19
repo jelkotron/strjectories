@@ -591,7 +591,9 @@ class ConfigIo():
                 msg = "%s Warning: Permission to I/O chip denied"%(time.strftime("%H:%M:%S"))
                 print(msg)
                 self.log(msg)
-
+        
+        subtype = 'pin_0_state' if pin_path == 'pin_0' else 'pin_1_state'
+        self.ui_q.put(Task(type='UI_UPDATE', subtype=subtype)) 
         callback()
 
 
