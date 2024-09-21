@@ -16,6 +16,7 @@ import random
 
 DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
 CHIPPATH = '/dev/gpiochip0'
+MAINTAINANCE_TIME = 5
 
 class ConfigIo():
     def __init__(self):
@@ -33,15 +34,21 @@ class ConfigIo():
         self.properties = ConfigData(self.input_q, self.ui_q)
         self.trajectories = Trajectories(self)
         self.schedule = schedule
-
+        
+       
         self.session_load()
 
         self.start()
 
 
+    def maintain(self):
+        self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG_TRIM', path=self.properties.log_file))
+
+
     def start(self):
         self.running = True
         self.io_thread = threading.Thread(target=self.run)
+        self.schedule.every(MAINTAINANCE_TIME).minutes.do(self.maintain)
         self.io_thread.start()
 
    
@@ -63,6 +70,7 @@ class ConfigIo():
 
     def sleep_schedule(self, sleep_time, wake_time, clear=False):
         self.schedule.clear()
+        self.schedule.every(MAINTAINANCE_TIME).minutes.do(self.maintain)
         if clear == False:
             if sleep_time == None:
                 sleep_time = self.properties.sleep_time
@@ -357,33 +365,49 @@ class ConfigIo():
             
             if subtype == 'SESSION':
                 data = self.session_data()
-
-        if path and data:
-            if subtype == 'LOG':
-                with open(path, 'a') as file:
-                    file.write(data)
-                    if not data.endswith('\n'):
-                        file.write('\n')
-                    file.close()
-            else:
-                with open(path, 'w', encoding='utf-8') as file:
-                    if type(data) == dict:
-                        json.dump(data, file, ensure_ascii=False, indent=4)
-                    elif type(data) == str:
-                        file.write(data)
+        # print(subtype)
+        if path:
+            if subtype == 'LOG_TRIM':
+                with open(path, 'r') as file:
+                    lines = file.readlines()
                 file.close()
+                if lines:
+                    if len(lines) > self.properties.log_lines:
+                        with open(path, 'w') as file:
+                            delta = len(lines) - self.properties.log_lines
+                            file.writelines(lines[delta:])
+                            file.close()
 
-                msg = "%s File written: %s"%(time.strftime("%H:%M:%S"), path)
-                if subtype:
-                    msg = msg.replace("File", subtype.title())
+                    
 
-                print(msg)    
-                self.log(msg, subtype='file_io')
 
+
+            if data:
+                if subtype == 'LOG':
+                    with open(path, 'a') as file:
+                        file.write(data)
+                        if not data.endswith('\n'):
+                            file.write('\n')
+                        file.close()
+
+
+                else:
+                    with open(path, 'w', encoding='utf-8') as file:
+                        if type(data) == dict:
+                            json.dump(data, file, ensure_ascii=False, indent=4)
+                        elif type(data) == str:
+                            file.write(data)
+                    file.close()
+
+                    msg = "%s File written: %s"%(time.strftime("%H:%M:%S"), path)
+                    if subtype:
+                        msg = msg.replace("File", subtype.title())
+
+                    print(msg)    
+                    self.log(msg, subtype='file_io')
 
         if callback:
             callback(True)
-
 
     ######## Url ########
     def url_request(self, url=None, callback=None):
