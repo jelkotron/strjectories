@@ -83,7 +83,7 @@ class ConfigIo():
         self.input_q.put(Task(type='IO', subtype='sleep'))
         msg = "%s Going to sleep"%(time.strftime("%H:%M:%S"))
         print(msg)    
-        self.log(msg)
+        self.log(msg, subtype='sleep')
         self.simulation_stop()
         
 
@@ -93,7 +93,7 @@ class ConfigIo():
         self.input_q.put(Task(type='IO', subtype='sleep'))
         msg = "%s Waking up"%(time.strftime("%H:%M:%S"))
         print(msg)    
-        self.log(msg)
+        self.log(msg, subtype='sleep')
         if self.properties.auto_simulate == True:
             self.simulation_start()
 
@@ -121,7 +121,13 @@ class ConfigIo():
         if task.type == 'IO':
             self.io_update(task)
             self.ui_q.put(task)
-            
+            if task.subtype == 'in_range_list':
+                sat_list = self.trajectories.in_range
+                sat_list.sort()
+                msg = "%s In Range: %s"%(self.time.strftime("%H:%M:%S"), str(sat_list))
+                self.log(msg, subtype='in_range_list')
+                msg = "%s Number In Range: %s"%(self.time.strftime("%H:%M:%S"), str(len(self.trajectories.in_range)))
+                self.log(msg, subtype='num_in_range')
 
         if task.type == 'RENDERING':
             if task.subtype == 'render_step':
@@ -185,7 +191,7 @@ class ConfigIo():
 
         #### Log ####
         if task.type == 'LOG_WRITE':
-            self.log_write(task.kwargs.get('message'))
+            self.log_write(task.kwargs.get('message'), task.kwargs.get('subtype'))
 
         return True
 
@@ -319,7 +325,7 @@ class ConfigIo():
                     msg = msg.replace("File", subtype.title())
 
                 print(msg)    
-                self.log(msg)
+                self.log(msg, subtype='file_io')
                 
                 if callback:
                     callback(data=result)
@@ -372,7 +378,7 @@ class ConfigIo():
                     msg = msg.replace("File", subtype.title())
 
                 print(msg)    
-                self.log(msg)
+                self.log(msg, subtype='file_io')
 
 
         if callback:
@@ -386,26 +392,26 @@ class ConfigIo():
 
         msg = "%s Querying %s"%(time.strftime("%H:%M:%S"), url)
         print(msg)
-        self.log(msg)
+        self.log(msg, subtype='update')
 
         data = requests.get(url)
     
         if data.status_code == 200:
             msg = "%s Download Finished"%(time.strftime("%H:%M:%S"))
             print(msg)
-            self.log(msg)
+            self.log(msg, subtype='update')
             if callback:
                 callback(data, mode='QUERY')
 
         elif data.status_code == 403:
             msg = "%s Request returned Code %i - Forbidden. Please wait for 2 hours"%(time.strftime("%H:%M:%S"), data.status_code)
             print(msg)
-            self.log(msg)
+            self.log(msg, subtype='update')
         
         else:
             msg = "%s Request returned Code %i"%(time.strftime("%H:%M:%S"), data.status_code)
             print(msg)
-            self.log(msg)
+            self.log(msg, subtype='update')
         
     def location_request(self, location):
         loc_list = []
@@ -456,7 +462,7 @@ class ConfigIo():
                 ser = serial.Serial(port, baud, timeout=1)
                 msg = "%s Serial port opened: %s"%(time.strftime("%H:%M:%S"), port)
                 print(msg)
-                self.log(msg)
+                self.log(msg, subtype='serial')
                 self.serial = ser
                 self.ui_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_serial', data=None))
                 if not self.trajectories.simulating:
@@ -466,7 +472,7 @@ class ConfigIo():
                 self.serial = None
                 msg = "%s Error: Serial port not found: %s"%(time.strftime("%H:%M:%S"), port)
                 print(msg)
-                self.log(msg)
+                self.log(msg, subtype='serial')
             
     def serial_close(self):
         if self.serial:
@@ -474,7 +480,7 @@ class ConfigIo():
             self.serial = None
             msg = "%s Serial port closed: %s"%(time.strftime("%H:%M:%S"), self.properties.serial_port)
             print(msg)
-            self.log(msg)
+            self.log(msg, subtype='serial')
 
     def serial_write(self, data):
         if self.serial:
@@ -486,13 +492,42 @@ class ConfigIo():
 
         
     ######## Log ########
-    def log_write(self, msg):
+    def log_write(self, msg, subtype=None):
         msg = self.time.strftime("%d.%m.%Y ") + msg
-        self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+        if self.properties.log_use:
+            if not subtype:
+                self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+            else:
+                if subtype == 'simulation' and self.properties.log_types['simulation'] == True:
+                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+                
+                if subtype == 'file_io' and self.properties.log_types['file_io'] == True:
+                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+                
+                if subtype == 'update' and self.properties.log_types['update'] == True:
+                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+                
+                if subtype == 'sleep' and self.properties.log_types['sleep'] == True:
+                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+                
+                if subtype == 'in_range_list' and self.properties.log_types['in_range_list'] == True:
+                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+                
+                if subtype == 'num_in_range' and self.properties.log_types['num_in_range'] == True:
+                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+                
+                if subtype == 'pin' and self.properties.log_types['pin'] == True:
+                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+
+                if subtype == 'serial' and self.properties.log_types['serial'] == True:
+                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
 
 
-    def log(self, msg):
-        self.input_q.put(Task(type='LOG_WRITE', message=msg))
+
+
+    def log(self, msg, subtype):
+        msg = self.time.strftime("%d.%m.%Y ") + msg
+        self.input_q.put(Task(type='LOG_WRITE', message=msg, subtype=subtype))
 
     ######## IO ########
 
@@ -577,16 +612,33 @@ class ConfigIo():
             use = self.properties.pin_0_use
             use_set = self.properties.pin_0_use_set
             pin = self.properties.pin_0
+            previous = self.properties.pin_0_previous
             callback = lambda: self.properties.pin_0_state_set(state)
         elif pin_path == 'pin_1':
             use = self.properties.pin_1_use
             use_set = self.properties.pin_1_use_set
             pin = self.properties.pin_1
+            previous = self.properties.pin_1_previous
             callback = lambda: self.properties.pin_1_state_set(state)
 
         if use and pin != None:
             pin_state = Value.ACTIVE if state else Value.INACTIVE
             try:
+                # reset previous pin to low
+                if previous != None and previous != pin:
+                    with gpiod.request_lines(
+                        chip_path, 
+                        consumer="pin-state-update", 
+                        config={
+                            pin: gpiod.LineSettings(
+                                direction=Direction.OUTPUT, 
+                                output_value=pin_state
+                                )}
+                    ) as request:
+                        request.set_value(previous, Value.INACTIVE)
+                        msg = "%s Pin %i reset to %s"%(time.strftime("%H:%M:%S"), previous, str(Value.INACTIVE))
+                        self.log(msg, subtype='pin')
+                # set current pin state
                 with gpiod.request_lines(
                         chip_path, 
                         consumer="pin-state-update", 
@@ -596,15 +648,20 @@ class ConfigIo():
                                 output_value=pin_state
                                 )}
                 ) as request:
-                    request.set_value(pin, pin_state)
-            
+                    request.set_value(pin, pin_state)                
+                
+                msg = "%s Pin %i set to %s"%(time.strftime("%H:%M:%S"), pin, str(pin_state))
+                self.log(msg, subtype='pin')
+
+                
+
             except PermissionError:
                 callback = lambda: use_set(False)
                 subtype = 'pin_0_use' if pin_path == 'pin_0' else 'pin_1_use'
                 self.ui_q.put(Task(type='UI_UPDATE', subtype=subtype)) 
                 msg = "%s Warning: Permission to I/O chip denied"%(time.strftime("%H:%M:%S"))
                 print(msg)
-                self.log(msg)
+                self.log(msg, subtype='pin')
         
         subtype = 'pin_0_state' if pin_path == 'pin_0' else 'pin_1_state'
         self.ui_q.put(Task(type='UI_UPDATE', subtype=subtype)) 
@@ -822,12 +879,14 @@ class ConfigData():
         self.pin_0_value = 'High'
         self.pin_0_condition = False
         self.pin_0_state = False # LO
+        self.pin_0_previous = None
 
         self.pin_1_use = False
         self.pin_1 = 1
         self.pin_1_value = 'High'
         self.pin_1_condition = False
         self.pin_1_state = False # LO
+        self.pin_1_previous = None
 
         self.render_range = None
                 #### Save state ####
@@ -885,7 +944,7 @@ class ConfigData():
             "log_lines": 9999,
             "log_types": {
                 "engine": False,
-                "saving": False,
+                "file_io": False,
                 "update": False,
                 "sleep": False,
                 "in_range_list": False,
@@ -1539,15 +1598,17 @@ class ConfigData():
                 self.saved_set(False)
    
     def pin_0_set(self, value, single=True):
-        self.pin_0 = value
-        self.input_q.put(Task(type='IO', subtype='pin_0'))
+        if value != self.pin_0:
+            self.pin_0_previous = self.pin_0
+            self.pin_0 = value
+            self.input_q.put(Task(type='IO', subtype='pin_0'))
 
-        if single == True:
+            if single == True:
 
-            if self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
-            else:
-                self.saved_set(False)
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
    
     def pin_0_value_set(self, value, single=True):
         self.pin_0_value = value
@@ -1587,14 +1648,15 @@ class ConfigData():
 
 
     def pin_1_set(self, value, single=True):
-        self.pin_1 = value
-            
-        if single == True:
-            self.input_q.put(Task(type='IO', subtype='pin_1'))
-            if self.auto_save:
-                self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
-            else:
-                self.saved_set(False)
+        if value != self.pin_1:
+            self.pin_1_previous = self.pin_1   
+            self.pin_1 = value
+            if single == True:
+                self.input_q.put(Task(type='IO', subtype='pin_1'))
+                if self.auto_save:
+                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
+                else:
+                    self.saved_set(False)
 
 
     def pin_1_value_set(self, value, single=True):
@@ -1678,7 +1740,7 @@ class ConfigData():
             except ValueError:
                 msg = "%s Invalid Baud Rate: %s"%(time.strftime("%H:%M:%S"), value)
                 print(msg)
-                self.log(msg)
+                self.log(msg, subtype='serial')
                 self.ui_q.put(Task(type='OUTPUT_UPDATE', subtype='serial_baud'))
 
 

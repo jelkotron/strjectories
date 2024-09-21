@@ -151,7 +151,7 @@ class Satellite():
                             self.trajectories.in_range.remove(self.id)
                             self.trajectories.num_in_range -= 1
                     if self.in_range != previous:
-                        self.config.input_q.put(Task(type='IO', subtype='in_range_list')) 
+                        self.config.input_q.put(Task(type='IO', subtype='in_range_list'))
                         if callback:
                             callback()
                             
@@ -265,7 +265,7 @@ class Trajectories():
         if not silent:
             msg = "%s Simulation started"%self.config.time.strftime("%H:%M:%S")
             print(msg)
-            self.config.log(msg)
+            self.config.log(msg, subtype='simulation')
 
 
     def simulation_stop(self, silent=False):
@@ -275,7 +275,7 @@ class Trajectories():
         if not silent:
             msg = "%s Simulation stopped"%self.config.time.strftime("%H:%M:%S")
             print(msg)
-            self.config.log(msg)
+            self.config.log(msg, subtype='simulation')
 
         if self.config.properties.auto_save:
             self.config.data_save()
@@ -602,7 +602,7 @@ class Trajectories():
             self.simulating = was_running
             msg = "%s TLE Data updated"%self.config.time.strftime("%H:%M:%S")
             print(msg)
-            self.config.log(msg)
+            self.config.log(msg, subtype='update')
             self.saved_set(False)
         
         elif mode == 'DATA':
@@ -682,7 +682,7 @@ class Trajectories():
 
         msg = "%s Data loaded: %s"%(self.config.time.strftime("%H:%M:%S"), file)
         print(msg)
-        self.config.log(msg)
+        self.config.log(msg, subtype='file_io')
             
 
     def set(self, data=None):
@@ -713,7 +713,7 @@ class Trajectories():
             
             msg = "%s TLE Data initialized"%(self.config.time.strftime("%H:%M:%S"))
             print(msg)
-            self.config.log(msg)
+            self.config.log(msg, subtype='update')
 
     
     def qsort(self, a, low, high):

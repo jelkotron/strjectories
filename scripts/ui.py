@@ -917,8 +917,8 @@ class OutputBox(ttk.Frame):
         self.log_use = tk.BooleanVar()
         self.log_file = tk.StringVar()
 
-        self.log_engine = tk.BooleanVar()
-        self.log_saving = tk.BooleanVar()
+        self.log_simulation = tk.BooleanVar()
+        self.log_file_io = tk.BooleanVar()
         self.log_update = tk.BooleanVar()
         self.log_sleep = tk.BooleanVar()
         self.log_in_range_list = tk.BooleanVar()
@@ -1080,8 +1080,8 @@ class OutputBox(ttk.Frame):
         self.log_lines_box.grid(row=0, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
         self.log_lines.set("20000")
 
-        log_engine = ttk.Checkbutton(log_frame_0, var=self.log_engine, command=self.log_engine_set, text="Engine", style="Dark.TCheckbutton")
-        log_engine.grid(row=1, column=0, columnspan=1, sticky="W", padx=0, pady=0)
+        log_simulation = ttk.Checkbutton(log_frame_0, var=self.log_simulation, command=self.log_simulation_set, text="Engine", style="Dark.TCheckbutton")
+        log_simulation.grid(row=1, column=0, columnspan=1, sticky="W", padx=0, pady=0)
         
         log_num_in_range_btn = ttk.Checkbutton(log_frame_0, var=self.log_num_in_range, command=self.log_num_in_range_set, text="List Len.", style="Dark.TCheckbutton")
         log_num_in_range_btn.grid(row=2, column=2, columnspan=1, sticky="W", padx=0, pady=0)
@@ -1089,7 +1089,7 @@ class OutputBox(ttk.Frame):
         log_in_range_list_btn = ttk.Checkbutton(log_frame_0, var=self.log_in_range_list, command=self.log_in_range_list_set, text="List", style="Dark.TCheckbutton")
         log_in_range_list_btn.grid(row=2, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
         
-        log_autosave_btn = ttk.Checkbutton(log_frame_0, var=self.log_saving, command=self.log_saving_set, text="Saving", style="Dark.TCheckbutton")
+        log_autosave_btn = ttk.Checkbutton(log_frame_0, var=self.log_file_io, command=self.log_file_io_set, text="File I/O", style="Dark.TCheckbutton")
         log_autosave_btn.grid(row=1, column=1, columnspan=1, sticky="W", padx=(0,0), pady=0)
 
         log_update_btn = ttk.Checkbutton(log_frame_0, var=self.log_update, command=self.log_update_set, text="Update", style="Dark.TCheckbutton")
@@ -1208,10 +1208,10 @@ class OutputBox(ttk.Frame):
 
         if task.subtype == 'log_types':
             for key, value in task.data.items():
-                if key == "engine":
-                    self.log_engine.set(value)
-                if key == "saving":
-                    self.log_saving.set(value)
+                if key == "simulation":
+                    self.log_simulation.set(value)
+                if key == "file_io":
+                    self.log_file_io.set(value)
                 if key == "update":
                     self.log_update.set(value)
                 if key == "sleep":
@@ -1327,11 +1327,11 @@ class OutputBox(ttk.Frame):
         else:
             self.log_file_open_button.configure(text="Open")
 
-    def log_engine_set(self, event=None):
-        self.config.properties.log_type_set("engine", self.log_engine.get())
+    def log_simulation_set(self, event=None):
+        self.config.properties.log_type_set("simulation", self.log_simulation.get())
 
-    def log_saving_set(self, event=None):
-        self.config.properties.log_type_set("saving", self.log_saving.get())
+    def log_file_io_set(self, event=None):
+        self.config.properties.log_type_set("file_io", self.log_file_io.get())
 
     def log_update_set(self, event=None):
         self.config.properties.log_type_set("update", self.log_update.get())
@@ -1396,7 +1396,7 @@ class Viewer(ttk.Frame):
         current_time = time.strftime("%H:%M:%S")
         msg = "%s Viewer initialized"%current_time
         print(msg)
-        self.config.log(msg)
+        self.config.log(msg, subtype='simulation')
 
         if self.config.properties.auto_simulate and self.config.properties.auto_render:
             self.rendering = True 
