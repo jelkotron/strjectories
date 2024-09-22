@@ -192,8 +192,9 @@ class ConfigIo():
     ######## Simulation ########
     def simulation_start(self):
         if self.trajectories:
-            self.trajectories.simulation_start()
-            self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=1))
+            if len(self.trajectories.satellites) > 0:
+                self.trajectories.simulation_start()
+                self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=1))
 
     def simulation_stop(self):
         self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=0))
@@ -401,24 +402,33 @@ class ConfigIo():
         print(msg)
         self.log(msg, subtype='update')
 
-        data = requests.get(url)
-    
-        if data.status_code == 200:
-            msg = "%s Download Finished"%(time.strftime("%H:%M:%S"))
-            print(msg)
-            self.log(msg, subtype='update')
-            if callback:
-                callback(data, mode='QUERY')
-
-        elif data.status_code == 403:
-            msg = "%s Request returned Code %i - Forbidden. Please wait for 2 hours"%(time.strftime("%H:%M:%S"), data.status_code)
-            print(msg)
-            self.log(msg, subtype='update')
+        try:
+            data = requests.get(url)
         
-        else:
-            msg = "%s Request returned Code %i"%(time.strftime("%H:%M:%S"), data.status_code)
+            if data.status_code == 200:
+                msg = "%s Download Finished"%(time.strftime("%H:%M:%S"))
+                print(msg)
+                self.log(msg, subtype='update')
+                if callback:
+                    callback(data, mode='QUERY')
+
+            elif data.status_code == 403:
+                msg = "%s Request returned Code %i - Forbidden. Please wait for 2 hours"%(time.strftime("%H:%M:%S"), data.status_code)
+                print(msg)
+                self.log(msg, subtype='update')
+            
+            else:
+                msg = "%s Request returned Code %i"%(time.strftime("%H:%M:%S"), data.status_code)
+                print(msg)
+                self.log(msg, subtype='update')
+        
+        except requests.exceptions.ConnectionError as e:
+            msg = "%s Connection Error: %s"%(time.strftime("%H:%M:%S"), url)
             print(msg)
             self.log(msg, subtype='update')
+            
+
+
         
     def location_request(self, location):
         loc_list = []
@@ -814,8 +824,8 @@ class ConfigIo():
          
     def data_new(self):
         self.properties.tle_file_set(None, single=False)
-        self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file', data=None))
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
+        self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file', data=None))
         self.properties.tle_file_set(None)
         if self.properties.auto_save:
             self.session_save()
