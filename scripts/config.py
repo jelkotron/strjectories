@@ -422,8 +422,13 @@ class ConfigIo():
                 print(msg)
                 self.log(msg, subtype='update')
         
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             msg = "%s Connection Error: %s"%(time.strftime("%H:%M:%S"), url)
+            print(msg)
+            self.log(msg, subtype='update')
+
+        except requests.exceptions.ConnectTimeout:
+            msg = "%s Connection Timeout: %s"%(time.strftime("%H:%M:%S"), url)
             print(msg)
             self.log(msg, subtype='update')
             
