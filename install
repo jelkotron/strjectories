@@ -24,9 +24,7 @@ else
         fi
         echo [Desktop Entry] >> $BASEDIR/trjectories.desktop
         echo Name=trjectories >> $BASEDIR/trjectories.desktop
-        if -f "$ICON"; then
-            echo Icon=$ICON >> $BASEDIR/trjectories.desktop
-        fi
+        echo Icon=$ICON >> $BASEDIR/trjectories.desktop
         echo Exec=$LAUNCHER >> $BASEDIR/trjectories.desktop
         echo Type=Application >> $BASEDIR/trjectories.desktop
         echo Encoding=UTF-8 >> $BASEDIR/trjectories.desktop
