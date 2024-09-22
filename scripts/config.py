@@ -206,9 +206,11 @@ class ConfigIo():
         subtype = kwargs.get('subtype')
         path = kwargs.get('path')
         result = None
+        init = None
         if subtype and path:
             if os.path.isfile(path):
                 if subtype == 'SESSION':
+                    init = True
                     f = open(path)
                     config, tles = None, None
                 
@@ -321,7 +323,7 @@ class ConfigIo():
                     msg = msg.replace("File", subtype.title())
 
                 print(msg)    
-                self.log(msg, subtype='file_io')
+                self.log(msg, subtype='file_io', init=init if init else False)
                 
                 if callback:
                     callback(data=result)
@@ -499,36 +501,43 @@ class ConfigIo():
     ######## Log ########
     def log(self, msg, subtype=None, init=False):
         msg = self.time.strftime("%d.%m.%Y ") + msg
-        if self.properties.log_use:
-            if not subtype:
-                self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
-            else:
-                if subtype == 'simulation' and self.properties.log_types['simulation'] == True:
-                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
-                
-                if subtype == 'file_io' and self.properties.log_types['file_io'] == True:
-                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
-                
-                if subtype == 'update' and self.properties.log_types['update'] == True:
-                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
-                
-                if subtype == 'sleep' and self.properties.log_types['sleep'] == True:
-                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
-                
-                if subtype == 'in_range_list' and self.properties.log_types['in_range_list'] == True:
-                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
-                
-                if subtype == 'num_in_range' and self.properties.log_types['num_in_range'] == True:
-                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
-                
-                if subtype == 'pin' and self.properties.log_types['pin'] == True:
-                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+        task = None
+        if not subtype:
+            task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
+        else:
+            if subtype == 'simulation' and self.properties.log_types['simulation'] == True:
+                task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
+            
+            if subtype == 'file_io' and self.properties.log_types['file_io'] == True:
+                task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
+            
+            if subtype == 'update' and self.properties.log_types['update'] == True:
+                task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
+            
+            if subtype == 'sleep' and self.properties.log_types['sleep'] == True:
+                task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
+            
+            if subtype == 'in_range_list' and self.properties.log_types['in_range_list'] == True:
+                task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
+            
+            if subtype == 'num_in_range' and self.properties.log_types['num_in_range'] == True:
+                task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
+            
+            if subtype == 'pin' and self.properties.log_types['pin'] == True:
+                task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
 
-                if subtype == 'serial' and self.properties.log_types['serial'] == True:
-                    self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
+            if subtype == 'serial' and self.properties.log_types['serial'] == True:
+                task = Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg)
+
+        if task: 
+            if self.properties.log_use:
+                self.input_q.put(task)
+        else:
+            if init:    
+                self.properties.log_cache.append(Task(type='LOG', subtype=subtype, data=msg))        
+    
 
     ######## IO ########
-
     def io_update(self, task):
         satellites_in_range = (len(self.trajectories.in_range) > 0)
         sleeping = self.sleeping
@@ -739,6 +748,13 @@ class ConfigIo():
             if self.properties.auto_save and init == False:
                 self.session_save()
         
+            if len(self.properties.log_cache) > 0:
+                if self.properties.log_use:
+                    for task in self.properties.log_cache:
+                        self.log(task.data, task.subtype)
+                self.properties.log_cache = []
+
+
         self.input_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
 
     def save(self, path=None):
@@ -897,7 +913,8 @@ class ConfigData():
         self.log_use = False
         self.log_lines = None
         self.log_types = None
-        
+        self.log_cache = []
+
         self.default_values = {
             "sessiondata_file" : "", 
             "config_file" : "",
@@ -943,7 +960,7 @@ class ConfigData():
 
             "log_lines": 9999,
             "log_types": {
-                "engine": False,
+                "simulation": False,
                 "file_io": False,
                 "update": False,
                 "sleep": False,
