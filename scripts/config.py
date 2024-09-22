@@ -358,22 +358,23 @@ class ConfigIo():
             if subtype == 'SESSION':
                 data = self.session_data()
 
-        if data:
+        if data and path:
             if subtype == 'LOG':
-                with open(path, 'r+') as file:
-                    if not data.endswith('\n'):
-                        data += '\n'
-                    lines = file.readlines()
-                    if len(lines) < self.properties.log_lines:
-                        file.writelines(data)
-                        file.close()
-                    else:
-                        delta = len(lines) - self.properties.log_lines
-                        file.seek(0)
-                        file.truncate()
-                        lines.append(data)
-                        file.writelines(lines[delta + 1:]) # one more for new line
-                        file.close()
+                if self.properties.log_lines:
+                    with open(path, 'r+') as file:
+                        if not data.endswith('\n'):
+                            data += '\n'
+                        lines = file.readlines()
+                        if len(lines) < self.properties.log_lines:
+                            file.writelines(data)
+                            file.close()
+                        else:
+                            delta = len(lines) - self.properties.log_lines
+                            file.seek(0)
+                            file.truncate()
+                            lines.append(data)
+                            file.writelines(lines[delta + 1:]) # one more for new line
+                            file.close()
 
             else:
                 with open(path, 'w', encoding='utf-8') as file:

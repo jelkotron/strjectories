@@ -1310,13 +1310,15 @@ class OutputBox(ttk.Frame):
 
     def log_file_open(self, event=None):
         filename = askopenfilename(title="Open Log")
-        self.config.properties.log_file_set(filename)
-        self.log_file_button_conf(filename)
+        if filename:
+            self.config.properties.log_file_set(filename)
+            self.log_file_button_conf(filename)
 
     def log_file_new(self, event=None):
         filename = asksaveasfile(title="Save Log as")
-        self.config.properties.log_file_set(filename)
-        self.log_file_button_conf(filename.name)
+        if filename:
+            self.config.properties.log_file_set(filename.name)
+            self.log_file_button_conf(filename.name)
 
     def log_file_button_conf(self, filename=None):
         if filename:
