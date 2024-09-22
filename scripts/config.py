@@ -16,7 +16,6 @@ import random
 
 DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
 CHIPPATH = '/dev/gpiochip0'
-MAINTAINANCE_TIME = 5
 
 class ConfigIo():
     def __init__(self):
@@ -40,15 +39,9 @@ class ConfigIo():
 
         self.start()
 
-
-    def maintain(self):
-        self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG_TRIM', path=self.properties.log_file))
-
-
     def start(self):
         self.running = True
         self.io_thread = threading.Thread(target=self.run)
-        self.schedule.every(MAINTAINANCE_TIME).minutes.do(self.maintain)
         self.io_thread.start()
 
    
@@ -70,7 +63,6 @@ class ConfigIo():
 
     def sleep_schedule(self, sleep_time, wake_time, clear=False):
         self.schedule.clear()
-        self.schedule.every(MAINTAINANCE_TIME).minutes.do(self.maintain)
         if clear == False:
             if sleep_time == None:
                 sleep_time = self.properties.sleep_time
@@ -365,30 +357,24 @@ class ConfigIo():
             
             if subtype == 'SESSION':
                 data = self.session_data()
-        # print(subtype)
-        if path:
-            if subtype == 'LOG_TRIM':
-                with open(path, 'r') as file:
-                    lines = file.readlines()
-                file.close()
-                if lines:
-                    if len(lines) > self.properties.log_lines:
-                        with open(path, 'w') as file:
-                            delta = len(lines) - self.properties.log_lines
-                            file.writelines(lines[delta:])
-                            file.close()
-
-                    
-
-
 
             if data:
                 if subtype == 'LOG':
-                    with open(path, 'a') as file:
-                        file.write(data)
+                    with open(path, 'r+') as file:
                         if not data.endswith('\n'):
-                            file.write('\n')
-                        file.close()
+                            data += '\n'
+                        lines = file.readlines()
+                        if len(lines) < self.properties.log_lines:
+                            file.writelines(data)
+                            file.close()
+                        else:
+                            delta = len(lines) - self.properties.log_lines
+                            file.truncate(0)
+                            lines.append(data)
+                            file.writelines(lines[delta + 1:]) # one more for new line
+                            file.close()
+
+
 
 
                 else:
