@@ -4,8 +4,11 @@ import timezonefinder
 import math
 import serial
 import time
+import os
+import sys
 
 r_earth = 6378.137
+
 
 def serial_out(serialport, baudrate=600):
     try:

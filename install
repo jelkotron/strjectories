@@ -3,7 +3,9 @@
 BASEDIR=$(dirname $(realpath $0))
 VENV=$BASEDIR/venv
 VENVBIN=$VENV/bin/activate
+ICON=$BASEDIR/assets/icon.png
 REQUIREMENTS=$BASEDIR/requirements
+LAUNCHER=$BASEDIR/launch
 TITLE="STRINSTALL"
 
 if [[ $DESKTOP_SESSION == *"mate"* ]]; then
@@ -20,5 +22,15 @@ else
         else
             lxterminal --title=$TITLE -e 'sh -c ". '$VENVBIN' && pip install -r '$REQUIREMENTS'";'
         fi
+        echo [Desktop Entry] >> $BASEDIR/trjectories.desktop
+        echo Name=trjectories >> $BASEDIR/trjectories.desktop
+        if -f "$ICON"; then
+            echo Icon=$ICON >> $BASEDIR/trjectories.desktop
+        fi
+        echo Exec=$LAUNCHER >> $BASEDIR/trjectories.desktop
+        echo Type=Application >> $BASEDIR/trjectories.desktop
+        echo Encoding=UTF-8 >> $BASEDIR/trjectories.desktop
+        echo Terminal=false >> $BASEDIR/trjectories.desktop
+        echo "Categories=None;" >> $BASEDIR/trjectories.desktop
     fi
 fi
