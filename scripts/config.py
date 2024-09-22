@@ -179,19 +179,13 @@ class ConfigIo():
                 data = str(len(self.trajectories.in_range)!=0)
                 
             self.serial_write(data)
-        
-       
-           
-        
+          
         #### Info ####
         #TODO: evaluate elegance of this
         if task.type == 'INFO_UPDATE':
             self.ui_q.put(Task(type=task.type, subtype=task.subtype))
 
-        #### Log ####
-        # if task.type == 'LOG_WRITE':
-        #     self.log_write(task.kwargs.get('message'), task.kwargs.get('subtype'))
-
+      
         return True
 
 
@@ -216,7 +210,7 @@ class ConfigIo():
             if os.path.isfile(path):
                 if subtype == 'SESSION':
                     f = open(path)
-                    config, tles, log = None, None, None
+                    config, tles = None, None
                 
                     lines = f.readlines()
                    
@@ -224,16 +218,13 @@ class ConfigIo():
                         config = lines[0].strip('\n ')
                     if len(lines) >= 2:
                         tles = lines[1].strip('\n ')
-                    if len(lines) == 3:
-                        log = lines[2].strip('\n ')
+                    
 
                     if config:
                         config = config if os.path.isfile(config) else None
                     if tles:
                         tles = tles if os.path.isfile(tles) else None
-                    if log:
-                        log = log if os.path.isfile(log) else None
-
+                 
                     result = {"sessiondata_file": path}
                  
                     if config:
@@ -242,9 +233,7 @@ class ConfigIo():
                     if tles:
                         result["tles"] = tles
                         self.tles = tles
-                    if log:
-                        result["log"] = log
-
+                   
                     f.close()
                 
     
@@ -685,11 +674,7 @@ class ConfigIo():
     def session_set(self, data):
         tles = data.get("tles")
         config = data.get("config")
-        log = data.get("log")
       
-        if log:
-            self.properties.log_file_set(log, single=False)
-
         if config:
             self.load(config, init=True)
         else:
@@ -718,12 +703,6 @@ class ConfigIo():
         
         if self.properties.tle_file:
             s += self.properties.tle_file + '\n'
-        else:
-            s += '\n'
-
-        if self.properties.log_file:
-            s += self.properties.log_file
-
 
         return s
 
