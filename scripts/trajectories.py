@@ -261,6 +261,7 @@ class Trajectories():
     def simulation_start(self, silent=False):
         self.simulating = True
         self.time_0 = time.time()
+        self.sat_sort()
         
         if not silent:
             msg = "%s Simulation started"%self.config.time.strftime("%H:%M:%S")
@@ -271,6 +272,7 @@ class Trajectories():
     def simulation_stop(self, silent=False):
         self.time_0 = 0
         self.simulating = False
+        self.sat_sort()
 
         if not silent:
             msg = "%s Simulation stopped"%self.config.time.strftime("%H:%M:%S")
@@ -729,6 +731,7 @@ class Trajectories():
         
         # partition the input
         split_index = low
+        
         for i in range(low, high):
             if self.config.properties.sort_by == None or self.config.properties.sort_by == 'PROXIMITY':
                 if a[i].distance_2D <= a[high].distance_2D:

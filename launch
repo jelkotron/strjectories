@@ -12,6 +12,6 @@ if [[ $DESKTOP_SESSION == *"mate"* ]]; then
     # x-terminal-emulator -T $title -geometry $geo -e 'sh -c "echo '$t' && . '$venv' && python3 '$main'; bash";'   
 else
     if [[ $DESKTOP_SESSION == *"LXDE"* ]]; then
-        lxterminal --geometry=$geo --title=$title -e 'sh -c "echo '$t' && . '$venv' && python3 '$main'; bash";'
+        lxterminal --geometry=$geo --title=$title -e 'sh -c ". '$venv' && python3 '$main'; bash";'
     fi
 fi

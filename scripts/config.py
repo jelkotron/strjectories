@@ -989,7 +989,7 @@ class ConfigData():
             },
 
             "saved" : True, 
-            "sort_by": "Proximity"
+            "sort_by": "PROXIMITY"
         }
 
         

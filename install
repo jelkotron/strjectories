@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+BASEDIR=$(dirname $(realpath $0))
+VENV=$BASEDIR/venv
+VENVBIN=$VENV/bin/activate
+REQUIREMENTS=$BASEDIR/requirements
+TITLE="STRINSTALL"
+
+if [[ $DESKTOP_SESSION == *"mate"* ]]; then
+    if [ ! -f "$VENVBIN" ]; then
+        mate-terminal --title $TITLE -x sh -c "python3 -m venv $VENV && . $VENVBIN && pip install -r $REQUIREMENTS"
+    else
+        mate-terminal --title $TITLE -x sh -c ". $VENVBIN && pip install -r $REQUIREMENTS"
+    fi
+
+else
+    if [[ $DESKTOP_SESSION == *"LXDE"* ]]; then
+        if [ ! -f "$VENVBIN" ]; then
+            lxterminal --title=$TITLE -e 'sh -c "python3 -m venv '$VENV' && . '$VENVBIN' && pip install -r '$REQUIREMENTS'";'
+        else
+            lxterminal --title=$TITLE -e 'sh -c ". '$VENVBIN' && pip install -r '$REQUIREMENTS'";'
+        fi
+    fi
+fi
