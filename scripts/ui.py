@@ -1218,7 +1218,7 @@ class OutputBox(ttk.Frame):
                     self.log_sleep.set(value)
                 if key == "in_range_list":
                     self.log_in_range_list.set(value)
-                if key == "log_num_in_range":
+                if key == "num_in_range":
                     self.log_num_in_range.set(value)
                 if key == "pin":
                     self.log_pin.set(value)

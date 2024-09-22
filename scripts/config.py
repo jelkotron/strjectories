@@ -34,7 +34,6 @@ class ConfigIo():
         self.trajectories = Trajectories(self)
         self.schedule = schedule
         
-       
         self.session_load()
 
         self.start()
@@ -190,8 +189,8 @@ class ConfigIo():
             self.ui_q.put(Task(type=task.type, subtype=task.subtype))
 
         #### Log ####
-        if task.type == 'LOG_WRITE':
-            self.log_write(task.kwargs.get('message'), task.kwargs.get('subtype'))
+        # if task.type == 'LOG_WRITE':
+        #     self.log_write(task.kwargs.get('message'), task.kwargs.get('subtype'))
 
         return True
 
@@ -217,27 +216,35 @@ class ConfigIo():
             if os.path.isfile(path):
                 if subtype == 'SESSION':
                     f = open(path)
-                    config, tles = None, None
+                    config, tles, log = None, None, None
                 
                     lines = f.readlines()
+                   
                     if len(lines) >= 1:
-                        config = lines[0].strip()
-                        if len(lines) == 2:
-                            tles = lines[1].strip()
+                        config = lines[0].strip('\n ')
+                    if len(lines) >= 2:
+                        tles = lines[1].strip('\n ')
+                    if len(lines) == 3:
+                        log = lines[2].strip('\n ')
 
-                        if config:
-                            config = config if os.path.isfile(config) else None
-                        if tles:
-                            tles = tles if os.path.isfile(tles) else None
-                    
+                    if config:
+                        config = config if os.path.isfile(config) else None
+                    if tles:
+                        tles = tles if os.path.isfile(tles) else None
+                    if log:
+                        log = log if os.path.isfile(log) else None
+
                     result = {"sessiondata_file": path}
-
+                 
                     if config:
                         result["config"] = config
                         self.config_file = config
                     if tles:
                         result["tles"] = tles
                         self.tles = tles
+                    if log:
+                        result["log"] = log
+
                     f.close()
                 
     
@@ -330,6 +337,7 @@ class ConfigIo():
                 if callback:
                     callback(data=result)
                 
+
     def file_write(self, callback=None, **kwargs):
         path = kwargs.get('path')
         data = kwargs.get('data')
@@ -358,39 +366,37 @@ class ConfigIo():
             if subtype == 'SESSION':
                 data = self.session_data()
 
-            if data:
-                if subtype == 'LOG':
-                    with open(path, 'r+') as file:
-                        if not data.endswith('\n'):
-                            data += '\n'
-                        lines = file.readlines()
-                        if len(lines) < self.properties.log_lines:
-                            file.writelines(data)
-                            file.close()
-                        else:
-                            delta = len(lines) - self.properties.log_lines
-                            file.truncate(0)
-                            lines.append(data)
-                            file.writelines(lines[delta + 1:]) # one more for new line
-                            file.close()
+        if data:
+            if subtype == 'LOG':
+                with open(path, 'r+') as file:
+                    if not data.endswith('\n'):
+                        data += '\n'
+                    lines = file.readlines()
+                    if len(lines) < self.properties.log_lines:
+                        file.writelines(data)
+                        file.close()
+                    else:
+                        delta = len(lines) - self.properties.log_lines
+                        file.seek(0)
+                        file.truncate()
+                        lines.append(data)
+                        file.writelines(lines[delta + 1:]) # one more for new line
+                        file.close()
 
+            else:
+                with open(path, 'w', encoding='utf-8') as file:
+                    if type(data) == dict:
+                        json.dump(data, file, ensure_ascii=False, indent=4)
+                    elif type(data) == str:
+                        file.write(data)
+                file.close()
 
+                msg = "%s File written: %s"%(time.strftime("%H:%M:%S"), path)
+                if subtype:
+                    msg = msg.replace("File", subtype.title())
 
-
-                else:
-                    with open(path, 'w', encoding='utf-8') as file:
-                        if type(data) == dict:
-                            json.dump(data, file, ensure_ascii=False, indent=4)
-                        elif type(data) == str:
-                            file.write(data)
-                    file.close()
-
-                    msg = "%s File written: %s"%(time.strftime("%H:%M:%S"), path)
-                    if subtype:
-                        msg = msg.replace("File", subtype.title())
-
-                    print(msg)    
-                    self.log(msg, subtype='file_io')
+                print(msg)    
+                self.log(msg, subtype='file_io')
 
         if callback:
             callback(True)
@@ -502,7 +508,7 @@ class ConfigIo():
 
         
     ######## Log ########
-    def log_write(self, msg, subtype=None):
+    def log(self, msg, subtype=None, init=False):
         msg = self.time.strftime("%d.%m.%Y ") + msg
         if self.properties.log_use:
             if not subtype:
@@ -531,13 +537,6 @@ class ConfigIo():
 
                 if subtype == 'serial' and self.properties.log_types['serial'] == True:
                     self.input_q.put(Task(type='FILE_WRITE', callback=None, subtype='LOG', data=msg))
-
-
-
-
-    def log(self, msg, subtype):
-        msg = self.time.strftime("%d.%m.%Y ") + msg
-        self.input_q.put(Task(type='LOG_WRITE', message=msg, subtype=subtype))
 
     ######## IO ########
 
@@ -686,6 +685,10 @@ class ConfigIo():
     def session_set(self, data):
         tles = data.get("tles")
         config = data.get("config")
+        log = data.get("log")
+      
+        if log:
+            self.properties.log_file_set(log, single=False)
 
         if config:
             self.load(config, init=True)
@@ -712,8 +715,16 @@ class ConfigIo():
             s += self.properties.config_file + '\n'
         else:
             s += '\n'
+        
         if self.properties.tle_file:
-            s += self.properties.tle_file
+            s += self.properties.tle_file + '\n'
+        else:
+            s += '\n'
+
+        if self.properties.log_file:
+            s += self.properties.log_file
+
+
         return s
 
     ######## Config ########
@@ -907,7 +918,7 @@ class ConfigData():
         self.log_use = False
         self.log_lines = None
         self.log_types = None
-
+        
         self.default_values = {
             "sessiondata_file" : "", 
             "config_file" : "",
