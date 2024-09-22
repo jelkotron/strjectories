@@ -652,7 +652,7 @@ class ConfigIo():
                         chip_path, 
                         consumer="pin-state-update", 
                         config={
-                            pin: gpiod.LineSettings(
+                            previous: gpiod.LineSettings(
                                 direction=Direction.OUTPUT, 
                                 output_value=pin_state
                                 )}
