@@ -761,7 +761,7 @@ class ConfigIo():
                 if self.properties.auto_render:
                     self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='viewer'))
 
-            if self.properties.auto_save and init == False:
+            if not init:
                 self.session_save()
         
             if len(self.properties.log_cache) > 0:
@@ -820,6 +820,9 @@ class ConfigIo():
         if self.properties.auto_simulate == True:
             self.simulation_start()
 
+        if not init:
+            self.session_save()
+
     def data_save(self, path=None):
         if path == None:
             path = self.properties.tle_file
@@ -833,8 +836,7 @@ class ConfigIo():
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
         self.ui_q.put(Task(type='FILE_UPDATE', subtype='tle_file', data=None))
         self.properties.tle_file_set(None)
-        if self.properties.auto_save:
-            self.session_save()
+        self.session_save()
 
     def data_refresh(self):
         self.input_q.put(Task(type='DATA_QUERY', url=None, callback=self.trajectories.tle_update))
