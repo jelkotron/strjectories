@@ -620,19 +620,16 @@ class AutomationBox(ttk.Frame):
         self.render_range.set(self.choices_render_range[0])
         self.render_range_box = ttk.OptionMenu(self.frame, self.render_range, self.choices_render_range[0], *self.choices_render_range, command=self.render_range_set, style="Dark.TMenubutton")
         self.render_range_box.grid(row=2, column=5, sticky='W')
-        self.render_range_box.configure(state='disabled')
-
+        
         self.render_step_label = ttk.Label(self.frame, text="Step", style="Dark.TLabel")
         self.render_step_label.grid(row=1, column=6, padx=(0,100), sticky='W')
-        self.render_step_label.configure(state='disabled')
-
+        
         self.choices_render_step = [0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
         self.render_step = tk.IntVar(self.root)
         self.render_step.set(self.choices_render_step[0])
         self.render_step_box = ttk.OptionMenu(self.frame, self.render_step, self.choices_render_step[0], *self.choices_render_step, command=self.render_step_set, style="Dark.TMenubutton")
         self.render_step_box.grid(row=2, column=6, padx=(0,100),sticky='W')
-        self.render_step_box.configure(state='disabled')
-
+        
 
 
 
@@ -641,14 +638,12 @@ class AutomationBox(ttk.Frame):
         self.auto_save_interval.set(self.choices_auto_save_interval[1])
         self.auto_save_interval_box = ttk.OptionMenu(self.frame, self.auto_save_interval, self.choices_auto_save_interval[1], *self.choices_auto_save_interval, command=self.auto_save_interval_set, style="Dark.TMenubutton")
         self.auto_save_interval_box.grid(row=2, column=1, sticky='W')
-        self.auto_save_interval_box.configure(state='disabled')
-
+        
         self.choices_auto_download_interval = ['1 hour', '2 hours', '4 hours', '8 hours', '12 hours', '24 hours', '48 hours']
         self.auto_download_interval = tk.StringVar(self.root)
         self.auto_download_interval.set(self.choices_auto_download_interval[0])
         self.auto_download_interval_box = ttk.OptionMenu(self.frame, self.auto_download_interval, self.choices_auto_download_interval[0], *self.choices_auto_download_interval, command=self.auto_download_interval_set, style="Dark.TMenubutton")
         self.auto_download_interval_box.grid(row=2, column=2, sticky='W')
-        self.auto_download_interval_box.configure(state='disabled')
         
         auto_sleep_w = ttk.Checkbutton(self.frame, var=self.auto_sleep, command=self.auto_sleep_set, text="Sleep",style="Dark.TCheckbutton")
         auto_sleep_w.grid(row=1, column=3, sticky="W")
@@ -660,13 +655,11 @@ class AutomationBox(ttk.Frame):
         self.sleep_time_entry = ttk.Entry(self.frame, textvariable=self.sleep_time, justify='center', validate="focusout", validatecommand=self.sleep_time_set, width=10, style="Dark.TEntry")
         self.sleep_time_entry.grid(row=2, column=3, sticky='EW')
         self.sleep_time.set("23:33")
-        self.sleep_time_entry.configure(state='disabled')
-
+        
         self.wake_time_entry = ttk.Entry(self.frame, textvariable=self.wake_time, justify='center', validate="focusout", validatecommand=self.wake_time_set, width=10, style="Dark.TEntry")
         self.wake_time_entry.grid(row=2, column=4, sticky='EW')
         self.wake_time.set("08:15")
-        self.wake_time_entry.configure(state='disabled')
-
+        
 
         self.sleep_time_entry.bind('<Return>', self.sleep_time_set)
         self.sleep_time_entry.bind('<0xff8d>', self.sleep_time_set)
@@ -687,10 +680,7 @@ class AutomationBox(ttk.Frame):
             val = self.config.properties.auto_save
             if type(val) == bool:
                 self.auto_save.set(val)
-                if val == True:
-                    self.auto_save_interval_box.configure(state='normal')
-                else:
-                    self.auto_save_interval_box.configure(state='disabled')
+                
 
 
         if task.subtype == 'auto_save_interval':
@@ -705,10 +695,7 @@ class AutomationBox(ttk.Frame):
             val = self.config.properties.auto_download
             if type(val) == bool:
                 self.auto_download.set(val)
-                if val == True:
-                    self.auto_download_interval_box.configure(state='normal')
-                else:
-                    self.auto_download_interval_box.configure(state='disabled')
+             
 
         if task.subtype == 'auto_download_interval':
             val = self.config.properties.auto_download_interval
@@ -727,10 +714,6 @@ class AutomationBox(ttk.Frame):
             val = self.config.properties.auto_render
             if type(val) == bool:
                 self.auto_render.set(val)
-                state = 'normal' if val == True else 'disabled'
-                self.render_range_box.configure(state=state)
-                self.render_step_label.configure(state=state)
-                self.render_step_box.configure(state=state)
 
         if task.subtype == 'render_range':
             val = self.config.properties.render_range
@@ -756,13 +739,7 @@ class AutomationBox(ttk.Frame):
             val = self.config.properties.auto_sleep
             if type(val) == bool:
                 self.auto_sleep.set(val)
-                if val == True:
-                    self.sleep_time_entry.configure(state='normal')
-                    self.wake_time_entry.configure(state='normal')
-                else:
-                    self.sleep_time_entry.configure(state='disabled')
-                    self.wake_time_entry.configure(state='disabled')
-
+                
         if task.subtype == 'auto_pin':
             val = self.config.properties.auto_pin
             if type(val) == bool:
@@ -778,12 +755,7 @@ class AutomationBox(ttk.Frame):
     def auto_save_set(self, event=None):
         autosave = self.auto_save.get()
         self.config.properties.auto_save_set(autosave)
-        if autosave == False:
-            self.auto_save_interval_box.configure(state='disabled')
-        else:
-            self.auto_save_interval_box.configure(state='normal')
-
-
+      
     def auto_save_interval_set(self, event=None):
         val = int(self.auto_save_interval.get().split(" ")[0])
         self.config.properties.auto_save_interval_set(val)
@@ -791,12 +763,7 @@ class AutomationBox(ttk.Frame):
     def auto_download_set(self, event=None):
         autodownload = self.auto_download.get()
         self.config.properties.auto_download_set(autodownload)
-        if autodownload == False:
-            self.auto_download_interval_box.configure(state='disabled')
-        else:
-            self.auto_download_interval_box.configure(state='normal')
-
-
+      
 
 
     def auto_download_interval_set(self, event=None):
@@ -811,13 +778,7 @@ class AutomationBox(ttk.Frame):
         self.config.properties.auto_render_set(val)
         if self.viewer:
             self.viewer.rendering = val
-        state = 'normal'
-        if val == False:
-            state = 'disabled'
-
-        self.render_range_box.configure(state=state)
-        self.render_step_label.configure(state=state)
-        self.render_step_box.configure(state=state)
+        
         
     def render_step_set(self, event=None):
         self.config.properties.render_step_set(self.render_step.get())
@@ -825,14 +786,7 @@ class AutomationBox(ttk.Frame):
     def auto_sleep_set(self, event=None):
         autosleep = self.auto_sleep.get()
         self.config.properties.auto_sleep_set(autosleep)
-        if autosleep == False:
-            self.sleep_time_entry.configure(state='disabled')
-            self.wake_time_entry.configure(state='disabled')
-            self.until_label.configure(state='disabled')
-        else:
-            self.sleep_time_entry.configure(state='normal')
-            self.wake_time_entry.configure(state='normal')
-            self.until_label.configure(state='normal')
+        
 
     def wake_time_set(self, event=None):
         wake_time = self.wake_time.get()
