@@ -18,7 +18,7 @@ else
         if [ ! -f "$VENVBIN" ]; then
             lxterminal --title=$TITLE -e 'sh -c "python3 -m venv '$VENV' && git pull &&. '$VENVBIN' && pip install -r '$REQUIREMENTS'";'
         else
-            lxterminal --title=$TITLE -e 'sh -c ". '$VENVBIN' && pip install -r '$REQUIREMENTS'";'
+            lxterminal --title=$TITLE -e 'sh -c "git pull && . '$VENVBIN' && pip install -r '$REQUIREMENTS'";'
         fi
     fi
 fi
