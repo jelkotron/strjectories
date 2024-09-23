@@ -626,7 +626,7 @@ class AutomationBox(ttk.Frame):
         self.render_step_label.grid(row=1, column=6, padx=(0,100), sticky='W')
         self.render_step_label.configure(state='disabled')
 
-        self.choices_render_step = [0, 1, 2, 4, 8, 16, 24, 48]
+        self.choices_render_step = [0, 2, 4, 8, 16, 32, 64, 128, 256, 512]
         self.render_step = tk.IntVar(self.root)
         self.render_step.set(self.choices_render_step[0])
         self.render_step_box = ttk.OptionMenu(self.frame, self.render_step, self.choices_render_step[0], *self.choices_render_step, command=self.render_step_set, style="Dark.TMenubutton")
