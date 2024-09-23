@@ -11,11 +11,11 @@ export TITLE="STRINSTALL"
 
 function yes_or_no () {
     while true; do
-        printf "\nInstall successfull\n"
+        printf "\nStrjectories Installation\n"
         read -p "Create Desktop Icon? [y/n]: " yn
         case $yn in
-            [Yy]*) return 0  ;;  
-            [Nn]*) echo "Aborted" ; return  1 ;;
+            [Yy]*) return 0 ;;  
+            [Nn]*) return 1 ;;
         esac
     done
 }
@@ -30,6 +30,7 @@ function desktop_icon () {
     echo Encoding=UTF-8 >> $HOME/Desktop/STRJECTORIES.desktop
     echo Terminal=false >> $HOME/Desktop/STRJECTORIES.desktop
     echo "Categories=None;" >> $HOME/Desktop/STRJECTORIES.desktop
+    return 0
 }
 
 
@@ -53,18 +54,25 @@ if [[ $DESKTOP_SESSION == *"mate"* ]]; then
 else
     if [[ $DESKTOP_SESSION == *"LXDE"* ]]; then
         if [ ! -f "$VENVBIN" ]; then
-            lxterminal --title=$TITLE -e 'sh -c "python3 -m venv '$VENV' && 
+            lxterminal --title=$TITLE -e "export ICON=$ICON && 
+                                            export LAUNCHER=$LAUNCHER && 
+                                            $(declare -f $yes_or_no); yes_or_no && 
+                                            $(declare -f $desktop_icon); desktop_icon && 
+                                            sh -c 'python3 -m venv '$VENV' && 
                                                 . '$VENVBIN' && 
-                                                pip install -r '$REQUIREMENTS' &&
-                                                '$(declare -f $yes_or_no)'; yes_or_no &&
-                                                '$(declare -f $desktop_icon)'; desktop_icon
-                                                ";'
+                                                pip install -r '$REQUIREMENTS' 
+                                                '
+                                            "
+            
         else
-            lxterminal --title=$TITLE -e 'sh -c ". '$VENVBIN' && 
-                                                pip install -r '$REQUIREMENTS'
-                                                '$(declare -f $yes_or_no)'; yes_or_no &&
-                                                '$(declare -f $desktop_icon)'; desktop_icon
-                                                ";'
+            lxterminal --title=$TITLE -e "export ICON=$ICON && 
+                                            export LAUNCHER=$LAUNCHER && 
+                                            $(declare -f $yes_or_no); yes_or_no && 
+                                            $(declare -f $desktop_icon); desktop_icon && 
+                                            sh -c '. '$VENVBIN' && 
+                                                pip install -r '$REQUIREMENTS' 
+                                                '
+                                            "
         fi
     fi
 fi
