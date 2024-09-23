@@ -25,11 +25,12 @@ class LocationBox(ttk.Frame):
         location_label = ttk.Label(self.frame, text="Location:", style="BoldDark.TLabel")
         self.location_entry = ttk.Entry(self.frame, textvariable=self.location, style="Dark.TEntry")
         self.location_entry.bind('<Return>', self.location_submit)
-
+        self.location_entry.bind('<0xff8d>', self.location_submit)
         location_button = ttk.Button(self.frame, text="OK", command=self.location_submit, style="Dark.TButton")
         self.loc_list_ui = tk.Listbox(self.frame, selectmode = tk.BROWSE, exportselection=False, width=66)
         self.loc_list_ui.bind('<<ListboxSelect>>', self.location_set)
         self.loc_list_ui.bind('<Return>', self.location_set)
+        self.loc_list_ui.bind('<0xff8d>', self.location_set)
 
         location_label.grid(row=0, column=0, sticky='E')
         self.location_entry.grid(row=0, column=1, columnspan=5, padx=2, pady=2, sticky="EW")
@@ -270,7 +271,7 @@ class FileBox(ttk.Frame):
         config_saved = self.config.properties.get("saved")
         tle_file = self.config.properties.get("tle_file")
         tle_saved = self.config.properties.get("saved")
-
+       
         if tle_file:
             info  = "%i satellites in cache, saved %s ago "%(num_tles, self.sim_age)
         else:
@@ -324,7 +325,7 @@ class SimulationBox(ttk.Frame):
         self.sort_by = tk.StringVar()
         self.t0_max = tk.StringVar()
         self.t1_max = tk.StringVar()
-        self.radius = tk.IntVar()
+        self.radius = tk.StringVar()
         self.filter = tk.StringVar()
         self.classification = tk.StringVar()
 
@@ -353,6 +354,8 @@ class SimulationBox(ttk.Frame):
 
         t0_max_box = ttk.Entry(self.frame, textvariable=self.t0_max, justify='center', validate="focusout", validatecommand=self.t0_max_set, style="Dark.TEntry")
         t0_max_box.bind('<Return>', self.t0_max_set)
+        t0_max_box.bind('<0xff8d>', self.t0_max_set)
+
         t0_max_box.bind('<FocusIn>', self.highlight_t0)
         t0_max_box.bind('<Enter>', self.highlight_t0)
         t0_max_box.bind('<Leave>', self.highlight_t0)
@@ -364,6 +367,7 @@ class SimulationBox(ttk.Frame):
 
         t1_max_box = ttk.Entry(self.frame, textvariable=self.t1_max, justify='center', validate="focusout", validatecommand=self.t1_max_set, style="Dark.TEntry")
         t1_max_box.bind('<Return>', self.t1_max_set)
+        t1_max_box.bind('<0xff8d>', self.t1_max_set)
         t1_max_box.bind('<FocusIn>', self.highlight_t1)
         t1_max_box.bind('<Enter>', self.highlight_t1)
         t1_max_box.bind('<Leave>', self.highlight_t1)
@@ -373,8 +377,11 @@ class SimulationBox(ttk.Frame):
         self.clock = ttk.Label(self.frame, text="00:00:00", anchor=tk.CENTER, style="Dark.TLabel")
         self.clock.grid(row=1, column=1)
         
-        self.frame.columnconfigure((0,2,3,4),minsize=100, weight=0)
-        self.frame.columnconfigure((1),minsize=103, weight=0)
+        self.frame.columnconfigure((0),minsize=100, weight=0)
+        self.frame.columnconfigure((2,3,4),minsize=100, weight=0)
+
+
+        self.frame.columnconfigure((1),minsize=50, weight=1)
         self.frame.columnconfigure((5,6),minsize=50, weight=1)
 
         self.frame.pack(padx=0, pady=(4,0),fill='both', expand=True)
@@ -387,8 +394,12 @@ class SimulationBox(ttk.Frame):
         radius_label.grid(row=3, column=0, sticky="E", padx=(0,4), pady=(10,0))
         self.choices_radius = [0, 0.001, 0.01, 0.1, 1, 10, 50, 100, 200, 500, 1000, 1500, 2000, 5000, 8000]
         
-        radius_box = ttk.OptionMenu(self.frame, self.radius, *self.choices_radius, command=self.radius_set, style="Dark.TMenubutton")
+        #radius_box = ttk.OptionMenu(self.frame, self.radius, *self.choices_radius, command=self.radius_set, style="Dark.TMenubutton")
+        radius_box = ttk.Entry(self.frame, textvariable=self.radius, justify='center', validate='focusout', validatecommand=self.radius_set, style="Dark.TEntry")
+        radius_box.bind('<Return>', self.radius_set)
+        radius_box.bind('<0xff8d>', self.radius_set)
         radius_box.grid(row=3, column=1, pady=(10,0), sticky='W')
+       
         self.radius.set(self.choices_radius[3])
         
         ################################ CLASSIFICATION ################################
@@ -405,6 +416,7 @@ class SimulationBox(ttk.Frame):
         
         filter_box = ttk.Entry(self.frame, textvariable=self.filter, validate="focusout", validatecommand=self.filter_set, style="Dark.TEntry")
         filter_box.bind('<Return>', self.filter_set)
+        filter_box.bind('<0xff8d>', self.filter_set)
         filter_box.grid(row=3, column=5, columnspan=2, sticky='EW', padx=(0,100), pady=(10,0))
 
         # self.frame.columnconfigure((0,1,2,3,4),minsize=100, weight=0)
@@ -451,11 +463,7 @@ class SimulationBox(ttk.Frame):
                 pass
 
         if task.subtype == 'radius':
-            index = 0
-            for i in range(len(self.choices_radius)):
-                if self.config.properties.radius == self.choices_radius[i]:
-                    index = i
-            self.radius.set(self.choices_radius[index])
+            self.radius.set(self.config.properties.radius)
 
         if task.subtype == 'class':
             index = 0
@@ -516,8 +524,11 @@ class SimulationBox(ttk.Frame):
         self.highlight_t1(event)
         
 
-    def radius_set(self, event):
-        self.config.properties.radius_set(self.radius.get())
+    def radius_set(self, event=None):
+        update = self.config.properties.radius_set(self.radius.get())
+        if update == False:
+            self.radius.set(self.config.properties.radius)
+        
         
     def classification_set(self, event):
         self.config.properties.classification_set(self.classification.get())
@@ -658,7 +669,10 @@ class AutomationBox(ttk.Frame):
 
 
         self.sleep_time_entry.bind('<Return>', self.sleep_time_set)
+        self.sleep_time_entry.bind('<0xff8d>', self.sleep_time_set)
+
         self.wake_time_entry.bind('<Return>', self.wake_time_set)
+        self.wake_time_entry.bind('<0xff8d>', self.wake_time_set)
 
 
         self.frame.columnconfigure((0),minsize=100, weight=0)
@@ -1044,12 +1058,16 @@ class OutputBox(ttk.Frame):
         self.serial_port = tk.StringVar()
         self.serial_port_input = ttk.Entry(serial_frame, textvariable=self.serial_port, validate='focusout', validatecommand=self.serial_port_set, style="Dark.TEntry")
         self.serial_port_input.bind('<Return>', self.serial_port_set)
+        self.serial_port_input.bind('<0xff8d>', self.serial_port_set)
         self.serial_port_input.grid(row=0, column=1, columnspan=2, padx=0, sticky='EW')
 
         serial_baud_label = ttk.Label(serial_frame, text="Baud:", style="Dark.TLabel")
         serial_baud_label.grid(row=2, column=0, sticky="E")
         self.serial_baud_input = ttk.Entry(serial_frame, textvariable=self.serial_baud, validate='focusout', validatecommand=self.serial_baud_set, style="Dark.TEntry")
         self.serial_baud_input.bind('<Return>', self.serial_baud_set)
+        self.serial_baud_input.bind('<0xff8d>', self.serial_baud_set)
+        
+        
         self.serial_baud_input.grid(row=2, column=1, columnspan=2, sticky='EW')
 
         serial_value_label = ttk.Label(serial_frame, text="Value:", style="Dark.TLabel")
@@ -1129,7 +1147,8 @@ class OutputBox(ttk.Frame):
         root.pack(padx=(0,0), ipadx=0, pady=(4,4), expand=1, fill=tk.BOTH)
 
         self.log_lines_box.bind('<Return>', self.log_lines_set)
-
+        self.log_lines_box.bind('<0xff8d>', self.log_lines_set)
+        
 
     def update(self, task):
         if task.subtype == 'auto_serial':

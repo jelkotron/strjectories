@@ -770,6 +770,8 @@ class ConfigIo():
                         self.log(task.data, task.subtype)
                 self.properties.log_cache = []
 
+            self.properties.saved_set(True)
+
 
         self.input_q.put(Task(type='UI_UPDATE', subtype='sim_age'))
 
@@ -781,7 +783,7 @@ class ConfigIo():
 
         self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.properties.saved_set, path=path))
         self.ui_q.put(Task(type='UI_UPDATE', subtype='config_file'))
-        self.ui_q.put(Task(type='UI_UPDATE', subtype='saved'))
+
         if self.properties.auto_save:
             self.session_save()
 
@@ -1033,6 +1035,7 @@ class ConfigData():
                 "sleep_time": self.sleep_time,
                 "wake_time": self.wake_time,
 
+                "saved": self.saved,
                 "pin_0_use": self.pin_0_use,
                 "pin_0": self.pin_0,
                 "pin_0_value": self.pin_0_value,
@@ -1346,17 +1349,27 @@ class ConfigData():
     #### Filter ####
     def radius_set(self, value, single=True):
         if self.radius != value and value != None:
-            self.radius = value
+            try: 
+                if type(value) == str:
+                    value = value.replace(',','.').replace(' ','')
+                value = float(value)
+                self.radius = value
 
-            if single == True:
-                self.input_q.put(Task(type='SIMULATION', subtype='radius'))
-                if self.auto_render:
-                    self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
-                if self.auto_save:
-                    self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
-                else:
-                    self.saved_set(False)
-              
+                if single == True:
+                    self.input_q.put(Task(type='SIMULATION', subtype='radius'))
+                    if self.auto_render:
+                        self.ui_q.put(Task(type='VIEWER_UPDATE', subtype='threads'))
+                    if self.auto_save:
+                        self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
+                    else:
+                        self.saved_set(False)
+
+                    return value
+
+            except ValueError:
+                return False
+        return False
+
     def classification_set(self, value, single=True):
         if self.classification != value and value != None:
             self.classification = value
