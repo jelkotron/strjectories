@@ -123,9 +123,9 @@ class ConfigIo():
             if task.subtype == 'in_range_list':
                 sat_list = self.trajectories.in_range
                 sat_list.sort()
-                msg = "%s In Range: %s"%(self.time.strftime("%H:%M:%S"), str(sat_list))
+                msg = "%s In Range %s km: %s"%(self.time.strftime("%H:%M:%S"), str(round(self.properties.radius, 3)) , str(sat_list))
                 self.log(msg, subtype='in_range_list')
-                msg = "%s Number In Range: %s"%(self.time.strftime("%H:%M:%S"), str(len(self.trajectories.in_range)))
+                msg = "%s Number In Range %s km: %s"%(self.time.strftime("%H:%M:%S"), str(round(self.properties.radius, 3)) , str(len(self.trajectories.in_range)))
                 self.log(msg, subtype='num_in_range')
 
         if task.type == 'RENDERING':

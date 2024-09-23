@@ -525,9 +525,12 @@ class SimulationBox(ttk.Frame):
         
 
     def radius_set(self, event=None):
-        update = self.config.properties.radius_set(self.radius.get())
+        radius = self.radius.get()
+        update = self.config.properties.radius_set(radius)
         if update == False:
             self.radius.set(self.config.properties.radius)
+        else:
+            self.radius.set(radius.replace(",","."))
         
         
     def classification_set(self, event):
