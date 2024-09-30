@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+basedir=$(dirname $(realpath $0))
+scriptdir=scripts
+main=$basedir/$scriptdir/main.py
+venv=$basedir/venv/bin/activate
+
+. $venv && python3 $main -b; bash
