@@ -3,7 +3,7 @@
 BASEDIR=$(dirname $(realpath $0))
 VENV=$BASEDIR/venv
 VENVBIN=$VENV/bin/activate
-REQUIREMENTS=$BASEDIR/requirements
+REQUIREMENTS=$BASEDIR/requirements.txt
 TITLE="STRUPDATE"
 
 if [[ $DESKTOP_SESSION == *"mate"* ]]; then

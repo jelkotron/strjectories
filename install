@@ -4,7 +4,7 @@ export BASEDIR=$(dirname $(realpath $0))
 export VENV=$BASEDIR/venv
 export VENVBIN=$VENV/bin/activate
 export ICON=$BASEDIR/assets/icon.png
-export REQUIREMENTS=$BASEDIR/requirements
+export REQUIREMENTS=$BASEDIR/requirements.txt
 export LAUNCHER=$BASEDIR/launch
 export TITLE="STRINSTALL"
 
