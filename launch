@@ -11,5 +11,5 @@ desktop=$DESKTOP_SESSION
 if [[ $DESKTOP_SESSION == *"LXDE"* ]]; then
     lxterminal --geometry=$geo --title=$title -e 'sh -c ". '$venv' && python3 '$main'; bash";'
 else
-    x-terminal-emulator -title $title -geometry $geo -e 'sh -c "echo '$t' && . '$venv' && python3 '$main'; bash";'  
+    x-terminal-emulator -title $title -geometry $geo -e 'sh -c ". '$venv' && python3 '$main'; bash";'  
 fi

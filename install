@@ -14,11 +14,11 @@ export AUTO_LAUNCHER=$HOME/.config/autostart/STRJECTORIES.desktop
 
 export Q0="Create Desktop Icon?"
 export Q1="Create Autostart File?"
+export FINISH_MSG='INFO: Strjectories Installation complete. Press Return to exit.'
 
-
-function yes_or_no () {
+function yes_or_no {
     while true; do
-        read -p "$1 [y/n]: " yn
+        read -p "$* [y/n]: " yn
         case $yn in
             [Yy]*) return 0 ;;  
             [Nn]*) return 1 ;;
@@ -26,7 +26,7 @@ function yes_or_no () {
     done
 }
 
-function launcher () {
+function launcher {
     > $1
     echo [Desktop Entry] >> $1
     echo Name=STRJECTORIES >> $1
@@ -40,55 +40,63 @@ function launcher () {
 }
 
 
-if [[ $DESKTOP_SESSION == *"mate"* ]]; then
+if [[ $DESKTOP_SESSION == *"LXDE"* ]]; then
     if [ ! -f "$VENVBIN" ]; then
-        mate-terminal --title $TITLE -x sh -c "python3 -m venv $VENV && 
-                                                . $VENVBIN && 
-                                                pip install -r $REQUIREMENTS &&
-                                                $(declare -f $yes_or_no); yes_or_no '$Q0' &&
-                                                $(declare -f $launcher); launcher $DESKTOP_LAUNCHER;
-                                                $(declare -f $yes_or_no); yes_or_no '$Q1' &&
-                                                $(declare -f $launcher); launcher $AUTO_LAUNCHER;
-                                                "
-                                                
-    else
-        mate-terminal --title $TITLE -x sh -c ". $VENVBIN && 
-                                                pip install -r $REQUIREMENTS &&
-                                                $(declare -f $yes_or_no); yes_or_no '$Q0' &&
-                                                $(declare -f $launcher); launcher $DESKTOP_LAUNCHER;
-                                                $(declare -f $yes_or_no); yes_or_no '$Q1' &&
-                                                $(declare -f $launcher); launcher $AUTO_LAUNCHER;
-                                                "
-    fi
-        
-else
-    if [[ $DESKTOP_SESSION == *"LXDE"* ]]; then
-        if [ ! -f "$VENVBIN" ]; then
-            lxterminal --title=$TITLE -e "export ICON=$ICON && 
-                                            export LAUNCHER=$LAUNCHER && 
-                                            $(declare -f $yes_or_no); yes_or_no '$Q0' && 
-                                            $(declare -f $launcher); launcher $DESKTOP_LAUNCHER;
-                                            $(declare -f $yes_or_no); yes_or_no '$Q1' && 
-                                            $(declare -f $launcher); launcher $AUTO_LAUNCHER && 
-                                            
-                                            sh -c 'python3 -m venv '$VENV' && 
-                                                . '$VENVBIN' && 
-                                                pip install -r '$REQUIREMENTS' 
-                                                '
-                                            "
-            
-        else
-            lxterminal --title=$TITLE -e "export ICON=$ICON && 
-                                            export LAUNCHER=$LAUNCHER && 
-                                            $(declare -f $yes_or_no); yes_or_no '$Q0' && 
-                                            $(declare -f $launcher); launcher $DESKTOP_LAUNCHER;
-                                            $(declare -f $yes_or_no); yes_or_no '$Q1' && 
-                                            $(declare -f $launcher); launcher $AUTO_LAUNCHER && 
+        lxterminal --title=$TITLE -e "  sh -c 'python3 -m venv '$VENV' && 
+                                            . '$VENVBIN' && 
+                                            pip install -r '$REQUIREMENTS' ' &&
 
-                                            sh -c '. '$VENVBIN' && 
-                                                pip install -r '$REQUIREMENTS' 
-                                                '
-                                            "
-        fi
+                                        export ICON=$ICON && 
+                                        export LAUNCHER=$LAUNCHER && 
+                                        $(declare -f $yes_or_no); yes_or_no '$Q0' && 
+                                        $(declare -f $launcher); launcher $DESKTOP_LAUNCHER;
+                                        $(declare -f $yes_or_no); yes_or_no '$Q1' && 
+                                        $(declare -f $launcher); launcher $AUTO_LAUNCHER %% 
+                                        echo $FINISH_MSG &&
+                                        read x;
+                                        "
+        
+    else
+        lxterminal --title=$TITLE -e "  sh -c '. '$VENVBIN' && 
+                                            pip install -r '$REQUIREMENTS' ' &&
+
+                                        export ICON=$ICON && 
+                                        export LAUNCHER=$LAUNCHER && 
+                                        $(declare -f $yes_or_no); yes_or_no '$Q0' && 
+                                        $(declare -f $launcher); launcher $DESKTOP_LAUNCHER;
+                                        $(declare -f $yes_or_no); yes_or_no '$Q1' && 
+                                        $(declare -f $launcher); launcher $AUTO_LAUNCHER &&
+                                        echo $FINISH_MSG &&
+                                        read x; 
+                                        "
     fi
+else
+    if [ ! -f "$VENVBIN" ]; then
+        x-terminal-emulator -title $TITLE -e "sh -c 'python3 -m venv $VENV && 
+                                                    . $VENVBIN && 
+                                                    pip install -r $REQUIREMENTS &&
+                                                    
+                                                    $(declare -f $yes_or_no); yes_or_no $Q0 &&
+                                                    $(declare -f $launcher); launcher $DESKTOP_LAUNCHER;
+                                                    $(declare -f $yes_or_no); yes_or_no $Q1 &&
+                                                    $(declare -f $launcher); launcher $AUTO_LAUNCHER;
+                                                    echo $FINISH_MSG &&
+                                                    read x;
+                                                    '
+                                                "
+    else
+        x-terminal-emulator -title $TITLE -e "sh -c '. $VENVBIN && 
+                                                    pip install -r $REQUIREMENTS &&
+                                                    
+                                                    $(declare -f $yes_or_no); yes_or_no $Q0 &&
+                                                    $(declare -f $launcher); launcher $DESKTOP_LAUNCHER;
+                                                    $(declare -f $yes_or_no); yes_or_no $Q1 &&
+                                                    $(declare -f $launcher); launcher $AUTO_LAUNCHER &&
+                                                    echo $FINISH_MSG &&
+                                                    read x; 
+                                                    '
+                                                "
+                                                    
+    fi
+    
 fi

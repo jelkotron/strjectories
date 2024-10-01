@@ -74,7 +74,7 @@ Options are:
 + <b>Filter:</b> Filter objects by name  
 
 ### In Range Panel
-Displays a list of satellites in range and their count.
+Lists satellites in range and displays their count.
 
 
 ### Output Panel
