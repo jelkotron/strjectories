@@ -9,6 +9,7 @@ It is recommended to use a virtual environment.
 ### Other OS
 On other systems, dependencies need to be installed manually. Open a terminal and navigage to the Strjectories folder you have just downloaded. Optionally create a virtual environment using `python3 -m venv venv`. Required step: `pip install -r requirements.txt` will install the python packages required to run Strjectories. If your systems default python version is 2.x, make sure you have Python3 installed and use `pip3 install -r requirements.txt` instead. 
 
+<b>Note:</b> Strjectories is not tested on Windows. As Windows supports Python, Venv and Pip, installation should be fairly similar to the steps described here.
 <br />
 
 ## Quickstart
@@ -18,7 +19,9 @@ To launch the application without UI, execute `launch_noui` from a terminal.
 ### Other OS
 Open a terminal, navigate to the Strjectories folder. If you are using venv, activate the environment using `source <path to venv>/bin/activate`. To start Strjectories type `python3 scripts/main.py`. 
 If you want to launch the application without UI, use `python3 scripts/main.py -b` instead.
+You might want to create your own launch script to execute these two commands.
 
+<b>Note:</b> Strjectories is not tested on Windows. Activating a virtual environment and starting `main.py` using python should be fairly similar to the steps described here. For more information see <i>Trouble Shooting > Running on Windows</i>
    
 ### Run Simulation
 The <i>STRJECTORIES</i> window of the UI lets you set up options for your simulation, detailed below. To run a simulation, you need enter a location and download data using the <i>Data/New</i> Button. Press <i>Start</i> to run the simulation.
@@ -119,19 +122,19 @@ The Ouput Window displays valuable Information: Engine events, File I/O, Downloa
 As Strjectories is still in early development, there are still bugs to be found and it is possible for the user to render the tool unusable, especially on systems with little resources. This section outlines recommendations to avoid problems and methods to fix some known issues.
 
 ### Launch after Crash
-Sometimes Strjectories crashes and wont't start again, especially, when autosave is enabled. On a smaller systems this happens when using settings that are too demanding (see <i>Rendering on a Raspberry</i>). All systems can face similar issues when using questionable simulation settings (see <i>Simulation Properties</i>).
+Sometimes Strjectories crashes and won't start again, especially, when autosave is enabled. On smaller systems this can happen when using settings that are too demanding (see <i>Rendering on a Raspberry</i>). All systems can face similar issues when using questionable simulation settings (see <i>Simulation Properties</i>).
 
-<b>Solution: </b>If Strjectories won't start, you can modify the config file you have last used with a text editor. If you don't know, which value causes your issue, you can delete or rename the config file so the tool starts without a config file set. If Strjectories crashed while writing data rendering the file broken, deleting and manually downloading new data will help. Alternatively you can modify or delete the sessiondata file in the Strjectories folder. 
+<b>Solution: </b>If Strjectories won't start, you can modify the config file you have last used with a text editor. If you don't know, which value causes your issue, you can delete or rename the config file so the tool starts without a config file set. If Strjectories crashed while writing data, rendering the file broken, deleting and manually downloading new data will help. Alternatively you can modify or delete the sessiondata file in the Strjectories folder. 
 
 ### Simulation Properties 
 + <b>Sort by: </b> Sorting by velocity is of rare use for the in-range-detection scenario but can be useful for satellite observation in general. 
 + <b>Primary and secondary objects: </b>Depending on the use case, the number of primary objects should be greater than the number of satellites in range, to ensure prioritized detection of satellites entering or leaving the search area. The secondary object number doubles as a maximum number of satellites being calculated and rendered.</b> 
 
-+ <b>Range: </b>The range value represents the radius of a circle around the target location. Earths circumfence is roughly 40.000km. Using a search radius greater than half the planets circumfence makes little sense and leads to unknown behaviour, possibly crashes and broken program start up. While Radii greater around 6000-8000 km beautifully illustrate the mercator projection, they are known to cause performance issues on most systems. Greater values are untested and not recommended to use. 
++ <b>Range: </b>The range value represents the radius of a circle around the target location. Earths circumfence is roughly 40.000km. Using a search radius greater than half the planets circumfence makes little sense and leads to unknown behaviour, possibly crashes and broken program start up. While radii greater around 6000-8000 km beautifully illustrate the mercator projection, they are known to cause performance issues on some systems.  
 
 + <b>Classification: </b>There are only unclassified objects in the data obtained from the current source.
 ### Rendering on a Raspberry
-+ Unless you are rendering less than 10-20 satellites, a render step > 0 is strongly recommended.
++ Unless you are rendering less than 20 satellites, a render step > 0 is strongly recommended.
 + Rendering <i>all</i> satellites is only recommended while the simulation is not running. It will still take time. Startup may slow down when rendering all is written to the config file, in combination with autosimulate startup may fail.
 + You can easily render 500+ satellites using a step of 16. You will still see the viewer update regularily as the render load is balanced when using a step.
 + There are two instances of time measurement in the UI: The local time clock in the selection panel and the running time displayed beaneath the start/stop button. While small stutters in ticking are normal, you should use a higher step if the interface freezes too much.
@@ -144,4 +147,4 @@ As of now, headless mode (no UI) is not interactive. You should run the UI at le
 
 ### Running on Windows
 
-Using Strjectories on Windows is untested. Usage of Python3, Pip and Venv may vary from instructions given. Users may have to replace `/` with `\` when following the instructions. It may necessary to use file extensions for file created with Strjectories like `config.json` or `data.json`. 
+Using Strjectories on Windows is untested. Usage of Python3, Pip and Venv may vary from instructions given. Users may have to replace slashes (`/`) with backslashes (`\`) when following the instructions. It may necessary to use file extensions for files created with Strjectories like `config.json` or `data.json`. 

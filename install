@@ -95,8 +95,7 @@ else
                                                     echo $FINISH_MSG &&
                                                     read x; 
                                                     '
-                                                "
-                                                    
+                                                "                              
     fi
     
 fi
