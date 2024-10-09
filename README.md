@@ -1,13 +1,17 @@
 # STRJECTORIES
-A satellite tracking software to monitor the sky above a given location. While it should run on most systems supporting Python3, it is designed to run on a Raspberry Pi 5 to drive a robotic artwork by artist duo <i>strwüü</i>.
+A satellite tracking software to monitor the sky above a given location. While it should run on most systems supporting Python3, it is designed to run on a Raspberry Pi 5 to drive a robotic artwork by artist duo [<i>strwüü</i>](http://www.strwueue.de/).
 <br />
 ## Installation
-It is recommended to use a virtual environment.
+Strjectories requires Python3 to be installed. It is recommended to use a virtual environment.
 
 ### Debian based OS
 `install`, `update` and `lauch` scripts for Debian based systems like Ubuntu or Raspbian OS are included in the repository. After downloading the repository, the scripts can be launched from command line or by double clicking the files. The scripts create and use a virtual environment named <i>venv</i> inside the directory. If you wish to use another or no virtual environment, see manual installation steps in <i>Installation > Other OS</i>.  
 ### Other OS
-On other systems, dependencies need to be installed manually. Open a terminal and navigage to the Strjectories folder you have just downloaded. Optionally create a virtual environment using `python3 -m venv venv`. Required step: `pip install -r requirements.txt` will install the python packages required to run Strjectories. If your systems default python version is 2.x, make sure you have Python3 installed and use `pip3 install -r requirements.txt` instead. 
+On other systems, dependencies need to be installed manually:
++ Open a terminal and navigate to the Strjectories folder you have just downloaded
++ <b>Optional:</b> create a virtual environment entering `python3 -m venv venv` <br />
+and activate it using `source <path to venv>/bin/activate`
++ To install the required python packages type `pip3 install -r requirements.txt`
 
 <b>Note:</b> Strjectories is not tested on Windows. As Windows supports Python, Venv and Pip, installation should be fairly similar to the steps described here.
 <br />
@@ -19,9 +23,8 @@ To launch the application without UI, execute `launch_noui` from a terminal.
 ### Other OS
 Open a terminal, navigate to the Strjectories folder. If you are using venv, activate the environment using `source <path to venv>/bin/activate`. To start Strjectories type `python3 scripts/main.py`. 
 If you want to launch the application without UI, use `python3 scripts/main.py -b` instead.
-You might want to create your own launch script to execute these two commands.
 
-<b>Note:</b> Strjectories is not tested on Windows. Activating a virtual environment and starting `main.py` using python should be fairly similar to the steps described here. For more information see <i>Trouble Shooting > Running on Windows</i>
+<b>Note:</b> Strjectories is not tested on Windows. Activating a virtual environment and starting `main.py` using python should be fairly similar to the steps described here. For further information see <i>Trouble Shooting > Running on Windows</i>.
    
 ### Run Simulation
 The <i>STRJECTORIES</i> window of the UI lets you set up options for your simulation, detailed below. To run a simulation, you need enter a location and download data using the <i>Data/New</i> Button. Press <i>Start</i> to run the simulation.
@@ -38,28 +41,28 @@ A map of satellites is rendered to this window. The viewer has a simple color co
 ![Screenshot of Property Window](assets/screenshot1.jpeg)
 
 ### Location Panel
-Enter an address or location in the search bar and select a result from the list. Much like using your favourite map service!
+Enter an address or location in the search bar and select a result from the list. Much like using your favourite map service.
 
 ### Selection Panel
-Displays additional information for the selected location and indicates if the system is sleeping.
+Displays additional information for the selected location and indicates if the application is sleeping.
 
 ### File Panel
 Strjectories relies on two types of files, one that stores the configuration set in the UI and one to store satellite data. In the file panel you can create, open and save both file types. The files use JSON as a format. An additional line of text displays the number of active satellites, save states and the decay of the satellite data's precision.  
 
 ### Automation Panel
-In this Panel you can choose, what the system does automatically and in which intervals. Options are:
+In this Panel you can choose, what the application does automatically and in which intervals. Options are:
 
-+ <b>Auto Start Simulation:</b> If enabled, simulation starts upon load.
++ <b>Auto Start Simulation:</b> If enabled, the simulation starts when launching Strjectories. 
 
 
 + <b>Auto Save:</b> 
-If enabled, changing a property triggers your config file being saved. Also, when simulating, newly calculated satellite data is written to disk in the interval set below.
+If enabled, changing a property triggers your config file being saved. When simulating, newly calculated satellite data is written to disk in the interval set below.
 
 + <b>Auto Download:</b> 
-If enabled, satellite data is updated in the interval set below. As satellite data becomes unprecise after a day or two, enable this option to keep your objects up to date.
+If enabled, satellite data is updated in the interval set below. Satellite data looses precision with time. Enable this option to keep your objects up to date.
 
 + <b>Auto Sleep:</b> 
-If enabled, simulation is stopped between the two daytimes set below. Uses local time of selected location, 24h input.
+If enabled, simulation is stopped between sleep and wake times set below. Uses local time of selected location, 24h input.
 
 + <b>Auto Render:</b> 
 If enabled, the viewer window gets updated with every change. Select the render range below choosing from <i>All, In Range, Primary,</i> and <i>Secondary</i>.  <b>Note: For users of systems with little resources, like the Raspberry Pi, rendering <i>all</i> is not recommended while running the simulation.</b>
@@ -96,7 +99,7 @@ Lists satellites in range and displays their count.
 + <b>Value: </b>Value to send. Options are <i>In Range Count</i> and <i>(no) Satellites in Range</i>
 
 #### Log Tab
-If <i>Log</i> is enabled and a log file is set using <i>open</i> or <i>new</i> , Strjectories logs things.
+If <i>Log</i> is enabled and a log file is set using <i>log > open</i> or <i>log > new</i> , Strjectories logs events to disk.
 The maximum number of lines to log is set in the <i>Lines max</i> input field.
 
 Events you can log are: 
@@ -115,22 +118,24 @@ Events you can log are:
 
 ## Output Window
 ![Screenshot of Output Window](assets/screenshot2.jpeg)
+
 The Ouput Window displays valuable Information: Engine events, File I/O, Downloads, Sleep/Wake. Depending on the way you have started Strjectories, this info might appear in the terminal you started the program from. <b>Warning: </b>Closing the Output window will terminate the application.
 
-## Trouble Shooting
+## Tips & Tricks
+To ensure stable Strjectories, consider the best practices outlined in this section.
+### Rendering new data
+If you download satellite data for the first time, the objects' coordinates are calculated during the first iteration of the simulation. Therefore, new data is somewhat raw and (partially) unsorted until every satellite has been processed once. Satellites are passed to the renderer when their coordinates finish calculating. Initially, your canvas will be empty and it will take bit to draw every object when simulating for the first time.  
 
-As Strjectories is still in early development, there are still bugs to be found and it is possible for the user to render the tool unusable, especially on systems with little resources. This section outlines recommendations to avoid problems and methods to fix some known issues.
-
-### Launch after Crash
-Sometimes Strjectories crashes and won't start again, especially, when autosave is enabled. On smaller systems this can happen when using settings that are too demanding (see <i>Rendering on a Raspberry</i>). All systems can face similar issues when using questionable simulation settings (see <i>Simulation Properties</i>).
-
-<b>Solution: </b>If Strjectories won't start, you can modify the config file you have last used with a text editor. If you don't know, which value causes your issue, you can delete or rename the config file so the tool starts without a config file set. If Strjectories crashed while writing data, rendering the file broken, deleting and manually downloading new data will help. Alternatively you can modify or delete the sessiondata file in the Strjectories folder. 
+### Rendering old data
+When data and/or simulation haven't been updated for a while, the satellites' location will change drastically when calculated for the first time. While looking odd, this is normal behaviour.
 
 ### Simulation Properties 
-+ <b>Sort by: </b> Sorting by velocity is of rare use for the in-range-detection scenario but can be useful for satellite observation in general. 
-+ <b>Primary and secondary objects: </b>Depending on the use case, the number of primary objects should be greater than the number of satellites in range, to ensure prioritized detection of satellites entering or leaving the search area. The secondary object number doubles as a maximum number of satellites being calculated and rendered.</b> 
++ <b>Primary and secondary objects: </b>Depending on the use case, the number of primary objects should be greater than the number of satellites in range, to ensure prioritized detection of satellites entering or leaving the search area. The secondary object number doubles as a maximum number of satellites being calculated and rendered. 
 
-+ <b>Range: </b>The range value represents the radius of a circle around the target location. Earths circumfence is roughly 40.000km. Using a search radius greater than half the planets circumfence makes little sense and leads to unknown behaviour, possibly crashes and broken program start up. While radii greater around 6000-8000 km beautifully illustrate the mercator projection, they are known to cause performance issues on some systems.  
++ <b>Object highlight: </b>When the primary or secondary object input field is in focus or hovered over by the cursor, satallites in that group will highlight using a yellow outline. On less resourceful systems, highlights occasionally fail to deactivate. Hovering over the input field again usually fixes this. This behaviour can be an indicator for using render settings that are too demanding.
+
++ <b>Range: </b>The range value represents the radius of a circle around the target location. Earths circumfence is about 40.000 km. Using a search radius greater than 10000 km can impact performance and may lead to unknown behaviour, possible crashes and broken program start up. 
+<br/>Radii around 6000-8000 km beautifully illustrate the mercator projection, but may impact performance on some systems.  
 
 + <b>Classification: </b>There are only unclassified objects in the data obtained from the current source.
 ### Rendering on a Raspberry
@@ -139,6 +144,22 @@ Sometimes Strjectories crashes and won't start again, especially, when autosave 
 + You can easily render 500+ satellites using a step of 16. You will still see the viewer update regularily as the render load is balanced when using a step.
 + There are two instances of time measurement in the UI: The local time clock in the selection panel and the running time displayed beaneath the start/stop button. While small stutters in ticking are normal, you should use a higher step if the interface freezes too much.
 + Using a monitoring tool such as the <i>Task Manager</i> in Raspbian OS can help you evaluate CPU and GPU load and set your options accordingly. 
+
+## Trouble Shooting
+
+As Strjectories is still in early development. It is possible for the user to render the tool unusable, especially on systems with little resources. This section outlines recommendations to avoid problems and methods to fix some known issues.
+
+### Bash Scripts for Debian based systems
+The included bash scripts are suitable for different Debian based environments. As they are designed for use within a desktop environment, they require starting a terminal. Debians <i>x-terminal-emulator</i> links to the desktop environment's default terminal application. Terminal applications not necessarily share the same syntax, which is why there is an exception for Raspian OS in the scripts to use <i>lxterminal</i> directly. As of now, the scripts have been tested on Ubuntu Mate and Raspbian OS.  
+
+
+
+
+### Launch after Crash
+Sometimes Strjectories crashes and won't start again, especially, when autosave is enabled. On smaller systems this can happen when using settings that are too demanding (see <i>Rendering on a Raspberry</i>). All systems can face similar issues when using questionable simulation settings (see <i>Simulation Properties</i>).
+
+<b>Solution: </b>If Strjectories won't start, you can modify the config file you have last used with a text editor. If you don't know, which value causes your issue, you can delete or rename the config file so the tool starts without a config file set. If Strjectories crashed while writing data, rendering the data file broken, deleting and manually downloading new data will help. Alternatively you can modify or delete the sessiondata file in the Strjectories folder. 
+
 
 
 
