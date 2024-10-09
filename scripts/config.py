@@ -53,7 +53,7 @@ class ConfigIo():
         while self.running:
             if self.input_q.empty():
                 self.schedule.run_pending()
-                time.sleep(0.1)
+                time.sleep(0.01)
             else:
                 task = self.input_q.get()
                 self.process(task)
@@ -83,10 +83,10 @@ class ConfigIo():
         msg = "%s Going to sleep"%(time.strftime("%H:%M:%S"))
         print(msg)    
         self.log(msg, subtype='sleep')
-        self.simulation_stop()
         
-
-
+        if self.trajectories.simulating == True:
+            self.simulation_stop()
+        
     def wake(self):
         self.sleeping = False
         self.input_q.put(Task(type='IO', subtype='sleep'))
@@ -95,6 +95,50 @@ class ConfigIo():
         self.log(msg, subtype='sleep')
         if self.properties.auto_simulate == True:
             self.simulation_start()
+
+
+    def time_to_sleep(self):
+        sleeping = False
+        sleep = self.properties.sleep_time
+        wake = self.properties.wake_time
+        try:
+            h_sleep = int(sleep.split(":")[0])
+            m_sleep = int(sleep.split(":")[1])
+            h_wake = int(wake.split(":")[0])
+            m_wake = int(wake.split(":")[1])
+
+            h_local = self.time.localtime().tm_hour
+            m_local = self.time.localtime().tm_min
+
+            # sleeping hour is before wake hour or the same
+            if h_sleep < h_wake:
+                # bedtime hour or past bedtime hour and before waketime
+                if h_local >= h_sleep and h_local < h_wake:
+                    sleeping = True
+                
+            # local and waketime share the same hour
+            elif h_sleep == h_wake:
+                # sleeping minute is before waking minute  
+                if m_sleep < m_wake:
+                    if m_local >= m_sleep and m_local < m_wake:
+                        sleeping = True  
+                    
+                # sleeping minute is after waking minute (-> sleeping 23+ h)  
+                elif m_sleep > m_wake:
+                    if m_local >= m_sleep and m_local > m_wake:
+                        sleeping = True
+
+            # sleeping hour is after waking hour (24h wrap around)
+            else:
+                # bedtime hour or past bedtime hour and before waketime
+                if h_local <= h_sleep and h_local > h_wake:
+                    sleeping = True
+                
+                
+        except ValueError:
+            pass
+
+        return sleeping
 
 
     def process(self, task):
@@ -111,8 +155,18 @@ class ConfigIo():
                 self.trajectories.update_filter()
                
             if task.subtype == 'timezone':
-                os.environ['TZ'] = self.properties.timezone
-                self.time.tzset()
+                tz = self.properties.timezone
+                if task.data:
+                    tz = task.data
+
+                if tz != os.environ['TZ']: 
+                    os.environ['TZ'] = tz
+                    self.time.tzset()
+                    msg = "%s Timezone updated: %s"%(self.time.strftime("%H:%M:%S"), tz)
+                    print(msg)
+                    self.log(msg, subtype='simulation')
+
+
 
             self.ui_q.put(task)
 
@@ -141,8 +195,21 @@ class ConfigIo():
 
         #### Automation ####
         if task.type == 'AUTOMATION_UPDATE':
-            if task.subtype == 'auto_sleep':
+            if task.subtype == 'sleep_time' or task.subtype == 'wake_time':
                 self.sleep_schedule(None, None, clear = not self.properties.auto_sleep)
+            
+            if task.subtype == 'auto_sleep':
+                if self.properties.auto_sleep == True:
+                    sleepytime = self.time_to_sleep() 
+                    if sleepytime == True:
+                        self.sleep()
+                    else:
+                        self.wake()
+                else: 
+                    self.wake()
+            
+            self.ui_q.put(task)
+
 
 
         #### Query ####
@@ -697,16 +764,17 @@ class ConfigIo():
             self.input_q.put(Task(type='FILE_READ', callback=self.session_set, subtype='SESSION', path=self.properties.sessiondata_file))
 
     def session_set(self, data):
-        tles = data.get("tles")
         config = data.get("config")
-      
+        
         if config:
             self.load(config, init=True)
         else:
-            self.properties.set_default()
-         
+            self.set(data=None, default=True)
+
+        tles = data.get("tles")
         if tles:
             self.data_load(tles, init=True)
+
 
     def session_save(self):
         if self.properties.sessiondata_file:
@@ -742,6 +810,7 @@ class ConfigIo():
             # init prevents saving due to value changes on load
             init = False
             if data:
+                tz = data.get("timezone")
                 init = data.get("init") if data.get("init") else False
                 self.properties.config_file_set(data.get("config_file"), single = not init) 
                 self.properties.set_all(data)
@@ -751,11 +820,24 @@ class ConfigIo():
             else: # default == True
                 self.properties.set_default()
                 self.properties.config_file_set(None, single = False) 
+                tz = self.properties.get("timezone")
                 for key, value in self.properties.properties_get().items():
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=value))
 
+            if tz != os.environ.get('TZ') or True == True: 
+                os.environ['TZ'] = tz
+                self.time.tzset()
+                msg = "%s Timezone updated: %s"%(self.time.strftime("%H:%M:%S"), tz)
+                print(msg)
+                self.log(msg, subtype='simulation')
+                
             self.input_q.put(Task(type='SIMULATION', subtype='selection'))
             
+            if self.properties.auto_sleep == True:
+                if self.time_to_sleep():
+                    self.sleep()
+                else:
+                    self.wake()
             
             if not init:
                 if self.properties.auto_render:
@@ -820,7 +902,12 @@ class ConfigIo():
         self.input_q.put(Task(type='IO', subtype=None))
 
         if self.properties.auto_simulate == True:
-            self.simulation_start()
+            if self.sleeping == False: 
+                self.simulation_start()
+            else:
+                self.ui_q.put(Task(type='SIMULATION', subtype='toggle', data=0))
+                
+        # else:
 
         if not init:
             self.session_save()
@@ -943,7 +1030,7 @@ class ConfigData():
             "log_use": False,
             "lat" : None,
             "lon" : None,
-            "timezone" : None,
+            "timezone" : "Europe/Berlin",
             "radius" : 500,
             "loc_query" : "",
             "loc_list" : [],
@@ -1054,6 +1141,7 @@ class ConfigData():
         return result
 
     def set_default(self):
+        self.timezone_set(self.default_values["timezone"], single=False)
         
         self.loc_query_set(self.default_values["loc_query"], single=False)
         self.loc_list_set(self.default_values["loc_list"], single=False)
@@ -1094,6 +1182,9 @@ class ConfigData():
         self.log_types_set_all(self.default_values["log_types"], single=False)
         
     def set_all(self, data):
+        timezone = data.get("timezone")
+        self.timezone_set(timezone if timezone else self.default_values["timezone"], single=False)
+
 
         loc_query = data.get("loc_query")
         self.loc_query_set(loc_query if loc_query else self.default_values["loc_query"], single=False)
@@ -1262,11 +1353,12 @@ class ConfigData():
         self.timezone = value
         
         if single == True:
+            if value != None:
+                self.input_q.put(Task(type='SIMULATION', subtype='timezone'))
             if self.auto_save:
                 self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG'))
             else:
                 self.saved_set(False)
-        self.input_q.put(Task(type='SIMULATION_UPDATE', subtype='timezone'))
         self.ui_q.put(Task(type='SELECTION_UPDATE', subtype='timezone', data=None))
             
     def loc_query_set(self, value, single=True):
@@ -1509,9 +1601,8 @@ class ConfigData():
     def auto_sleep_set(self, value, single=True):
         if self.auto_sleep != value and value != None:
             self.auto_sleep = value
-            self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
             if single == True:
-                self.ui_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
+                self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
 
                 if self.auto_save:
                     self.input_q.put(Task(type='FILE_WRITE', subtype='CONFIG', callback=self.saved_set))
@@ -1579,7 +1670,7 @@ class ConfigData():
                             else:
                                 self.saved_set(False)
                         
-                        self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
+                        self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='wake_time'))
                         return strtime
 
             return False
@@ -1621,7 +1712,7 @@ class ConfigData():
                             else:
                                 self.saved_set(False)
                         
-                        self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='auto_sleep'))
+                        self.input_q.put(Task(type='AUTOMATION_UPDATE', subtype='sleep_time'))
                         return strtime
                     
             return False

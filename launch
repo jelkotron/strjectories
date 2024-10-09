@@ -4,7 +4,7 @@ basedir=$(dirname $(realpath $0))
 scriptdir=scripts
 main=$basedir/$scriptdir/main.py
 venv=$basedir/venv/bin/activate
-geo=87x13+0+1025
+geo=87x13+0+635
 title="STRWHAT"
 desktop=$DESKTOP_SESSION
 

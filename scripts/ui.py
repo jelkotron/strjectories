@@ -166,7 +166,7 @@ class SelectionBox(ttk.Frame):
                 
         if task.subtype == 'sleep':
             self.sleeping.configure(text=str(self.config.sleeping))
-
+            
         if task.subtype == 'MISC':
             if 'lat' in task.data:
                 self.lat.configure(text=self.config.properties.lat)
@@ -435,7 +435,10 @@ class SimulationBox(ttk.Frame):
             if value == 1: # start
                 self.run_button.configure(style="Highlight.TButton", text='Stop')
             if value == 0: # stop
-                self.run_button.configure(style="Dark.TButton", text='Start')
+                txt = 'Start'
+                if self.config.sleeping == True:
+                    txt = 'Wake'
+                self.run_button.configure(style="Dark.TButton", text=txt)
 
             # self.clock_label.configure(style="Highlight.TLabel")
 
@@ -495,13 +498,21 @@ class SimulationBox(ttk.Frame):
 
     def sim_toggle(self):
         if self.config.trajectories:
+
             if not self.config.trajectories.simulating:
-                self.config.simulation_start()
+                if not self.config.sleeping:
+                    self.config.simulation_start()
+                else:
+                    self.config.wake()
+
                 if self.viewer:
                     if self.config.properties.auto_render == True:
                         self.viewer.rendering = True 
             else:
-                self.config.simulation_stop()
+                if self.config.sleeping:
+                    self.config.wake()
+                else:
+                    self.config.simulation_stop()
                 if self.viewer:
                     self.viewer.rendering = False
 
