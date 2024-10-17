@@ -1,5 +1,5 @@
 # STRJECTORIES
-A satellite tracking software to monitor the sky above a given location. While it should run on most systems supporting Python3, it is designed to run on a Raspberry Pi 5 to drive a robotic artwork by artist duo [<i>strwüü</i>](http://www.strwueue.de/).
+A satellite tracking software to monitor the sky above a given location. It is designed for the Raspberry Pi 5 to drive an artwork by artist duo [<i>strwüü</i>](http://www.strwueue.de/). 
 <br />
 ## Installation
 Strjectories requires Python3 to be installed. It is recommended to use a virtual environment.
@@ -10,7 +10,7 @@ Strjectories requires Python3 to be installed. It is recommended to use a virtua
 On other systems, dependencies need to be installed manually:
 + Open a terminal and navigate to the Strjectories folder you have just downloaded
 + <b>Optional:</b> create a virtual environment entering `python3 -m venv venv` <br />
-and activate it using `source <path to venv>/bin/activate`
+and activate it using `source venv/bin/activate`
 + To install the required python packages type `pip3 install -r requirements.txt`
 
 <b>Note:</b> Strjectories is not tested on Windows. As Windows supports Python, Venv and Pip, installation should be fairly similar to the steps described here.
@@ -21,8 +21,8 @@ and activate it using `source <path to venv>/bin/activate`
 After installation, you can execute `lauch` from either a terminal or by clicking on it. If you have chosen to create a desktop icon during installation, you can click that as well.
 To launch the application without UI, execute `launch_noui` from a terminal.
 ### Other OS
-Open a terminal, navigate to the Strjectories folder. If you are using venv, activate the environment using `source <path to venv>/bin/activate`. To start Strjectories type `python3 scripts/main.py`. 
-If you want to launch the application without UI, use `python3 scripts/main.py -b` instead.
+Open a terminal, navigate to the Strjectories folder. If you are using venv, activate the environment using `source <path to venv>/bin/activate`. To start Strjectories type `python3 /scripts/main.py`. 
+If you want to launch the application without UI, use `python3 /scripts/main.py -b` instead.
 
 <b>Note:</b> Strjectories is not tested on Windows. Activating a virtual environment and starting `main.py` using python should be fairly similar to the steps described here. For further information see <i>Trouble Shooting > Running on Windows</i>.
    
@@ -50,7 +50,7 @@ Displays additional information for the selected location and indicates if the a
 Strjectories relies on two types of files, one that stores the configuration set in the UI and one to store satellite data. In the file panel you can create, open and save both file types. The files use JSON as a format. An additional line of text displays the number of active satellites, save states and the decay of the satellite data's precision.  
 
 ### Automation Panel
-In this Panel you can choose, what the application does automatically and in which intervals. Options are:
+In this Panel you can choose what the application does automatically and in which intervals. Options are:
 
 + <b>Auto Start Simulation:</b> If enabled, the simulation starts when launching Strjectories. 
 
@@ -89,7 +89,7 @@ Lists satellites in range and displays their count.
 + <b>Use: </b>Set the checkbox if you want to use this pin
 + <b>If: </b>Set the condition for setting the pin. Options are <i>(not) Sleeping</i> and <i>(no) Satellites in Range</i>. 
 + <b>Pin: </b>Raspberry Pi GPIO pin number
-+ <b>Value: </b>Value to set pin to if condition is fulfilled  
++ <b>Value: </b>Value to set pin to if condition is met  
 + <b>State: </b>This display shows the current state of the pin or previews it if the pin is not used
 
 #### Serial Tab
@@ -147,7 +147,7 @@ When data and/or simulation haven't been updated for a while, the satellites' lo
 
 ## Trouble Shooting
 
-As Strjectories is still in early development. It is possible for the user to render the tool unusable, especially on systems with little resources. This section outlines recommendations to avoid problems and methods to fix some known issues.
+Strjectories is still in early development.  This section outlines recommendations to avoid problems and methods to fix some known issues.
 
 ### Bash Scripts for Debian based systems
 The included bash scripts are suitable for different Debian based environments. As they are designed for use within a desktop environment, they require starting a terminal. Debians <i>x-terminal-emulator</i> links to the desktop environment's default terminal application. Terminal applications not necessarily share the same syntax, which is why there is an exception for Raspian OS in the scripts to use <i>lxterminal</i> directly. As of now, the scripts have been tested on Ubuntu Mate and Raspbian OS.  
@@ -158,9 +158,10 @@ The included bash scripts are suitable for different Debian based environments. 
 ### Launch after Crash
 Sometimes Strjectories crashes and won't start again, especially, when autosave is enabled. On smaller systems this can happen when using settings that are too demanding (see <i>Rendering on a Raspberry</i>). All systems can face similar issues when using questionable simulation settings (see <i>Simulation Properties</i>).
 
-<b>Solution: </b>If Strjectories won't start, you can modify the config file you have last used with a text editor. If you don't know, which value causes your issue, you can delete or rename the config file so the tool starts without a config file set. If Strjectories crashed while writing data, rendering the data file broken, deleting and manually downloading new data will help. Alternatively you can modify or delete the sessiondata file in the Strjectories folder. 
+<b>Solution: </b>If Strjectories won't start, you can modify the config file you have last used with a text editor. If you don't know, which value causes your issue, you can delete or rename the config file so the tool starts without a config file set. If Strjectories is closed while writing data, rendering the data file broken, deleting and manually downloading new data will help. Alternatively you can modify or delete the sessiondata file in the Strjectories folder. 
 
-
+### GPIO Pins
+Using GPIO Pins is only supported on a Raspberry Pi 5. The <i>State</i> displays show the result of the logic defined in this tab, but the checkboxes will uncheck themselves if the user tries to use pin output on other systems.
 
 
 ### Running Headless
@@ -168,4 +169,4 @@ As of now, headless mode (no UI) is not interactive. You should run the UI at le
 
 ### Running on Windows
 
-Using Strjectories on Windows is untested. Usage of Python3, Pip and Venv may vary from instructions given. Users may have to replace slashes (`/`) with backslashes (`\`) when following the instructions. It may necessary to use file extensions for files created with Strjectories like `config.json` or `data.json`. 
+Using Strjectories on Windows is untested. Usage of Python3, Pip and Venv may vary from instructions given. Depending on the terminal, users may have to replace slashes (`/`) with backslashes (`\`) when following the instructions. It may necessary to use file extensions for files created with Strjectories like `config.json` or `data.json` or `log.txt`. 
