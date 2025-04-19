@@ -824,7 +824,7 @@ class ConfigIo():
                 for key, value in self.properties.properties_get().items():
                     self.ui_q.put(Task(type='UI_UPDATE', subtype=key, data=value))
 
-            if tz != os.environ.get('TZ') or True == True: 
+            if tz != os.environ.get('TZ'): 
                 os.environ['TZ'] = tz
                 self.time.tzset()
                 msg = "%s Timezone updated: %s"%(self.time.strftime("%H:%M:%S"), tz)
