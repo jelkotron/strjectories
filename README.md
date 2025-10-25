@@ -5,7 +5,7 @@ A satellite tracking software to monitor the sky above a given location. It is d
 Strjectories requires Python3 to be installed. It is recommended to use a virtual environment.
 
 ### Debian based OS
-`install`, `update` and `lauch` scripts for Debian based systems like Ubuntu or Raspbian OS are included in the repository. After downloading the repository, the scripts can be launched from command line or by double clicking the files. The scripts create and use a virtual environment named <i>venv</i> inside the directory. If you wish to use another or no virtual environment, see manual installation steps in <i>Installation > Other OS</i>.  
+`install`, `update` and `lauch` scripts for Debian based systems like Ubuntu or Raspbian OS are included in the repository. If your system does not support GPIO (Pin I/O) please use <i>install_nopi</i>. After downloading the repository, the scripts can be launched from command line or by double clicking the files. The scripts create and use a virtual environment named <i>venv</i> inside the directory. If you wish to use another or no virtual environment, see manual installation steps in <i>Installation > Other OS</i>.  
 ### Other OS
 On other systems, dependencies need to be installed manually:
 + Open a terminal and navigate to the Strjectories folder you have just downloaded
