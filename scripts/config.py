@@ -14,7 +14,7 @@ import gpiod
 from gpiod.line import Direction, Value
 import random
 
-DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
+DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle'
 CHIPPATH = '/dev/gpiochip0'
 
 class ConfigIo():

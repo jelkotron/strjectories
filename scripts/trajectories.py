@@ -9,7 +9,7 @@ import numpy as np
 import queue
 
 
-DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active'
+DATAURL = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle' # this seems unused?
 
 resolution_x = 800
 resolution_y = 600
